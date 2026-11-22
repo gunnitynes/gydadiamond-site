@@ -106,7 +106,8 @@ body.app a { color: inherit; }
               linear-gradient(180deg, rgba(19,3,3,.3) 0%, rgba(19,3,3,0) 18%, rgba(19,3,3,.15) 55%, var(--ink) 100%); }
 .after-hero .page-title { text-shadow: 0 2px 30px rgba(0,0,0,.45); }
 .after-hero .kicker { color: var(--soft); }
-.after-hero #app { margin-top: 4.4rem; }
+.after-hero #app { margin-top: 14rem; }
+.after-hero .booking { margin-top: 1.4rem; }
 .booking { margin: 0 0 1rem; font-size: 1.4rem; letter-spacing: .04em; color: var(--soft); }
 .booking:empty { display: none; }
 .booking a { color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.45); }
@@ -255,6 +256,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   body.app { font-size: 1.6rem; }
   .app-main { padding: 12rem 1.8rem 7rem; }
   .page-hero { height: 85vh; min-height: 480px; background-position: 72% 35%; }
+  .after-hero #app { margin-top: 9rem; }
   .lede { margin-bottom: 4rem; }
   .film > button { grid-template-columns: 1fr auto; gap: .2rem 1rem; padding: 1.6rem .2rem; }
   .film .yr { grid-column: 1; grid-row: 1; }
