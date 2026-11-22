@@ -126,7 +126,7 @@ HEAD = """<meta charset="utf-8">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
 
 
 def topbar(key, on_photo=False):
@@ -173,8 +173,9 @@ def app_html(key):
     bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\')"></div>' if bg and not hero else ''
     head = f'<p class="kicker">{html.escape(kicker)}</p>\n<h1 class="page-title">{title}</h1>'
     # a "hero:" photo is shown whole across the top of the page, with the title over it
-    top = (f'<header class="page-hero" style="background-image:url(\'{bg}\')"><div class="page-hero-in">{head}'
-           f'<p class="booking" data-booking></p></div></header>') if hero else ''
+    top = f'<div class="page-hero" style="background-image:url(\'{bg}\')" aria-hidden="true"></div>' if hero else ''
+    if hero:
+        head += '\n<p class="booking" data-booking></p>'
     return f'''<!doctype html>
 <html lang="en" class="app-root">
 <head>
@@ -188,7 +189,7 @@ def app_html(key):
 {topbar(key, hero)}
 {top}
 <main class="app-main{' after-hero' if hero else ''}">
-{'' if hero else head}
+{head}
 <div id="app"><noscript><p>This page needs JavaScript.</p></noscript></div>
 </main>
 <script src="js/app.js?v={V}" defer></script>
