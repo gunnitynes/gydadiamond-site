@@ -1,0 +1,76 @@
+/* Layout rules that Cargo's own JavaScript used to supply.
+   Colours, fonts and sizes come from site.css (the original Cargo stylesheet)
+   and from each page's own <style> block. */
+
+html { font-size: 10px; background: #130303; -webkit-text-size-adjust: 100%; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; }
+bodycopy { display: block; }
+img { max-width: 100%; height: auto; }
+a { color: inherit; }
+
+/* Background image (Cargo "backdrop") */
+.backdrop { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.backdrop-image { position: absolute; inset: 0; background-size: cover; background-position: center; }
+/* Cargo animated the "wave" and "kaleidoscope" backdrops with WebGL; here they drift very slowly instead */
+.backdrop-wave .backdrop-image,
+.backdrop-kaleidoscope .backdrop-image { animation: drift 40s ease-in-out infinite alternate; }
+@keyframes drift { from { transform: scale(1.04) translate(0, 0); } to { transform: scale(1.1) translate(-1.5%, 1%); } }
+@media (prefers-reduced-motion: reduce) { .backdrop-image { animation: none !important; } }
+
+/* Page column */
+.page { position: relative; z-index: 1; display: flex; flex-direction: column; }
+.container { display: flex; flex: 1 0 auto; width: 100%; margin-left: 0 !important; margin-right: 0 !important; justify-content: center; }
+.pos-left .container { justify-content: flex-start; }
+.pos-right .container { justify-content: flex-end; }
+.container_width { position: relative; }
+.cover .container_width { align-self: stretch; }
+.page_background { position: absolute; inset: 0; z-index: -1; }
+.page_content { position: relative; }
+
+/* Cargo columns: grid-pad is the gap around each column, the xN numbers are relative widths */
+[grid-row] { display: flex; align-items: flex-start; margin: calc(var(--pad, 0rem) * -1); }
+[grid-col] { padding: var(--pad, 0rem); min-width: 0; }
+[grid-col="x1"]{flex:1 1 0} [grid-col="x2"]{flex:2 2 0} [grid-col="x3"]{flex:3 3 0} [grid-col="x4"]{flex:4 4 0}
+[grid-col="x5"]{flex:5 5 0} [grid-col="x6"]{flex:6 6 0} [grid-col="x7"]{flex:7 7 0} [grid-col="x8"]{flex:8 8 0}
+[grid-col="x9"]{flex:9 9 0} [grid-col="x10"]{flex:10 10 0} [grid-col="x11"]{flex:11 11 0} [grid-col="x12"]{flex:12 12 0}
+.content img, bodycopy img { margin-bottom: .5em; vertical-align: top; }
+
+/* Video embeds */
+.embed { position: relative; width: 100%; max-width: 100%; margin: 0 auto; }
+.embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Slideshow galleries (PHOTOS page) */
+.slideshow { position: relative; margin: 1rem 0 2rem; user-select: none; }
+.slideshow .slides { position: relative; display: grid; }
+.slideshow .slide { grid-area: 1 / 1; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .5s ease; pointer-events: none; }
+.slideshow .slide.on { opacity: 1; pointer-events: auto; }
+.slideshow .slide img { max-height: 80vh; width: auto; margin: 0; object-fit: contain; }
+.slideshow .arrow { position: absolute; top: 0; bottom: 0; width: 30%; background: none; border: 0;
+  color: rgba(255,255,255,.75); font-size: 4.4rem; cursor: pointer; padding: 0 1.5rem; opacity: 0; transition: opacity .2s; }
+.slideshow:hover .arrow, .slideshow .arrow:focus-visible { opacity: 1; }
+.slideshow .prev { left: 0; text-align: left; }
+.slideshow .next { right: 0; text-align: right; }
+.slideshow .count { text-align: center; font-family: Karla, sans-serif; font-size: 1.2rem; color: rgba(255,255,255,.5); margin-top: .6rem; }
+
+/* Small way back to the front page (Cargo had none; visitors used the back button) */
+.home-link { position: fixed; top: 1.4rem; left: 1.6rem; z-index: 5; font-family: Karla, sans-serif;
+  font-size: 1.2rem; letter-spacing: .2em; color: rgba(255,255,255,.75); text-decoration: none;
+  mix-blend-mode: difference; }
+.home-link:hover { color: #fff; }
+
+/* Phones */
+@media (max-width: 768px) {
+  html { font-size: 9px; }
+  [data-css-preset] .container_width, body[local-style] .container_width { width: 100% !important; }
+  [data-css-preset] .content_padding, body[local-style] .content_padding { padding: 4.4rem 1.8rem 3rem !important; }
+  [grid-row][grid-responsive] { flex-direction: column; align-items: stretch; }
+  [grid-row][grid-responsive] > [grid-col] { flex: none; width: 100%; }
+  [data-predefined-style="true"] h1 { font-size: 4.2rem !important; }
+  .home.cover .page_background { background-color: rgba(71, 6, 6, .82) !important; }
+  .slideshow .arrow { opacity: 1; font-size: 3.4rem; }
+}
+@media (max-width: 768px) { .backdrop { left: 0 !important; } }
+/* On phones the text sits over the photo instead of beside it: give it a soft shadow so it stays readable */
+@media (max-width: 768px) { .subpage .backdrop ~ .page bodycopy { text-shadow: 0 1px 8px rgba(0,0,0,.75); } }

@@ -1,0 +1,150 @@
+{
+ "About": {
+  "url": "https://freight.cargo.site/t/original/i/748b58f2a8354887b9f9089563ac2ec7ca8397d97d585cb908b2fba0b900be37/Gya14-copyI.jpg",
+  "path": "wallpaper",
+  "data": {
+   "scale_option": "cover",
+   "margin": 0,
+   "limit_size": false,
+   "overlay_color": "transparent",
+   "bg_color": "transparent",
+   "cycle_images": false,
+   "autoplay": false,
+   "slideshow_transition": "slide",
+   "transition_timeout": 2.5,
+   "transition_duration": 1,
+   "randomize": false,
+   "arrow_navigation": false,
+   "image": "39273337",
+   "requires_webgl": "false"
+  }
+ },
+ "Bio": {
+  "url": "https://freight.cargo.site/t/original/i/bd460de1f78129a6999feebd56eacc7422fa5be84382cde5ba55546b12e0038c/gyda_sepia_s.jpg",
+  "path": "kaleidoscope",
+  "data": {
+   "slices": 24,
+   "zoom": 190,
+   "baseRotation1": 26,
+   "rotationSpeed1": -8,
+   "baseRotation2": 15,
+   "rotationSpeed2": -8,
+   "rotationCenterX": -20,
+   "rotationCenterY": 101,
+   "mirrorSlices": true,
+   "hasMouseInteraction": true,
+   "image": "39336079",
+   "requires_webgl": "true"
+  }
+ },
+ "Front-page": {
+  "url": "https://freight.cargo.site/t/original/i/4f4f1ca5e45aafed3608819f03e27bfa73b87c9e7b4c05b0467c1cae2bae8b74/Gya_140.jpg",
+  "path": "wallpaper",
+  "data": {
+   "scale_option": "cover",
+   "repeat_image": false,
+   "image_alignment": "image_center_center",
+   "margin": 20,
+   "pattern_size": 67,
+   "limit_size": false,
+   "overlay_color": "transparent",
+   "bg_color": "transparent",
+   "cycle_images": false,
+   "autoplay": false,
+   "slideshow_transition": "fade",
+   "transition_timeout": 2.5,
+   "transition_duration": 0.8,
+   "randomize": true,
+   "arrow_navigation": false,
+   "focus_object": "{\"71601209\":{\"mid\":\"71601209\",\"x\":0.6513332112630208,\"y\":0.8216249593098959},\"71601223\":{\"mid\":\"71601223\",\"x\":0.5246665445963542,\"y\":0.27736834363670043}}",
+   "backdrop_viewport_lock": false,
+   "use_image_focus": "false",
+   "image": "238964747",
+   "requires_webgl": "false"
+  }
+ },
+ "Epicycle-II": {
+  "url": "https://freight.cargo.site/t/original/i/65f21254300a2f5468b291915c07ceffa10a19064b89868f4a4743be3049cbef/EpicycleII-front-digital-copydark.jpeg",
+  "path": "kaleidoscope",
+  "data": {
+   "slices": 12,
+   "zoom": 217,
+   "baseRotation1": -6,
+   "rotationSpeed1": -8,
+   "baseRotation2": -148,
+   "rotationSpeed2": -8,
+   "rotationCenterX": -279,
+   "rotationCenterY": 107,
+   "mirrorSlices": true,
+   "hasMouseInteraction": false,
+   "backdrop_viewport_lock": false,
+   "image": "84295222",
+   "requires_webgl": "true"
+  }
+ },
+ "Epicycle": {
+  "url": "https://freight.cargo.site/t/original/i/af7fd07ee90c87a091c37f7e0a2ddafc566366988567b7dc568864cde0d512b9/Epicycle-back.png",
+  "path": "wave",
+  "data": {
+   "image": "39364081",
+   "automate": false,
+   "interactive": true,
+   "requires_webgl": true,
+   "filters": "{\"ripples\":{\"displayName\":\"Waves\",\"on\":true,\"postProc\":false,\"params\":{\"noiseSpeed\":{\"displayName\":\"Wave Speed\",\"value\":1.14,\"min\":0,\"max\":30,\"step\":0.01,\"randRange\":\"low\",\"randMin\":1,\"randMax\":7.5,\"custom\":true,\"automate\":true,\"noisePosn\":0},\"noiseSize\":{\"displayName\":\"Wave Size\",\"value\":0.46,\"min\":0.1,\"max\":4,\"step\":0.01,\"randMin\":0.1,\"randMax\":0.5,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":10},\"noiseDepth\":{\"displayName\":\"Wave Depth\",\"value\":3.41,\"min\":0,\"max\":40,\"step\":0.01,\"randMin\":0,\"randMax\":0,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":30},\"dispDepth\":{\"displayName\":\"Noise Depth\",\"value\":0,\"min\":0,\"max\":40,\"step\":1,\"randMin\":1,\"randMax\":10,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":60},\"brighten\":{\"displayName\":\"Contrast\",\"value\":0.28,\"min\":0,\"max\":0.3,\"step\":0.01,\"randMin\":0,\"randMax\":0.3,\"automate\":true,\"noisePosn\":100},\"speedX\":{\"displayName\":\"Speed X\",\"value\":0.06,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":200},\"speedY\":{\"displayName\":\"Speed Y\",\"value\":-0.03,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":140},\"rotX\":{\"displayName\":\"Rotation X\",\"value\":0.24,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"randMin\":-0.3,\"randMax\":0.3,\"automate\":true,\"interactive\":true,\"noisePosn\":56},\"rotY\":{\"displayName\":\"Rotation Y\",\"value\":0.23,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"automate\":true,\"interactive\":true,\"randMin\":-0.3,\"randMax\":0.3,\"noisePosn\":300}}},\"vignette\":{\"displayName\":\"Vignette\",\"on\":true,\"postProc\":true,\"params\":{\"offset\":{\"displayName\":\"Amount\",\"value\":1.2,\"min\":0,\"max\":2,\"step\":0.1}}},\"tilt\":{\"displayName\":\"Tilt Shift\",\"on\":false,\"postProc\":true,\"params\":{\"v\":{\"displayName\":\"Amount\",\"value\":0.012,\"min\":0.001,\"max\":0.02,\"step\":0.001,\"randMin\":0.001,\"randMax\":0.01,\"randRange\":\"low\"},\"r\":{\"displayName\":\"Position\",\"value\":0.6,\"min\":0,\"max\":1,\"step\":0.1}}}}"
+  }
+ },
+ "Evolution": {
+  "url": "https://freight.cargo.site/t/original/i/475818a30b7d2217fbe8ab836162984480970e99f630daba626354d8027f993e/drawing_2.png",
+  "path": "wave",
+  "data": {
+   "image": "39828371",
+   "automate": false,
+   "interactive": true,
+   "requires_webgl": true,
+   "filters": "{\"ripples\":{\"displayName\":\"Waves\",\"on\":true,\"postProc\":false,\"params\":{\"noiseSpeed\":{\"displayName\":\"Wave Speed\",\"value\":2.13,\"min\":0,\"max\":30,\"step\":0.01,\"randRange\":\"low\",\"randMin\":1,\"randMax\":7.5,\"custom\":true,\"automate\":true,\"noisePosn\":0},\"noiseSize\":{\"displayName\":\"Wave Size\",\"value\":3.96,\"min\":0.1,\"max\":4,\"step\":0.01,\"randMin\":0.1,\"randMax\":0.5,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":10},\"noiseDepth\":{\"displayName\":\"Wave Depth\",\"value\":0.49,\"min\":0,\"max\":40,\"step\":0.01,\"randMin\":0,\"randMax\":0,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":30},\"dispDepth\":{\"displayName\":\"Noise Depth\",\"value\":0,\"min\":0,\"max\":40,\"step\":1,\"randMin\":1,\"randMax\":10,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":60},\"brighten\":{\"displayName\":\"Contrast\",\"value\":0.07,\"min\":0,\"max\":0.3,\"step\":0.01,\"randMin\":0,\"randMax\":0.3,\"automate\":true,\"noisePosn\":100},\"speedX\":{\"displayName\":\"Speed X\",\"value\":0.01,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":200},\"speedY\":{\"displayName\":\"Speed Y\",\"value\":0.17,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":140},\"rotX\":{\"displayName\":\"Rotation X\",\"value\":0.11,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"randMin\":-0.3,\"randMax\":0.3,\"automate\":true,\"interactive\":true,\"noisePosn\":56},\"rotY\":{\"displayName\":\"Rotation Y\",\"value\":0.26,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"automate\":true,\"interactive\":true,\"randMin\":-0.3,\"randMax\":0.3,\"noisePosn\":300}}},\"vignette\":{\"displayName\":\"Vignette\",\"on\":false,\"postProc\":true,\"params\":{\"offset\":{\"displayName\":\"Amount\",\"value\":1.2,\"min\":0,\"max\":2,\"step\":0.1}}},\"tilt\":{\"displayName\":\"Tilt Shift\",\"on\":false,\"postProc\":true,\"params\":{\"v\":{\"displayName\":\"Amount\",\"value\":0.012,\"min\":0.001,\"max\":0.02,\"step\":0.001,\"randMin\":0.001,\"randMax\":0.01,\"randRange\":\"low\"},\"r\":{\"displayName\":\"Position\",\"value\":0.6,\"min\":0,\"max\":1,\"step\":0.1}}}}"
+  }
+ },
+ "FULL-BIO": {
+  "url": "https://freight.cargo.site/t/original/i/6bc6f39701eae03cda5b4c53f68ae643aaa7f9590de6ffcb0803fd985950d130/gyda_sepia_s.jpg",
+  "path": "wave",
+  "data": {
+   "image": "39335776",
+   "automate": false,
+   "interactive": true,
+   "requires_webgl": true,
+   "filters": "{\"ripples\":{\"displayName\":\"Waves\",\"on\":true,\"postProc\":false,\"params\":{\"noiseSpeed\":{\"displayName\":\"Wave Speed\",\"value\":0.79,\"min\":0,\"max\":30,\"step\":0.01,\"randRange\":\"low\",\"randMin\":1,\"randMax\":7.5,\"custom\":true,\"automate\":true,\"noisePosn\":0},\"noiseSize\":{\"displayName\":\"Wave Size\",\"value\":0.37,\"min\":0.1,\"max\":4,\"step\":0.01,\"randMin\":0.1,\"randMax\":0.5,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":10},\"noiseDepth\":{\"displayName\":\"Wave Depth\",\"value\":1.38,\"min\":0,\"max\":40,\"step\":0.01,\"randMin\":0,\"randMax\":0,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":30},\"dispDepth\":{\"displayName\":\"Noise Depth\",\"value\":0,\"min\":0,\"max\":40,\"step\":1,\"randMin\":1,\"randMax\":10,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":60},\"brighten\":{\"displayName\":\"Contrast\",\"value\":0,\"min\":0,\"max\":0.3,\"step\":0.01,\"randMin\":0,\"randMax\":0.3,\"automate\":true,\"noisePosn\":100},\"speedX\":{\"displayName\":\"Speed X\",\"value\":0.01,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":200},\"speedY\":{\"displayName\":\"Speed Y\",\"value\":-0.1,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":140},\"rotX\":{\"displayName\":\"Rotation X\",\"value\":0.16,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"randMin\":-0.3,\"randMax\":0.3,\"automate\":true,\"interactive\":true,\"noisePosn\":56},\"rotY\":{\"displayName\":\"Rotation Y\",\"value\":0.3,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"automate\":true,\"interactive\":true,\"randMin\":-0.3,\"randMax\":0.3,\"noisePosn\":300}}},\"vignette\":{\"displayName\":\"Vignette\",\"on\":true,\"postProc\":true,\"params\":{\"offset\":{\"displayName\":\"Amount\",\"value\":2,\"min\":0,\"max\":2,\"step\":0.1}}},\"tilt\":{\"displayName\":\"Tilt Shift\",\"on\":true,\"postProc\":true,\"params\":{\"v\":{\"displayName\":\"Amount\",\"value\":0.006,\"min\":0.001,\"max\":0.02,\"step\":0.001,\"randMin\":0.001,\"randMax\":0.01,\"randRange\":\"low\"},\"r\":{\"displayName\":\"Position\",\"value\":0.2,\"min\":0,\"max\":1,\"step\":0.1}}}}"
+  }
+ },
+ "LIVE": {
+  "url": "https://freight.cargo.site/t/original/i/5ca8202de769fd913e57d3fc8fad6842cb06bd08f6ecaa41f9ede192ed14fac4/ata_kam-7.jpg",
+  "path": "wallpaper",
+  "data": {
+   "scale_option": "cover",
+   "margin": 0,
+   "limit_size": false,
+   "overlay_color": "transparent",
+   "bg_color": "rgb(0, 0, 0)",
+   "cycle_images": false,
+   "autoplay": false,
+   "slideshow_transition": "slide",
+   "transition_timeout": 2.5,
+   "transition_duration": 1,
+   "randomize": false,
+   "arrow_navigation": false,
+   "image": "39276467",
+   "requires_webgl": "false"
+  }
+ },
+ "Ox": {
+  "url": "https://freight.cargo.site/t/original/i/f68d8c29cd217692d8870c7c40c2cc410fdb5c1a6c395c426cfad484a9f9ac9b/-milk_blood_antjetaiga6.jpeg",
+  "path": "wave",
+  "data": {
+   "image": "147569243",
+   "automate": false,
+   "interactive": false,
+   "backdrop_viewport_lock": false,
+   "requires_webgl": true,
+   "filters": "{\"ripples\":{\"displayName\":\"Waves\",\"on\":true,\"postProc\":false,\"params\":{\"noiseSpeed\":{\"displayName\":\"Wave Speed\",\"value\":0.78,\"min\":0,\"max\":30,\"step\":0.01,\"randRange\":\"low\",\"randMin\":1,\"randMax\":7.5,\"custom\":true,\"automate\":true,\"noisePosn\":0},\"noiseSize\":{\"displayName\":\"Wave Size\",\"value\":0.78,\"min\":0.1,\"max\":4,\"step\":0.01,\"randMin\":0.1,\"randMax\":0.5,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":10},\"noiseDepth\":{\"displayName\":\"Wave Depth\",\"value\":11.12,\"min\":0,\"max\":40,\"step\":0.01,\"randMin\":0,\"randMax\":0,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":30},\"dispDepth\":{\"displayName\":\"Noise Depth\",\"value\":0,\"min\":0,\"max\":40,\"step\":1,\"randMin\":1,\"randMax\":10,\"randRange\":\"low\",\"automate\":true,\"noisePosn\":60},\"brighten\":{\"displayName\":\"Contrast\",\"value\":0.02,\"min\":0,\"max\":0.3,\"step\":0.01,\"randMin\":0,\"randMax\":0.3,\"automate\":true,\"noisePosn\":100},\"speedX\":{\"displayName\":\"Speed X\",\"value\":-0.24,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":200},\"speedY\":{\"displayName\":\"Speed Y\",\"value\":-0.11,\"min\":-2,\"max\":2,\"step\":0.01,\"custom\":true,\"randMin\":-2,\"randMax\":2,\"automate\":true,\"noisePosn\":140},\"rotX\":{\"displayName\":\"Rotation X\",\"value\":-0.24,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"randMin\":-0.3,\"randMax\":0.3,\"automate\":true,\"interactive\":true,\"noisePosn\":56},\"rotY\":{\"displayName\":\"Rotation Y\",\"value\":0.26,\"min\":-0.3,\"max\":0.3,\"step\":0.01,\"custom\":true,\"automate\":true,\"interactive\":true,\"randMin\":-0.3,\"randMax\":0.3,\"noisePosn\":300}}},\"vignette\":{\"displayName\":\"Vignette\",\"on\":true,\"postProc\":true,\"params\":{\"offset\":{\"displayName\":\"Amount\",\"value\":1.2,\"min\":0,\"max\":2,\"step\":0.1}}},\"tilt\":{\"displayName\":\"Tilt Shift\",\"on\":false,\"postProc\":true,\"params\":{\"v\":{\"displayName\":\"Amount\",\"value\":0.012,\"min\":0.001,\"max\":0.02,\"step\":0.001,\"randMin\":0.001,\"randMax\":0.01,\"randRange\":\"low\"},\"r\":{\"displayName\":\"Position\",\"value\":0.6,\"min\":0,\"max\":1,\"step\":0.1}}}}"
+  }
+ }
+}
