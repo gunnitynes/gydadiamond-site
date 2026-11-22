@@ -21,6 +21,7 @@ site = json.load(open(os.path.join(ROOT, 'data', 'site.json')))
 APP_PAGES = {
     'Work':   ('work',   'Work',  'Albums, scores & collaborations', ''),
     'FILM':   ('film',   'Film',  'Films, documentaries and art', 'images/b784a330-MIHKEL-cover.jpg'),
+    'CONTACT': ('contact', 'Contact', 'Get in touch', 'hero:images/09f593f7-759A5994.jpg'),
     'LIVE':   ('live',   'Live',  'Concerts', 'hero:images/576e7e30-ata_kam-7.jpg'),
     'NEWS':   ('news',   'News',  'From Gyða', ''),
     'PHOTOS': ('photos', 'Photos', 'Press photos', ''),
@@ -31,7 +32,7 @@ SKIP = {'Running-on-Cargo'}
 # cache-busting: asset links get ?v=<hash of the asset files>, so browsers fetch new CSS/JS after a change
 import hashlib
 V = hashlib.sha1(b''.join(open(os.path.join(ROOT, f), 'rb').read() for f in
-                          ['css/static.css', 'css/app.css', 'js/app.js', 'js/site.js', '_source/site.css'])).hexdigest()[:8]
+                          ['css/static.css', 'css/app.css', 'css/fonts.css', 'js/app.js', 'js/site.js', '_source/site.css'])).hexdigest()[:8]
 HOME = 'Front-page'
 
 
@@ -100,11 +101,6 @@ def convert(content):
     # the hand-spaced "H O M E ... W O R K ➤" row at the bottom of About wrapped onto two lines
     c = re.sub(r'<div grid-row[^>]*>\s*<div grid-col[^>]*><div style="text-align: left"><b>[^<]*<a href="Front-page"[^>]*>H O M E.*?</div>\s*</div>\s*$',
                '<p class="next-page"><a href="Work">W O R K&nbsp;➤</a></p>', c.rstrip().removesuffix('<br>').rstrip(), flags=re.S)
-    # Contact: the live booking agent under her own email (js/app.js refreshes it from data/site.json)
-    if 'gydakid@gmail.com<br>' in c and site.get('booking_email'):
-        b = html.escape(site['booking_email'])
-        c = c.replace('gydakid@gmail.com<br>', 'gydakid@gmail.com<br><br><span data-booking-contact>Live booking · '
-                      + html.escape(site.get('booking_name', '')) + '<br><a href="mailto:' + b + '">' + b + '</a></span><br>', 1)
     c = c.replace(' rel="history"', '')
     c = re.sub(r'href="Front-page"', 'href="./"', c)
     # external links open in a new tab, like most of them already did
@@ -121,12 +117,11 @@ def local_css(page):
     return re.sub(r'\s*[a-z-]+:\s*initial\s*(/\*[^*]*\*/)?\s*;', '', css)
 
 
-HEAD = """<meta charset="utf-8">
+HEAD = f"""<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
+<link rel="stylesheet" href="css/fonts.css?v={V}">
+<script type="speculationrules">{{"prerender": [{{"where": {{"and": [{{"href_matches": "/*"}}, {{"not": {{"href_matches": "/*admin*"}}}}]}}, "eagerness": "moderate"}}]}}</script>"""
 
 
 def topbar(key, on_photo=False):
@@ -174,7 +169,7 @@ def app_html(key):
     head = f'<p class="kicker">{html.escape(kicker)}</p>\n<h1 class="page-title">{title}</h1>'
     # a "hero:" photo is shown whole across the top of the page, with the title over it
     top = f'<div class="page-hero" style="background-image:url(\'{bg}\')" aria-hidden="true"></div>' if hero else ''
-    if hero:
+    if view == 'live':
         head += '\n<p class="booking" data-booking></p>'
     return f'''<!doctype html>
 <html lang="en" class="app-root">
@@ -228,9 +223,8 @@ def page_html(key, page):
 <meta name="description" content="{html.escape(desc)}">
 <meta property="og:title" content="{html.escape(title)}">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/fonts.css?v={V}">
+<script type="speculationrules">{{"prerender": [{{"where": {{"and": [{{"href_matches": "/*"}}, {{"not": {{"href_matches": "/*admin*"}}}}]}}, "eagerness": "moderate"}}]}}</script>
 <link rel="stylesheet" href="css/site.css?v={V}">
 <link rel="stylesheet" href="css/static.css?v={V}">
 <link rel="stylesheet" href="css/app.css?v={V}">

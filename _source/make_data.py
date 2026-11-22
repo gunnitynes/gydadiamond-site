@@ -45,8 +45,8 @@ dump('site.json', {
         {'label': 'Contact', 'href': 'CONTACT'},
     ],
     'show_next_show': True,
-    'email': 'gydakid@gmail.com',
-    'press_email': 'gydakid@gmail.com',
+    'email': '[email removed: see data/site.json]',
+    'press_email': '[email removed: see data/site.json]',
     'links': [
         {'label': 'Bandcamp', 'url': 'https://gyda.bandcamp.com/'},
         {'label': 'Facebook', 'url': 'https://www.facebook.com/gydavaltys/'},

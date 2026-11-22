@@ -41,7 +41,8 @@
         if (d) return Promise.resolve(JSON.parse(d));
       } catch (e) { /* fall through to the published file */ }
     }
-    return fetch('data/' + name + '.json', { cache: 'no-cache' })
+    // normal browser caching (GitHub allows 10 minutes): pages open instantly when switching
+    return fetch('data/' + name + '.json')
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
   }
@@ -101,16 +102,66 @@
   }
 
   // ------------------------------------------------------------ live booking contact (LIVE header, CONTACT page)
+  // Email addresses are stored scrambled ("enc:" + base64 of the address backwards) and only become
+  // real mailto: links when a visitor clicks, so address-harvesting bots reading the pages find nothing.
+  function unmail(v) {
+    v = String(v || '');
+    if (v.indexOf('enc:') !== 0) return v;
+    try { return decodeURIComponent(escape(atob(v.slice(4)))).split('').reverse().join(''); } catch (e) { return ''; }
+  }
+  // <a data-mail="enc:…">: a click opens the mail app; data-reveal shows the address with a Copy button
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-mail]');
+    if (a) {
+      e.preventDefault();
+      var addr = unmail(a.getAttribute('data-mail'));
+      if (!addr) return;
+      if (a.hasAttribute('data-reveal')) {
+        var box = document.createElement('span');
+        box.className = 'revealed';
+        box.innerHTML = '<a href="mailto:' + esc(addr) + '">' + esc(addr) + '</a><button class="btn small copy-mail">Copy</button>';
+        a.replaceWith(box);
+        return;
+      }
+      location.href = 'mailto:' + addr;
+    }
+    var c = e.target.closest('.copy-mail');
+    if (c) {
+      var t = c.previousElementSibling.textContent;
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () {
+        c.textContent = 'Copied ✓';
+        setTimeout(function () { c.textContent = 'Copy'; }, 2000);
+      }, function () { c.textContent = 'Select it to copy'; });
+    }
+  });
+  function mailLink(enc, label, reveal, cls) {
+    return enc ? '<a href="#" data-mail="' + esc(enc) + '"' + (reveal ? ' data-reveal' : '') + (cls ? ' class="' + cls + '"' : '') + '>' + label + '</a>' : '';
+  }
+
+  // ------------------------------------------------------------ live booking link (LIVE header)
   function renderBooking(site) {
     if (!site || !site.booking_email) return;
-    var m = '<a href="mailto:' + esc(site.booking_email) + '">' + esc(site.booking_email) + '</a>';
-    var who = site.booking_name ? esc(site.booking_name) : '';
     document.querySelectorAll('[data-booking]').forEach(function (el) {
-      el.innerHTML = 'Live booking' + (who ? ' · ' + who : '') + ' · ' + m;
+      el.innerHTML = mailLink(site.booking_email, 'Live booking');
     });
-    document.querySelectorAll('[data-booking-contact]').forEach(function (el) {
-      el.innerHTML = 'Live booking' + (who ? ' · ' + who : '') + '<br>' + m;
-    });
+  }
+
+  // ------------------------------------------------------------ CONTACT
+  function renderContact(site) {
+    var root = document.getElementById('app');
+    site = site || {};
+    var cards = [];
+    if (site.email) cards.push(['Gyða', 'Write to Gyða', 'Everything else: music, collaborations and questions.', mailLink(site.email, 'Show email', true, 'btn solid')]);
+    if (site.booking_email) cards.push(['Live booking', esc(site.booking_name || 'Booking'), 'Concerts and festivals.', mailLink(site.booking_email, 'Show email', true, 'btn solid')]);
+    cards.push(['Press', 'Press & photos', 'Photos are free to use with the photographer credited.',
+      '<a class="btn" href="PHOTOS">Press photos →</a>' + (site.press_email && site.press_email !== site.email ? mailLink(site.press_email, 'Show email', true, 'btn') : '')]);
+    var links = (site.links || []).filter(function (l) { return l.url; });
+    root.innerHTML = '<div class="contact-grid">' + cards.map(function (c) {
+      return '<section class="ccard"><p class="kicker">' + esc(c[0]) + '</p><h2>' + c[1] + '</h2><p>' + esc(c[2]) + '</p><div class="acts">' + c[3] + '</div></section>';
+    }).join('') + '</div>' +
+      (links.length ? '<div class="follow"><span class="kicker">Listen &amp; follow</span>' + links.map(function (l) {
+        return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label || l.url) + ' ↗</a>';
+      }).join('') + '</div>' : '');
   }
 
   // ------------------------------------------------------------ front page
@@ -224,10 +275,9 @@
             '</div></article>';
         }).join('') + '</div>';
       } else {
-        var bm = (site && (site.booking_email || site.email)) || '';
-        // the booking contact is already in the page header when one is set
-        h += '<div class="no-shows"><p>No dates announced right now.</p>' + (site && site.booking_email ? '' :
-          '<p>For concerts: <a href="mailto:' + esc(bm) + '">' + esc(bm) + '</a></p>') + '</div>';
+        // the booking link is already in the page header when one is set
+        h += '<div class="no-shows"><p>No dates announced right now.</p>' + (site && !site.booking_email && site.email ?
+          '<p>' + mailLink(site.email, 'Write about concerts') + '</p>' : '') + '</div>';
       }
       if (past.length) {
         h += '<h2 class="section-label">Past</h2>';
@@ -401,6 +451,23 @@
     draw('');
   }
 
+  // ------------------------------------------------------------ faster page switching
+  // Chrome prerenders the next page on hover (speculationrules in each page's head); for other browsers,
+  // fetch it on hover / touch so it is already in the browser cache when clicked.
+  (function () {
+    var warmed = {};
+    function warm(e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || a.target === '_blank' || a.origin !== location.origin || /admin|\.(jpe?g|png|pdf|zip)$/i.test(a.pathname)) return;
+      var u = a.href.split('#')[0];
+      if (warmed[u] || u === location.href.split('#')[0]) return;
+      warmed[u] = 1;
+      fetch(u).catch(function () {});
+    }
+    document.addEventListener('mouseover', warm, { passive: true });
+    document.addEventListener('touchstart', warm, { passive: true });
+  })();
+
   // ------------------------------------------------------------ go
   if (PREVIEW) {
     var f = document.createElement('div');
@@ -419,6 +486,7 @@
     if (view === 'film') return load('films').then(renderFilm);
     if (view === 'live') return renderLive(site);
     if (view === 'news') return load('news').then(renderNews);
+    if (view === 'contact') return renderContact(site);
     if (view === 'photos') return load('photos').then(function (p) { renderPhotos(p, site); });
   });
 })();

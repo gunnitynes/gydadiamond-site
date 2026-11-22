@@ -187,11 +187,23 @@
     if (/^(images|press)\//.test(path)) removals[path] = true;
   }
 
+  // email addresses are saved scrambled so bots reading the website can't harvest them (see js/app.js unmail)
+  function encMail(v) {
+    v = String(v || '').trim();
+    return v ? 'enc:' + btoa(unescape(encodeURIComponent(v.split('').reverse().join('')))) : '';
+  }
+  function decMail(v) {
+    v = String(v || '');
+    if (v.indexOf('enc:') !== 0) return v;
+    try { return decodeURIComponent(escape(atob(v.slice(4)))).split('').reverse().join(''); } catch (e) { return ''; }
+  }
+
   // ------------------------------------------------------------------ form building
   // fields: [{k, label, type, help, wide, options, placeholder}]
   function fieldsHTML(obj, fields) {
     return '<div class="fields">' + fields.map(function (f) {
       var v = obj[f.k] == null ? '' : obj[f.k];
+      if (f.type === 'email') v = decMail(v);
       var id = 'f-' + f.k;
       var inner;
       if (f.type === 'textarea') inner = '<textarea id="' + id + '" data-k="' + f.k + '" class="' + (f.tall ? 'tall' : '') + '" placeholder="' + esc(f.placeholder || '') + '">' + esc(v) + '</textarea>';
@@ -205,7 +217,7 @@
           '<button class="btn small" type="button" data-img="' + f.k + '">' + (v ? 'Change picture' : 'Add picture') + '</button>' +
           (v ? '<button class="btn small" type="button" data-noimg="' + f.k + '">Remove</button>' : '') + '</div></div>' +
           (f.help ? '<em>' + f.help + '</em>' : '') + '</div>';
-      } else inner = '<input id="' + id + '" type="' + (f.type || 'text') + '" data-k="' + f.k + '" value="' + esc(v) + '" placeholder="' + esc(f.placeholder || '') + '"' + (f.list ? ' list="' + f.list + '"' : '') + '>';
+      } else inner = '<input id="' + id + '" type="' + (f.type || 'text') + '" data-k="' + f.k + '" value="' + esc(v) + '" placeholder="' + esc(f.placeholder || '') + '"' + (f.list ? ' list="' + f.list + '"' : '') + (f.type === 'email' ? ' data-enc' : '') + '>';
       return '<label class="f' + (f.wide ? ' wide' : '') + '" for="' + id + '"><span>' + esc(f.label) + '</span>' + inner + (f.help ? '<em>' + f.help + '</em>' : '') + '</label>';
     }).join('') + '</div>';
   }
@@ -214,7 +226,7 @@
     root.addEventListener('input', function (e) {
       var k = e.target.getAttribute('data-k');
       if (!k || e.target.closest('[data-row]')) return;
-      obj[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+      obj[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.hasAttribute('data-enc') ? encMail(e.target.value) : e.target.value;
       if (e.target.type === 'checkbox' && !obj[k]) delete obj[k];
       dirty();
       if (after) after(k, e);
@@ -686,7 +698,7 @@
     var html = '<div class="tab-head"><div><h1>Contact &amp; press</h1><p>Email addresses, the line on the Photos page and links.</p></div></div>' +
       '<div class="card" id="cset">' + fieldsHTML(s, [
         { k: 'email', label: 'My own email (Contact page)', type: 'email' },
-        { k: 'booking_email', label: 'Live booking email', type: 'email', help: 'Shown on the Live page and the Contact page.' },
+        { k: 'booking_email', label: 'Live booking email', type: 'email', help: 'The “Live booking” link on the Live page and a card on the Contact page. Addresses are hidden from spam bots automatically.' },
         { k: 'booking_name', label: 'Booking agency or name', placeholder: 'Toutpartout' },
         { k: 'press_email', label: 'Email for press', type: 'email' },
         { k: 'press_intro', label: 'Line at the top of the Photos page', type: 'textarea', wide: true }
@@ -695,7 +707,7 @@
         return '<div class="row two" data-row="' + i + '"><input type="text" data-k="label" value="' + esc(l.label) + '" placeholder="Name"><input type="url" data-k="url" value="' + esc(l.url) + '" placeholder="https://…">' +
           '<span class="tools"><button data-l="del" title="Remove">✕</button></span></div>';
       }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-l="add">+ Add link</button></p></div>' +
-      '<div class="card"><h3>The older pages</h3><p>About, the album pages and Contact are still the pages from the old Cargo site. ' +
+      '<div class="card"><h3>The older pages</h3><p>About and the album pages are still the pages from the old Cargo site. ' +
       'Ask Gunnar if something there needs changing.</p></div>';
     var p = $('#panel');
     p.innerHTML = html;
@@ -748,7 +760,7 @@
     }
   }
 
-  var PREVIEW_PAGE = { work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'PHOTOS.html' };
+  var PREVIEW_PAGE = { work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'CONTACT.html' };
   function preview() {
     // swap not-yet-uploaded pictures for their in-browser copies, then hand the drafts to the site
     try {
@@ -812,7 +824,7 @@
     }).then(function () {
       return loadAll();
     }).then(function () {
-      toast('Published! The website shows the changes in about a minute.');
+      toast('Published! The website shows the changes in a minute or two (a browser that had the page open may need up to 10 minutes or a refresh).');
     }).catch(function (e) {
       toast('Not published: ' + e.message, true);
       dirty();
