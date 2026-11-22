@@ -1,0 +1,101 @@
+[
+ {
+  "section": "Albums",
+  "title": "Mother Pearl",
+  "year": "2026",
+  "kind": "Album",
+  "image": "images/20260320-mother-pearl-cover.jpg",
+  "text": "Gyða’s third solo album of original compositions, out on Marvaða. On vinyl and digital.",
+  "page": "",
+  "listen": "https://gyda.bandcamp.com/album/mother-pearl",
+  "listen_label": "Bandcamp"
+ },
+ {
+  "section": "Albums",
+  "title": "Ox",
+  "year": "2021",
+  "kind": "Album",
+  "image": "images/e30f2600-Screenshot-2022-07-02-at-11.32.06.jpg",
+  "text": "Both visceral & wildly sublime, Ox celebrates the embodiment of both the darkness and the light that exists within us.",
+  "page": "Ox",
+  "listen": "https://gyda.bandcamp.com/album/ox",
+  "listen_label": "Bandcamp"
+ },
+ {
+  "section": "Albums",
+  "title": "Epicycle II",
+  "year": "2020",
+  "kind": "Album",
+  "image": "images/22f7384b-EpicycleII-front-digital-copydark.jpg",
+  "text": "A network map of musical relationships: a collaboration with some of Iceland’s most compelling musicians.",
+  "page": "Epicycle-II",
+  "listen": "https://gyda.bandcamp.com/",
+  "listen_label": "Bandcamp"
+ },
+ {
+  "section": "Albums",
+  "title": "Evolution",
+  "year": "2018",
+  "kind": "Album",
+  "image": "images/35ad73d9-Evolution-digicover.jpg",
+  "text": "An ode to the spirals in & out of bodily existence. Gyða’s first album of her own music.",
+  "page": "Evolution",
+  "listen": "https://open.spotify.com/album/3qOw6D4y9auxCyXnARXnl1",
+  "listen_label": "Spotify"
+ },
+ {
+  "section": "Albums",
+  "title": "Epicycle",
+  "year": "2017",
+  "kind": "Album",
+  "image": "images/7a8c010c-Epicycle-cover.jpg",
+  "text": "A constellation of composition, from ancient to avant-garde.",
+  "page": "Epicycle",
+  "listen": "https://gyda.bandcamp.com/album/epicycle",
+  "listen_label": "Bandcamp"
+ },
+ {
+  "section": "More",
+  "title": "Film & Art",
+  "year": "",
+  "kind": "Scores & installations",
+  "image": "images/b784a330-MIHKEL-cover.jpg",
+  "text": "",
+  "page": "FILM",
+  "listen": "",
+  "listen_label": ""
+ },
+ {
+  "section": "More",
+  "title": "Music Videos",
+  "year": "",
+  "kind": "Video",
+  "image": "images/b8c58ab1-IMG_7963.jpg",
+  "text": "",
+  "page": "Music-Video",
+  "listen": "",
+  "listen_label": ""
+ },
+ {
+  "section": "More",
+  "title": "With Others",
+  "year": "",
+  "kind": "Collaborations",
+  "image": "images/706122d6-Screen-Shot-2018-10-26-at-11.22.52-PM.jpg",
+  "text": "",
+  "page": "With-Others",
+  "listen": "",
+  "listen_label": ""
+ },
+ {
+  "section": "More",
+  "title": "Instant Composition",
+  "year": "",
+  "kind": "Improvisation",
+  "image": "images/abd07131-Gyda_istan.jpg",
+  "text": "",
+  "page": "Instant-composition",
+  "listen": "",
+  "listen_label": ""
+ }
+]

@@ -74,3 +74,10 @@ a { color: inherit; }
 @media (max-width: 768px) { .backdrop { left: 0 !important; } }
 /* On phones the text sits over the photo instead of beside it: give it a soft shadow so it stays readable */
 @media (max-width: 768px) { .subpage .backdrop ~ .page bodycopy { text-shadow: 0 1px 8px rgba(0,0,0,.75); } }
+
+/* About: the link on to WORK, on one line at the right */
+.next-page { text-align: right; white-space: nowrap; font-weight: 700; margin: 2rem 0 4rem;
+  width: 100vw; position: relative; left: 50%; transform: translateX(-50%); padding: 0 4rem; }
+/* room for the top bar */
+body[local-style] .page { padding-top: 3rem; }
+@media (max-width: 768px) { body[local-style] .page { padding-top: 5rem; } .next-page { padding: 0 1.8rem; } }
