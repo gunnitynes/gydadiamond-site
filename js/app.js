@@ -9,7 +9,9 @@
   var view = document.body.getAttribute('data-view') || '';
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  function load(name) {
+  var cache = {};
+  function load(name) { return cache[name] || (cache[name] = load1(name)); }
+  function load1(name) {
     if (PREVIEW) {
       try {
         var d = localStorage.getItem('gyda-draft:' + name);
@@ -36,6 +38,11 @@
         .replace(/\n/g, '<br>');
       return '<p>' + h + '</p>';
     }).join('');
+  }
+  // small preview (images/t/, 720px) for grids; falls back to the full picture if there is none
+  function thumbImg(src, attrs) {
+    var t = /^images\/[^/]+$/.test(src || '') ? 'images/t/' + src.slice(7).replace(/\.[a-z]+$/i, '.jpg') : src;
+    return '<img src="' + esc(t) + '"' + (t !== src ? ' onerror="this.onerror=null;this.src=\'' + esc(src) + '\'"' : '') + ' ' + (attrs || '') + '>';
   }
   function ext(url) { return /^https?:/.test(url || '') ? ' target="_blank" rel="noopener"' : ''; }
   function parseDate(s) { var p = String(s || '').split('-'); return new Date(+p[0], (+p[1] || 1) - 1, +p[2] || 1); }
@@ -116,7 +123,7 @@
           '<span class="ttl">' + esc(f.title) + '<span class="who">' + esc(who) + '</span></span>' +
           '<span class="plus" aria-hidden="true">+</span></button>' +
           '<div class="more" id="' + id + '"><div><div class="more-in">' +
-          (f.image ? '<img src="' + esc(f.image) + '" alt="" loading="lazy">' : '') +
+          (f.image ? thumbImg(f.image, 'alt="" loading="lazy"') : '') +
           '<div><p class="role">' + esc(f.role || '') + (f.year ? ' · ' + esc(f.year) : '') + '</p>' +
           '<div class="prose">' + (f.text ? prose(f.text) : '<p>' + esc(f.director ? 'Directed by ' + f.director + '.' : '') + '</p>') + '</div>' +
           (f.link ? '<a class="btn" href="' + esc(f.link) + '"' + ext(f.link) + '>' + esc(f.link_label || linkName(f.link)) + ' ↗</a>' : '') +
@@ -224,7 +231,7 @@
         var href = w.page || w.listen || '';
         // with an odd number of albums the newest one gets a wide row of its own
         return '<article class="wcard' + (i === 0 && albums.length % 2 ? ' lead' : '') + '">' + (href ? '<a class="stretch" href="' + esc(href) + '"' + ext(href) + ' aria-label="' + esc(w.title) + '"></a>' : '') +
-          '<div class="pic">' + (w.image ? '<img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover" loading="lazy">' : '') + '</div>' +
+          '<div class="pic">' + (w.image ? thumbImg(w.image, 'alt="' + esc(w.title) + ' cover" loading="lazy"') : '') + '</div>' +
           '<div class="txt"><div class="meta">' + (w.year ? '<b>' + esc(w.year) + '</b>' : '') + '<span>' + esc(w.kind || '') + '</span></div>' +
           '<h3>' + esc(w.title) + '</h3>' + (w.text ? '<p>' + esc(w.text) + '</p>' : '') +
           '<div class="acts">' + (w.page ? '<a class="btn" href="' + esc(w.page) + '"' + ext(w.page) + '>About the album →</a>' : '') +
@@ -235,7 +242,7 @@
     if (more.length) {
       h += '<h2 class="section-label" style="margin-top:9rem">More work</h2><div class="card-grid small">' + more.map(function (w) {
         return '<a class="tile" href="' + esc(w.page || w.listen || '#') + '"' + ext(w.page || w.listen) + '>' +
-          (w.image ? '<img src="' + esc(w.image) + '" alt="" loading="lazy">' : '') +
+          (w.image ? thumbImg(w.image, 'alt="" loading="lazy"') : '') +
           '<span><small>' + esc(w.kind || '') + '</small><b>' + esc(w.title) + '</b></span></a>';
       }).join('') + '</div>';
     }
@@ -257,7 +264,7 @@
       '<span class="btn">Read →</span></div></article>';
     if (rest.length) {
       h += '<h2 class="section-label" style="margin-top:8rem">Earlier</h2><div class="card-grid three">' + rest.map(function (p, i) {
-        return '<button class="wcard" data-n="' + (i + 1) + '"><div class="pic">' + (p.image ? '<img src="' + esc(p.image) + '" alt="" loading="lazy">' : '') + '</div>' +
+        return '<button class="wcard" data-n="' + (i + 1) + '"><div class="pic">' + (p.image ? thumbImg(p.image, 'alt="" loading="lazy"') : '') + '</div>' +
           '<div class="meta"><span>' + esc(fmtLong(p.date)) + '</span></div><h3>' + esc(p.title || '') + '</h3>' +
           '<p class="excerpt">' + esc(plain(p.text)) + '</p></button>';
       }).join('') + '</div>';
@@ -309,8 +316,8 @@
       cur = list.filter(function (p) { return !credit || p.credit === credit; });
       grid.innerHTML = cur.map(function (p, i) {
         var ratio = p.width && p.height ? ' width="' + p.width + '" height="' + p.height + '"' : '';
-        return '<figure class="shot"><button class="open" data-i="' + i + '" aria-label="View larger"><img src="' + esc(p.src) + '"' + ratio +
-          ' alt="Gyða Valtýsdóttir, photo by ' + esc(p.credit) + '" loading="lazy"></button><figcaption><span>© ' + esc(p.credit) +
+        return '<figure class="shot"><button class="open" data-i="' + i + '" aria-label="View larger">' +
+          thumbImg(p.src, ratio.trim() + ' alt="Gyða Valtýsdóttir, photo by ' + esc(p.credit) + '" loading="lazy"') + '</button><figcaption><span>© ' + esc(p.credit) +
           (p.caption ? ' · ' + esc(p.caption) : '') + '</span><a href="' + esc(p.hires || p.src) + '" download>↓ Hi-res ' + mb(p.bytes) + '</a></figcaption></figure>';
       }).join('');
     }
@@ -363,6 +370,9 @@
     f.textContent = 'Preview — not published yet';
     document.body.appendChild(f);
   }
+  // start the page's data downloads now, alongside site.json (load() hands back the same request later)
+  ({ work: ['work'], film: ['films'], news: ['news'], photos: ['photos'], live: ['shows', 'calendar'], front: ['shows', 'calendar'] }[view] || [])
+    .forEach(function (n) { load(n); });
   load('site').then(function (site) {
     renderNav(site);
     if (view === 'front') return renderFront(site);

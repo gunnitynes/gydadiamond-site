@@ -8,6 +8,9 @@
 
   // ---- where the site lives on GitHub
   var REPO = { owner: 'gunnitynes', name: 'gydadiamond-site', branch: 'main' };
+  // admin password: only a salted PBKDF2 hash is stored here, never the password itself
+  // (to change it: python3 tools/set_admin_password.py)
+  var PASS = { salt: '8fdbb42222829c551788c196403a9ecf', iter: 250000, hash: 'dbe7ed29e67c9794959b2cafd17216548fa1eae009cd794e2d4bf3195341aac1' };
   var FILES = ['site', 'work', 'news', 'shows', 'films', 'photos'];
   var API = 'https://api.github.com/repos/' + REPO.owner + '/' + REPO.name;
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
@@ -164,8 +167,13 @@
   }
   function uploadWebImage(file, base) {
     return webCopy(file).then(function (r) {
-      return addUpload(uniquePath('images', slug(base || file.name), 'jpg'), r.blob);
+      return withThumb(file, addUpload(uniquePath('images', slug(base || file.name), 'jpg'), r.blob));
     });
+  }
+  // the small preview the site's grids use (images/t/<same name>.jpg, 720px)
+  function thumbPath(path) { return 'images/t/' + path.slice(7).replace(/\.[a-z]+$/i, '.jpg'); }
+  function withThumb(file, path) {
+    return webCopy(file, 720).then(function (t) { addUpload(thumbPath(path), t.blob); return path; });
   }
   // a file is only deleted if nothing in the data still points at it
   function used(path) {
@@ -174,6 +182,7 @@
   }
   function dropFile(path) {
     if (!path || used(path)) return;
+    if (/^images\/[^/]+$/.test(path)) dropFile(thumbPath(path));
     if (uploads[path]) { URL.revokeObjectURL(uploads[path].url); delete uploads[path]; return; }
     if (/^(images|press)\//.test(path)) removals[path] = true;
   }
@@ -573,11 +582,15 @@
           var ext = (f.name.match(/\.([a-z0-9]+)$/i) || [, 'jpg'])[1].toLowerCase().replace('jpeg', 'jpg');
           var item = {
             src: addUpload(uniquePath('images', base, 'jpg'), r.blob),
+            _file: f,
             hires: addUpload(uniquePath('press', base, ext), f),
             width: r.width, height: r.height, bytes: f.size, credit: credit, caption: ''
           };
+          var file = item._file;
+          delete item._file;
           D.photos.unshift(item);
           added.push(item);
+          return withThumb(file, item.src);
         });
       });
     }, Promise.resolve()).then(function () {
@@ -645,6 +658,7 @@
           if (!fs.length) return;
           return webCopy(fs[0], 2600).then(function (r) {
             s.hero = addUpload(uniquePath('images', 'front-' + slug(fs[0].name), 'jpg'), r.blob);
+            withThumb(fs[0], s.hero);
             s.hero_focus = '50% 40%';
             dirty();
             render();
@@ -847,6 +861,7 @@
   $('#signout').addEventListener('click', function () {
     if (changes() && !confirm('You have unpublished changes. Sign out and lose them?')) return;
     localStorage.removeItem('gyda.key');
+    localStorage.removeItem('gyda.unlocked');
     location.reload();
   });
   $('#publish').addEventListener('click', publish);
@@ -864,8 +879,32 @@
     if (changes()) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  var h = location.hash.slice(1);
-  if (TABS[h]) tab = h;
-  token = localStorage.getItem('gyda.key') || '';
-  if (token) start(); else showSignin();
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
+  function checkPass(pw) {
+    var salt = new Uint8Array(PASS.salt.match(/../g).map(function (x) { return parseInt(x, 16); }));
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (k) {
+      return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: PASS.iter }, k, 256);
+    }).then(function (bits) { return hex(bits) === PASS.hash; });
+  }
+  function boot() {
+    var h = location.hash.slice(1);
+    if (TABS[h]) tab = h;
+    token = localStorage.getItem('gyda.key') || '';
+    if (token) start(); else showSignin();
+  }
+  $('#lock-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = $('#lock-err');
+    err.textContent = 'Checking…';
+    checkPass($('#pass').value).then(function (ok) {
+      if (!ok) { err.textContent = 'Wrong password.'; $('#pass').select(); return; }
+      try { localStorage.setItem('gyda.unlocked', PASS.hash); } catch (x) { /* private mode: ask again next time */ }
+      $('#lock').hidden = true;
+      boot();
+    });
+  });
+  var unlocked = false;
+  try { unlocked = localStorage.getItem('gyda.unlocked') === PASS.hash; } catch (x) { /* ignore */ }
+  if (unlocked) boot();
+  else { $('#lock').hidden = false; $('#pass').focus(); }
 })();

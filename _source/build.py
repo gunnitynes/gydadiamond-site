@@ -121,7 +121,7 @@ HEAD = """<meta charset="utf-8">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,200..700&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
 
 
 def topbar(key, on_photo=False):
@@ -218,7 +218,7 @@ def page_html(key, page):
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,200..700&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css?v={V}">
 <link rel="stylesheet" href="css/static.css?v={V}">
 <link rel="stylesheet" href="css/app.css?v={V}">
