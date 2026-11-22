@@ -21,7 +21,7 @@ site = json.load(open(os.path.join(ROOT, 'data', 'site.json')))
 APP_PAGES = {
     'Work':   ('work',   'Work',  'Albums, scores & collaborations', ''),
     'FILM':   ('film',   'Film',  'Films, documentaries and art', 'images/b784a330-MIHKEL-cover.jpg'),
-    'LIVE':   ('live',   'Live',  'Concerts', 'images/576e7e30-ata_kam-7.jpg'),
+    'LIVE':   ('live',   'Live',  'Concerts', 'hero:images/576e7e30-ata_kam-7.jpg'),
     'NEWS':   ('news',   'News',  'From Gyða', ''),
     'PHOTOS': ('photos', 'Photos', 'Press photos', ''),
 }
@@ -100,6 +100,11 @@ def convert(content):
     # the hand-spaced "H O M E ... W O R K ➤" row at the bottom of About wrapped onto two lines
     c = re.sub(r'<div grid-row[^>]*>\s*<div grid-col[^>]*><div style="text-align: left"><b>[^<]*<a href="Front-page"[^>]*>H O M E.*?</div>\s*</div>\s*$',
                '<p class="next-page"><a href="Work">W O R K&nbsp;➤</a></p>', c.rstrip().removesuffix('<br>').rstrip(), flags=re.S)
+    # Contact: the live booking agent under her own email (js/app.js refreshes it from data/site.json)
+    if 'gydakid@gmail.com<br>' in c and site.get('booking_email'):
+        b = html.escape(site['booking_email'])
+        c = c.replace('gydakid@gmail.com<br>', 'gydakid@gmail.com<br><br><span data-booking-contact>Live booking · '
+                      + html.escape(site.get('booking_name', '')) + '<br><a href="mailto:' + b + '">' + b + '</a></span><br>', 1)
     c = c.replace(' rel="history"', '')
     c = re.sub(r'href="Front-page"', 'href="./"', c)
     # external links open in a new tab, like most of them already did
@@ -121,7 +126,7 @@ HEAD = """<meta charset="utf-8">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">"""
 
 
 def topbar(key, on_photo=False):
@@ -163,7 +168,13 @@ def front_html():
 
 def app_html(key):
     view, title, kicker, bg = APP_PAGES[key]
-    bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\')"></div>' if bg else ''
+    hero = bg.startswith('hero:')
+    bg = bg.removeprefix('hero:')
+    bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\')"></div>' if bg and not hero else ''
+    head = f'<p class="kicker">{html.escape(kicker)}</p>\n<h1 class="page-title">{title}</h1>'
+    # a "hero:" photo is shown whole across the top of the page, with the title over it
+    top = (f'<header class="page-hero" style="background-image:url(\'{bg}\')"><div class="page-hero-in">{head}'
+           f'<p class="booking" data-booking></p></div></header>') if hero else ''
     return f'''<!doctype html>
 <html lang="en" class="app-root">
 <head>
@@ -174,10 +185,10 @@ def app_html(key):
 </head>
 <body class="app" data-view="{view}">
 {bg_div}
-{topbar(key)}
-<main class="app-main">
-<p class="kicker">{html.escape(kicker)}</p>
-<h1 class="page-title">{title}</h1>
+{topbar(key, hero)}
+{top}
+<main class="app-main{' after-hero' if hero else ''}">
+{'' if hero else head}
 <div id="app"><noscript><p>This page needs JavaScript.</p></noscript></div>
 </main>
 <script src="js/app.js?v={V}" defer></script>
@@ -218,7 +229,7 @@ def page_html(key, page):
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;500&family=Karla:ital,wght@0,400;0,700;1,400;1,700&family=Vollkorn:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/site.css?v={V}">
 <link rel="stylesheet" href="css/static.css?v={V}">
 <link rel="stylesheet" href="css/app.css?v={V}">

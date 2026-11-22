@@ -7,6 +7,29 @@
   'use strict';
   var PREVIEW = /[?&]preview\b/.test(location.search);
   var view = document.body.getAttribute('data-view') || '';
+
+  // Font try-out: add ?font=raleway (etc.) to any page address to see the headings in another font.
+  // It sticks while browsing in that tab; ?font=off goes back to the normal one.
+  var FONTS = {
+    jost: ['Jost', 'Jost:wght@300;400'], josefin: ['Josefin Sans', 'Josefin+Sans:wght@300;400'],
+    raleway: ['Raleway', 'Raleway:wght@300;400'], redhat: ['Red Hat Display', 'Red+Hat+Display:wght@300;400'],
+    outfit: ['Outfit', 'Outfit:wght@300;400'], dmsans: ['DM Sans', 'DM+Sans:opsz,wght@9..40,300;9..40,400'],
+    manrope: ['Manrope', 'Manrope:wght@300;400'], karla: ['Karla', 'Karla:wght@300;400'],
+    syne: ['Syne', 'Syne:wght@400;500'], cormorant: ['Cormorant Garamond', 'Cormorant+Garamond:wght@300;400']
+  };
+  (function () {
+    var m = location.search.match(/[?&]font=([a-z]+)/), f;
+    try {
+      if (m) { if (m[1] === 'off') sessionStorage.removeItem('gyda.font'); else sessionStorage.setItem('gyda.font', m[1]); }
+      f = FONTS[sessionStorage.getItem('gyda.font')];
+    } catch (e) { f = m && FONTS[m[1]]; }
+    if (!f) return;
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=' + f[1] + '&display=swap';
+    document.head.appendChild(l);
+    document.documentElement.style.setProperty('--display', '"' + f[0] + '", sans-serif');
+  })();
   var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
   var cache = {};
@@ -75,6 +98,19 @@
       return '<a href="' + esc(m.href) + '"' + (here(m.href) ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
     bar.innerHTML = '<a class="home" href="./">◆ ' + esc((site.short_name || 'GYDA')) + '</a><nav aria-label="Main">' + links + '</nav>';
+  }
+
+  // ------------------------------------------------------------ live booking contact (LIVE header, CONTACT page)
+  function renderBooking(site) {
+    if (!site || !site.booking_email) return;
+    var m = '<a href="mailto:' + esc(site.booking_email) + '">' + esc(site.booking_email) + '</a>';
+    var who = site.booking_name ? esc(site.booking_name) : '';
+    document.querySelectorAll('[data-booking]').forEach(function (el) {
+      el.innerHTML = 'Live booking' + (who ? ' · ' + who : '') + ' · ' + m;
+    });
+    document.querySelectorAll('[data-booking-contact]').forEach(function (el) {
+      el.innerHTML = 'Live booking' + (who ? ' · ' + who : '') + '<br>' + m;
+    });
   }
 
   // ------------------------------------------------------------ front page
@@ -188,8 +224,10 @@
             '</div></article>';
         }).join('') + '</div>';
       } else {
-        h += '<div class="no-shows"><p>No dates announced right now.</p><p>For concerts and bookings: <a href="mailto:' +
-          esc((site && site.email) || '') + '">' + esc((site && site.email) || '') + '</a></p></div>';
+        var bm = (site && (site.booking_email || site.email)) || '';
+        // the booking contact is already in the page header when one is set
+        h += '<div class="no-shows"><p>No dates announced right now.</p>' + (site && site.booking_email ? '' :
+          '<p>For concerts: <a href="mailto:' + esc(bm) + '">' + esc(bm) + '</a></p>') + '</div>';
       }
       if (past.length) {
         h += '<h2 class="section-label">Past</h2>';
@@ -375,6 +413,7 @@
     .forEach(function (n) { load(n); });
   load('site').then(function (site) {
     renderNav(site);
+    renderBooking(site);
     if (view === 'front') return renderFront(site);
     if (view === 'work') return load('work').then(renderWork);
     if (view === 'film') return load('films').then(renderFilm);

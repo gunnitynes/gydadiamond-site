@@ -685,7 +685,9 @@
     s.links = s.links || [];
     var html = '<div class="tab-head"><div><h1>Contact &amp; press</h1><p>Email addresses, the line on the Photos page and links.</p></div></div>' +
       '<div class="card" id="cset">' + fieldsHTML(s, [
-        { k: 'email', label: 'Email for concerts and bookings', type: 'email' },
+        { k: 'email', label: 'My own email (Contact page)', type: 'email' },
+        { k: 'booking_email', label: 'Live booking email', type: 'email', help: 'Shown on the Live page and the Contact page.' },
+        { k: 'booking_name', label: 'Booking agency or name', placeholder: 'Toutpartout' },
         { k: 'press_email', label: 'Email for press', type: 'email' },
         { k: 'press_intro', label: 'Line at the top of the Photos page', type: 'textarea', wide: true }
       ]) + '</div><div class="card"><h3>Links</h3><p>Bandcamp, Instagram and so on.</p><div class="rows" id="links">' +

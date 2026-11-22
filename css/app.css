@@ -12,7 +12,7 @@
   --line: rgba(255,255,255,.14);
   --glow: #e8b8a8;        /* warm highlight for "next" and hovers */
   --serif: "Vollkorn", Georgia, serif;
-  --display: "Jost", "Futura", "Helvetica Neue", Arial, sans-serif;  /* headings on the data pages */
+  --display: "Josefin Sans", "Futura", "Helvetica Neue", Arial, sans-serif;  /* headings on the data pages */
   --sans: Karla, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -96,6 +96,18 @@ body.app a { color: inherit; }
 .prose a:hover { border-color: #fff; }
 .preview-flag { position: fixed; bottom: 1.4rem; left: 50%; transform: translateX(-50%); z-index: 50; background: var(--glow); color: var(--ink);
   font: 700 1.1rem/1 var(--sans); letter-spacing: .2em; padding: .9em 1.4em; text-transform: uppercase; box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+
+/* ---------- a page that opens with a whole photo (LIVE) */
+.page-hero { position: relative; height: 78vh; min-height: 460px; max-height: 900px; background-size: cover; background-position: 62% 40%; }
+.page-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,3,3,.35) 0%, rgba(19,3,3,0) 22%, rgba(19,3,3,0) 55%, var(--ink) 100%); }
+.page-hero-in { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; max-width: 1080px; margin: 0 auto; padding: 0 3rem 3.2rem; }
+.page-hero .page-title { margin-bottom: 1rem; text-shadow: 0 2px 30px rgba(0,0,0,.5); }
+.page-hero .kicker { color: var(--soft); }
+.booking { margin: 0; font-size: 1.4rem; letter-spacing: .04em; color: var(--soft); }
+.booking:empty { display: none; }
+.booking a { color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.45); }
+.booking a:hover { border-color: #fff; }
+.app-main.after-hero { padding-top: 4rem; }
 
 /* ---------- FILM: a list that opens */
 .film-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
@@ -237,6 +249,9 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .topbar nav { justify-content: flex-start; gap: .5rem 1.4rem; }
   body.app { font-size: 1.6rem; }
   .app-main { padding: 12rem 1.8rem 7rem; }
+  .page-hero { height: 62vh; min-height: 380px; background-position: 70% 40%; }
+  .page-hero-in { padding: 0 1.8rem 2.4rem; }
+  .app-main.after-hero { padding-top: 3rem; }
   .lede { margin-bottom: 4rem; }
   .film > button { grid-template-columns: 1fr auto; gap: .2rem 1rem; padding: 1.6rem .2rem; }
   .film .yr { grid-column: 1; grid-row: 1; }
