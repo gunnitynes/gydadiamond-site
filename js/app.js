@@ -151,13 +151,13 @@
     var root = document.getElementById('app');
     site = site || {};
     var cards = [];
-    if (site.email) cards.push(['Gyða', '', '', mailLink(site.email, 'Show email', true, 'btn solid')]);
+    if (site.email) cards.push(['', 'Gyða', '', mailLink(site.email, 'Show email', true, 'btn solid')]);
     if (site.booking_email) cards.push(['Live booking', esc(site.booking_name || 'Booking'), 'Concerts and festivals.', mailLink(site.booking_email, 'Show email', true, 'btn solid')]);
     cards.push(['Press', 'Press & photos', 'Photos are free to use with the photographer credited.',
       '<a class="btn" href="PHOTOS">Press photos →</a>' + (site.press_email && site.press_email !== site.email ? mailLink(site.press_email, 'Show email', true, 'btn') : '')]);
     var links = (site.links || []).filter(function (l) { return l.url; });
     root.innerHTML = '<div class="contact-grid">' + cards.map(function (c) {
-      return '<section class="ccard' + (c[1] ? '' : ' short') + '"><p class="kicker">' + esc(c[0]) + '</p>' + (c[1] ? '<h2>' + c[1] + '</h2>' : '') +
+      return '<section class="ccard' + (c[0] ? '' : ' short') + '">' + (c[0] ? '<p class="kicker">' + esc(c[0]) + '</p>' : '') + (c[1] ? '<h2>' + c[1] + '</h2>' : '') +
         (c[2] ? '<p>' + esc(c[2]) + '</p>' : '') + '<div class="acts">' + c[3] + '</div></section>';
     }).join('') + '</div>' +
       (links.length ? '<div class="follow"><span class="kicker">Listen &amp; follow</span>' + links.map(function (l) {

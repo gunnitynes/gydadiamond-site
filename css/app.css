@@ -127,7 +127,9 @@ body[data-view="contact"] .ccard .kicker, body[data-view="contact"] .ccard h2, b
 body[data-view="contact"] .ccard p { margin-bottom: 0; }
 body[data-view="contact"] .ccard .acts { grid-column: 2; grid-row: 1 / span 3; align-self: center; margin: 0; flex-direction: column; align-items: stretch; }
 body[data-view="contact"] .follow { max-width: 46rem; }
-.ccard.short .kicker { margin-bottom: 0; align-self: center; }
+/* the Gyða card: just her name, as big as the other card titles, centred against its button */
+body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8rem; padding-bottom: 2.8rem; }
+.ccard.short h2 { margin: 0; align-self: center; }
 .booking .revealed { display: inline-flex; font-size: 1.4rem; }
 .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; }
 .ccard { display: flex; flex-direction: column; padding: 3rem 2.8rem 2.8rem; background: rgba(19,3,3,.62); border: 1px solid rgba(255,255,255,.14);
