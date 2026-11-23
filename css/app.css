@@ -65,7 +65,7 @@ body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--p
   /* phones: a dark veil down the left where the text is, the photo moved right so her face sits beside the menu */
   .hero::after { background: linear-gradient(90deg, rgba(20,2,2,.72) 0%, rgba(20,2,2,.5) 38%, rgba(20,2,2,.08) 70%, rgba(20,2,2,0) 100%),
                              linear-gradient(180deg, rgba(20,2,2,.45) 0%, rgba(20,2,2,0) 30%, rgba(20,2,2,0) 70%, rgba(20,2,2,.5) 100%); }
-  .hero-img { object-position: calc(var(--fx, 50%) - 16%) var(--fy, 50%); }
+  .hero-img { object-position: calc(var(--fx, 50%) - 9%) var(--fy, 50%); }
   .hero-menu a { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
   .hero-text { padding: 36px 24px 28px; }
   .hero h1 { font-size: 3rem; }
