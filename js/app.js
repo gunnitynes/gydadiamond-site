@@ -277,6 +277,20 @@
     var root = document.getElementById('app');
     return allShows().then(function (shows) {
       var up = shows.filter(isUpcoming);
+      // let search engines show the upcoming concerts (schema.org MusicEvent)
+      var ld = up.filter(function (s) { return s.status !== 'cancelled'; }).map(function (s) {
+        return { '@context': 'https://schema.org', '@type': 'MusicEvent', name: 'Gyða Valtýsdóttir' + (s.with ? ' with ' + s.with : '') + ' – ' + s.venue,
+          startDate: s.date, endDate: s.end || s.date, eventStatus: 'https://schema.org/EventScheduled', eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+          location: { '@type': 'Place', name: s.venue, address: { '@type': 'PostalAddress', addressLocality: s.city || '', addressCountry: s.country || '' } },
+          performer: { '@type': 'MusicGroup', name: 'Gyða Valtýsdóttir' }, url: s.link || location.href.split('#')[0],
+          offers: s.link ? { '@type': 'Offer', url: s.link, availability: s.status === 'soldout' ? 'https://schema.org/SoldOut' : 'https://schema.org/InStock' } : undefined };
+      });
+      var old = document.getElementById('ld-shows'); if (old) old.remove();
+      if (ld.length) {
+        var sc = document.createElement('script');
+        sc.type = 'application/ld+json'; sc.id = 'ld-shows'; sc.textContent = JSON.stringify(ld);
+        document.head.appendChild(sc);
+      }
       var past = shows.filter(function (s) { return !isUpcoming(s); }).reverse();
       var h = '<h2 class="section-label">Upcoming</h2>';
       if (up.length) {
@@ -346,6 +360,61 @@
   function proseD(t) {
     return prose(t).replace(/<p>\s*◆\s*<\/p>/g, '<p class="sep-d" aria-hidden="true">◆</p>');
   }
+  // Bandcamp's own player for an album: "bandcamp" holds the album number, or the whole embed code pasted from Bandcamp
+  function bandcamp(w) {
+    var m = String(w.bandcamp || '').match(/album=(\d+)/) || String(w.bandcamp || '').match(/^\s*(\d{6,})\s*$/);
+    if (!m) return '';
+    return '<div class="bc-player"><iframe title="Listen to ' + esc(w.title) + ' on Bandcamp" seamless ' +
+      'src="https://bandcamp.com/EmbeddedPlayer/album=' + m[1] + '/size=large/bgcol=130303/linkcol=e8b8a8/artwork=none/transparent=true/"></iframe></div>';
+  }
+
+  // ------------------------------------------------------------ VIDEO WALLS (Music videos, With others, Instant composition)
+  function ytId(v) {
+    var m = String(v || '').match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/) || String(v || '').match(/^([\w-]{11})$/);
+    return m ? m[1] : '';
+  }
+  function renderVideos(all) {
+    var slug = document.body.getAttribute('data-slug');
+    var list = (all || []).filter(function (v) { return v.page === slug && !v.hidden && ytId(v.youtube); });
+    var root = document.getElementById('app');
+    if (!list.length) { root.innerHTML = '<p class="empty">No videos yet.</p>'; return; }
+    root.innerHTML = '<div class="vwall' + (list.length < 3 ? ' few' : '') + '">' + list.map(function (v) {
+      var id = ytId(v.youtube);
+      return '<figure class="vcard"><button class="vplay" data-yt="' + id + '" aria-label="Play ' + esc(v.title) + '">' +
+        '<img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy"><span class="vbtn" aria-hidden="true"></span></button>' +
+        '<figcaption><h3>' + esc(v.title) + '</h3>' + (v.by ? '<p class="by">' + esc(v.by) + '</p>' : '') +
+        (v.credits ? '<p class="cr">' + lines(v.credits).map(esc).join('<br>') + '</p>' : '') + '</figcaption></figure>';
+    }).join('') + '</div>' +
+      // the three video pages lead on to each other
+      '<nav class="album-nav">' + [['Music-Video', 'Music videos'], ['With-Others', 'With others'], ['Instant-composition', 'Instant composition'], ['FILM', 'Film & art']]
+        .filter(function (x) { return x[0] !== slug; }).map(function (x) { return '<a href="' + x[0] + '">' + x[1] + ' →</a>'; }).join('') + '</nav>';
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('.vplay');
+      if (!b) return;
+      // the video only loads (from youtube-nocookie) when someone presses play
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + b.getAttribute('data-yt') + '?autoplay=1&rel=0';
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      f.title = b.getAttribute('aria-label');
+      f.className = 'vframe';
+      b.replaceWith(f);
+    });
+  }
+
+  // ------------------------------------------------------------ STORE (the albums from Work, with their Bandcamp links)
+  function renderStore(work) {
+    var list = (work || []).filter(function (w) { return w.section !== 'More' && !w.hidden && (w.buy || w.listen); });
+    document.getElementById('app').innerHTML = '<div class="card-grid store">' + list.map(function (w) {
+      var href = w.buy || w.listen;
+      return '<article class="wcard"><a class="stretch" href="' + esc(href) + '" target="_blank" rel="noopener" aria-label="' + esc(w.title) + ' on Bandcamp"></a>' +
+        '<div class="pic">' + (w.image ? thumbImg(w.image, 'alt="' + esc(w.title) + ' cover" loading="lazy"') : '') + '</div>' +
+        '<div class="txt"><div class="meta"><b>' + esc(w.year || '') + '</b><span>' + esc(w.kind || 'Album') + '</span></div><h3>' + esc(w.title) + '</h3>' +
+        '<div class="acts"><a class="btn solid" href="' + esc(href) + '" target="_blank" rel="noopener">Vinyl, CD &amp; digital ↗</a>' +
+        (w.page ? '<a class="btn" href="' + esc(w.page) + '">About →</a>' : '') + '</div></div></article>';
+    }).join('') + '</div>';
+  }
+
   function renderAbout(a) {
     a = a || {};
     setHero(a.photo);
@@ -389,7 +458,9 @@
     var cover = w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '';
     var h = '<div class="album-top">' +
       '<div class="album-info"><div class="longread">' + proseD(w.story || w.text) + '</div>' +
-      '<div class="acts">' + (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') + more + '</div></div></div>';
+      bandcamp(w, 'large') +
+      '<div class="acts">' + (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') +
+      (w.buy && w.buy !== w.listen ? '<a class="btn" href="' + esc(w.buy) + '" target="_blank" rel="noopener">Buy on Bandcamp ↗</a>' : '') + more + '</div></div></div>';
     var tracks = lines(w.tracks), credits = lines(w.credits);
     if (tracks.length || credits.length) {
       h += '<div class="album-cols">';
@@ -663,7 +734,7 @@
     document.body.appendChild(f);
   }
   // start the page's data downloads now, alongside site.json (load() hands back the same request later)
-  ({ about: ['about'], bio: ['about'], album: ['work'], work: ['work'], film: ['films'], news: ['news'], photos: ['photos'], live: ['shows', 'calendar'], front: ['shows', 'calendar'] }[view] || [])
+  ({ videos: ['videos'], store: ['work'], about: ['about'], bio: ['about'], album: ['work'], work: ['work'], film: ['films'], news: ['news'], photos: ['photos'], live: ['shows', 'calendar'], front: ['shows', 'calendar'] }[view] || [])
     .forEach(function (n) { load(n); });
   load('site').then(function (site) {
     renderNav(site);
@@ -673,6 +744,8 @@
     if (view === 'about') return load('about').then(renderAbout);
     if (view === 'bio') return load('about').then(renderBio);
     if (view === 'album') return load('work').then(renderAlbum);
+    if (view === 'videos') return load('videos').then(renderVideos);
+    if (view === 'store') return load('work').then(renderStore);
     if (view === 'film') return load('films').then(renderFilm);
     if (view === 'live') return renderLive(site);
     if (view === 'news') return load('news').then(renderNews);

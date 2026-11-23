@@ -33,6 +33,12 @@ APP_PAGES = {
     'Evolution':   ('album', 'Evolution',   'Album', 'images/475818a3-drawing_2.png'),
     'Epicycle':    ('album', 'Epicycle',    'Album', 'images/af7fd07e-Epicycle-back.jpg'),
     'Epicycle-II': ('album', 'Epicycle II', 'Album', 'images/65f21254-EpicycleII-front-digital-copydark.jpg'),
+    'Mother-Pearl': ('album', 'Mother Pearl', 'Album', 'images/20260320-mother-pearl-cover.jpg'),
+    # video walls, drawn from data/videos.json (each video's "page" says where it shows)
+    'Music-Video':         ('videos', 'Music videos', 'Videos', ''),
+    'With-Others':         ('videos', 'With others', 'Collaborations', ''),
+    'Instant-composition': ('videos', 'Instant composition', 'Improvisations', ''),
+    'STORE':               ('store', 'Store', 'Albums on Bandcamp', ''),
 }
 
 SKIP = {'Running-on-Cargo'}
@@ -194,7 +200,7 @@ def app_html(key):
 <meta name="description" content="Gyða Valtýsdóttir — {html.escape(kicker.lower())}.">
 <link rel="stylesheet" href="css/app.css?v={V}">
 </head>
-<body class="app{' split' if split else ''}{' overlay' if overlay else ''}" data-view="{view}"{f' data-slug="{key}"' if view == 'album' else ''}>
+<body class="app{' split' if split else ''}{' overlay' if overlay else ''}" data-view="{view}"{f' data-slug="{key}"' if view in ('album', 'videos') else ''}>
 {bg_div}
 {topbar(key, hero or split or overlay)}
 {top}
@@ -281,6 +287,11 @@ def main():
         written.append(name)
         if key == HOME:  # old links to /Front-page keep working
             open(os.path.join(ROOT, 'Front-page.html'), 'w').write(out)
+    # data pages that never existed on Cargo
+    for key in APP_PAGES:
+        if key not in pages:
+            open(os.path.join(ROOT, f'{key}.html'), 'w').write(app_html(key))
+            written.append(f'{key}.html')
     # Cargo's stylesheet, with its font names pointed at the free fonts we load
     css = open(os.path.join(SRC, 'site.css')).read()
     css = css.replace('"Dolly Pro", Icons', '"Vollkorn", Georgia, serif').replace('Karla, Icons', 'Karla, sans-serif')

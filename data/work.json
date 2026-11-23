@@ -6,9 +6,19 @@
   "kind": "Album",
   "image": "images/20260320-mother-pearl-cover.jpg",
   "text": "Gyða’s third solo album of original compositions, out on Marvaða. On vinyl and digital.",
-  "page": "",
+  "page": "Mother-Pearl",
   "listen": "https://gyda.bandcamp.com/album/mother-pearl",
-  "listen_label": "Bandcamp"
+  "listen_label": "Bandcamp",
+  "bandcamp": "3505354852",
+  "buy": "https://gyda.bandcamp.com/album/mother-pearl",
+  "background": "images/20260320-mother-pearl-cover.jpg",
+  "story": "Mother Pearl is Gyða’s third solo album of original compositions, released on 20 March 2026 on Marvaða.\n\nWith Úlfur Hansson, Bert Cools, Indrė Jurgelevičiūtė, Alex Sopp, Julian Sartorius and Katie Buckley, and Kjartan Sveinsson co-writing the title track.",
+  "tracks_label": "Tracks",
+  "tracks": "Mother Pearl\nWhite Noise\nOpen Poem\nLiving Waters\nMirror\nChecking In\nRiverbed\nHorizon\nPotency",
+  "credits": "Written and produced by Gyða Valtýsdóttir\nMother Pearl (song): written by Gyða Valtýsdóttir & Kjartan Sveinsson\nChecking In: written by Gyða Valtýsdóttir & Úlfur Hansson\nMirror: string arrangement by Úlfur Hansson\nRiverbed: production by Úlfur Hansson\nReleased 20 March 2026 on Marvaða",
+  "quotes": "",
+  "awards": "",
+  "more_links": ""
  },
  {
   "section": "Albums",
@@ -27,7 +37,9 @@
   "credits": "Produced by Gyða\nAll mixes by Úlfur Hansson & Gyða\nMastered by Sarah Register\nCover design by Gyða\nCover photo by Eva Schram\nAlbum artwork by Antje Taiga Jandrig\nLayout by Stina Westegaard\n© & ℗ DiaMond 2021",
   "quotes": "",
   "awards": "Icelandic Music Awards — Producer of the Year (shared with Úlfur Hansson)\nNordic Music Prize — Nominated",
-  "more_links": ""
+  "more_links": "",
+  "bandcamp": "2797370490",
+  "buy": "https://gyda.bandcamp.com/album/ox"
  },
  {
   "section": "Albums",
@@ -37,7 +49,7 @@
   "image": "images/22f7384b-EpicycleII-front-digital-copydark.jpg",
   "text": "A network map of musical relationships: a collaboration with some of Iceland’s most compelling musicians.",
   "page": "Epicycle-II",
-  "listen": "https://gyda.bandcamp.com/",
+  "listen": "https://gyda.bandcamp.com/album/epicycle-ii",
   "listen_label": "Bandcamp",
   "background": "images/65f21254-EpicycleII-front-digital-copydark.jpg",
   "story": "A network map of the cellist’s musical relationships with luminaries of the living Icelandic music scene. Each piece is written by, or with, a musician who shaped Gyða’s path.",
@@ -46,7 +58,9 @@
   "credits": "Artwork by Rachel Garrard\nMixed by Jónsi",
   "quotes": "",
   "awards": "",
-  "more_links": "CD & LP (Sono Luminus) | http://www.sonoluminus.com/store/epicycleii"
+  "more_links": "CD & LP (Sono Luminus) | http://www.sonoluminus.com/store/epicycleii",
+  "bandcamp": "1613857938",
+  "buy": "https://gyda.bandcamp.com/album/epicycle-ii"
  },
  {
   "section": "Albums",
@@ -65,7 +79,9 @@
   "credits": "",
   "quotes": "Here we have the rarest of things, an utterly unexplainable magic that goes way beyond the music itself, tugging one’s heart forcefully.\n— AET, Morgunblaðið",
   "awards": "Icelandic Music Awards — Album of the Year (open category)\nNordic Music Prize — Album of the Year, nominated",
-  "more_links": ""
+  "more_links": "",
+  "bandcamp": "2726686128",
+  "buy": "https://gyda.bandcamp.com/album/evolution"
  },
  {
   "section": "Albums",
@@ -84,7 +100,9 @@
   "credits": "",
   "quotes": "It’s evocative, moving, and reminds you that the power of music transcends time and space.\n— Reykjavík Grapevine",
   "awards": "Icelandic Music Awards — Album of the Year 2017 (open category)\nIcelandic Music Awards — Album Cover of the Year (design by Gyða)",
-  "more_links": ""
+  "more_links": "",
+  "bandcamp": "4138256579",
+  "buy": "https://gyda.bandcamp.com/album/epicycle"
  },
  {
   "section": "More",

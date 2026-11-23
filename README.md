@@ -9,10 +9,11 @@ Internet Archive, January–April 2026) and is now partly data-driven, with an a
 | Front page (photo, name, menu, "next show") | `index.html` + `data/site.json` | admin → Front page |
 | Work, FILM, LIVE, NEWS, PHOTOS, CONTACT | `Work.html`, `FILM.html` … + `data/work.json`, `films.json`, `shows.json`, `news.json`, `photos.json`, `site.json` | admin |
 | About, Full bio | `About.html`, `FULL-BIO.html` + `data/about.json` | admin → About |
-| Album pages (Ox, Evolution, Epicycle, Epicycle II) | `Ox.html` … + the album's entry in `data/work.json` (matched by its `page`) | admin → Work |
+| Album pages (Mother Pearl, Ox, Evolution, Epicycle, Epicycle II) | `Ox.html` … + the album's entry in `data/work.json` (matched by its `page`) | admin → Work |
 | Contact emails, press bio, links | `data/site.json` | admin → Contact & press |
 | Shows from her calendar (optional) | `data/calendar.json` | `tools/sync_calendar.py`, run daily by `.github/workflows/sync-calendar.yml` |
-| Music videos, With others, Instant composition, Store | `*.html` from the recovered Cargo pages | `_source/build.py` |
+| Music videos, With others, Instant composition | `Music-Video.html` … + `data/videos.json` (each video's `page`) | admin → Videos |
+| Store | `STORE.html`, built from the albums in `data/work.json` (`buy`) | admin → Work |
 
 - `js/app.js` draws the data pages and the top menu from `data/*.json` in the browser, so an admin
   Publish is live after GitHub Pages redeploys (about a minute). No build step.

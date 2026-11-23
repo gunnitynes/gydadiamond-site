@@ -11,7 +11,7 @@
   // admin password: only a salted PBKDF2 hash is stored here, never the password itself
   // (to change it: python3 tools/set_admin_password.py)
   var PASS = { salt: '8fdbb42222829c551788c196403a9ecf', iter: 250000, hash: 'dbe7ed29e67c9794959b2cafd17216548fa1eae009cd794e2d4bf3195341aac1' };
-  var FILES = ['site', 'about', 'work', 'news', 'shows', 'films', 'photos'];
+  var FILES = ['site', 'about', 'work', 'videos', 'news', 'shows', 'films', 'photos'];
   var API = 'https://api.github.com/repos/' + REPO.owner + '/' + REPO.name;
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
@@ -355,7 +355,7 @@
     });
     // a new date can move the item in the list
     if (cur) $('.editor').addEventListener('change', function (e) {
-      if (/^(date|end|category|section)$/.test(e.target.getAttribute('data-k') || '')) render();
+      if (/^(date|end|category|section|page)$/.test(e.target.getAttribute('data-k') || '')) render();
     });
   }
 
@@ -474,6 +474,8 @@
           { k: 'listen_label', label: 'Listen link name', placeholder: 'Bandcamp' },
           { k: 'page', label: 'Page on this site (optional)', placeholder: 'e.g. Ox', help: 'The page that “About the album →” opens. A full web address also works.' },
           { k: 'hidden', label: 'Hide this one', type: 'check' },
+          { k: 'buy', label: 'Bandcamp page (buy)', type: 'url', placeholder: 'https://gyda.bandcamp.com/album/…', help: 'Used by the Store page and the “Buy on Bandcamp” button.' },
+          { k: 'bandcamp', label: 'Bandcamp player', placeholder: 'Paste the embed code from Bandcamp', help: 'On the album’s Bandcamp page: Share / Embed → choose any player → copy the code and paste it here. The album page then gets a player.' },
           { k: 'story', label: 'Album page: the story', type: 'textarea', tall: true, wide: true, help: 'Shown next to the cover on the album page. Empty line = new paragraph.' },
           { k: 'tracks_label', label: 'Album page: heading for the list', placeholder: 'Tracks' },
           { k: 'background', label: 'Album page: faint background picture', type: 'image' },
@@ -500,6 +502,35 @@
           help: 'Start each section with ## and its name (e.g. ## Education). Under it, one item per line; “Title — 2021” puts the year on the right. A section with one long line shows as a paragraph.' }
       ]) + '</div>';
     bind($('#aboutf', p), a);
+  };
+
+  TABS.videos = function () {
+    var PAGES = [['Music-Video', 'Music videos'], ['With-Others', 'With others'], ['Instant-composition', 'Instant composition']];
+    function pname(k) { return (PAGES.filter(function (p) { return p[0] === k; })[0] || [k, k])[1]; }
+    listTab({
+      name: 'videos', title: 'Videos', addLabel: 'Add a video', orderable: true,
+      intro: 'YouTube videos for the Music videos, With others and Instant composition pages. Paste the YouTube address; the picture comes from YouTube by itself.',
+      items: function () {
+        var out = [];
+        PAGES.forEach(function (p) { D.videos.forEach(function (v) { if (v.page === p[0]) out.push({ it: v }); }); });
+        D.videos.forEach(function (v) { if (!PAGES.some(function (p) { return p[0] === v.page; })) out.push({ it: v }); });
+        return out;
+      },
+      group: function (v) { return pname(v.page); },
+      label: function (v) { return v.title; },
+      sub: function (v) { return (v.by || '') + (v.hidden ? ' · hidden' : ''); },
+      blank: function () { return { page: 'Music-Video', title: '', by: '', credits: '', youtube: '' }; },
+      fields: function () {
+        return [
+          { k: 'title', label: 'Title', wide: true },
+          { k: 'page', label: 'Page', type: 'select', options: PAGES, key: 'category' },
+          { k: 'youtube', label: 'YouTube address', type: 'url', placeholder: 'https://www.youtube.com/watch?v=…' },
+          { k: 'by', label: 'Small line under the title', placeholder: 'e.g. Music by Jónsi & Gyða' },
+          { k: 'credits', label: 'Credits', type: 'textarea', wide: true, help: 'One per line.' },
+          { k: 'hidden', label: 'Hide this video', type: 'check' }
+        ];
+      }
+    });
   };
 
   TABS.films = function () {
@@ -730,8 +761,7 @@
         return '<div class="row two" data-row="' + i + '"><input type="text" data-k="label" value="' + esc(l.label) + '" placeholder="Name"><input type="url" data-k="url" value="' + esc(l.url) + '" placeholder="https://…">' +
           '<span class="tools"><button data-l="del" title="Remove">✕</button></span></div>';
       }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-l="add">+ Add link</button></p></div>' +
-      '<div class="card"><h3>The older pages</h3><p>Music videos, With others, Instant composition and Store are still the pages from the old Cargo site. ' +
-      'Ask Gunnar if something there needs changing.</p></div>';
+''; // every page is now edited in the admin
     var p = $('#panel');
     p.innerHTML = html;
     bind($('#cset'), s);
@@ -751,7 +781,7 @@
   };
 
   // ------------------------------------------------------------------ chrome
-  var TAB_FILE = { about: 'about', work: 'work', front: 'site', news: 'news', live: 'shows', films: 'films', photos: 'photos', settings: 'site' };
+  var TAB_FILE = { videos: 'videos', about: 'about', work: 'work', front: 'site', news: 'news', live: 'shows', films: 'films', photos: 'photos', settings: 'site' };
   function render() {
     var p = $('#panel'), fresh = p.cloneNode(false);
     p.parentNode.replaceChild(fresh, p); // drop old listeners
@@ -783,7 +813,7 @@
     }
   }
 
-  var PREVIEW_PAGE = { about: 'About.html', work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'CONTACT.html' };
+  var PREVIEW_PAGE = { videos: 'Music-Video.html', about: 'About.html', work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'CONTACT.html' };
   function preview() {
     // swap not-yet-uploaded pictures for their in-browser copies, then hand the drafts to the site
     try {
@@ -839,7 +869,7 @@
       $('#status').textContent = 'Saving…';
       return gh('/git/trees', { method: 'POST', body: { base_tree: baseTree, tree: tree } });
     }).then(function (t) {
-      var what = files.map(function (f) { return { about: 'about', work: 'work', site: 'front page/settings', shows: 'live', news: 'news', films: 'films', photos: 'photos' }[f]; });
+      var what = files.map(function (f) { return { videos: 'videos', about: 'about', work: 'work', site: 'front page/settings', shows: 'live', news: 'news', films: 'films', photos: 'photos' }[f]; });
       if (ups.length) what.push(ups.length + ' picture' + (ups.length === 1 ? '' : 's'));
       return gh('/git/commits', { method: 'POST', body: { message: 'Admin: update ' + what.join(', '), tree: t.sha, parents: [head] } });
     }).then(function (c) {
