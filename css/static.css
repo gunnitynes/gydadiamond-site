@@ -94,6 +94,7 @@ body[local-style] .page { padding-top: 3rem; }
 @media (max-width: 768px) {
   body.has-backdrop { position: fixed; inset: 0; overflow: hidden; }
   body.has-backdrop .page { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
+  body.has-backdrop .page { padding-bottom: calc(12rem + env(safe-area-inset-bottom)); }
   body.has-backdrop .backdrop { height: 100%; }
 }
 

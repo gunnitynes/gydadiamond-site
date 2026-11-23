@@ -428,7 +428,8 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   /* About on phones: the text scrolls inside a full-screen frame so the browser bars stay and the photo never moves */
   body.overlay { position: fixed; inset: 0; overflow: hidden; }
   body.overlay .app-main { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain; touch-action: pan-y; padding: 2.2rem 1.8rem 7rem; }
+    overscroll-behavior: contain; touch-action: pan-y; padding: 2.2rem 1.8rem calc(16rem + env(safe-area-inset-bottom)); }
+  /* (the extra space at the bottom keeps the last button clear of the phone browser's bottom bar) */
   body.overlay .page-hero { background-position: 50% 20%; }
   /* split pages: photo on top, text below */
   body.split .page-hero { position: relative; left: 0; height: 58vh; height: 58svh; min-height: 320px; }
