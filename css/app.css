@@ -35,8 +35,11 @@ html.app-root { font-size: 10px; -webkit-text-size-adjust: 100%; }
 .home-link { display: none !important; }
 /* computers: the bar is pinned to the top, slides away while scrolling down, returns on scrolling up */
 @media (min-width: 769px) {
-  .topbar { position: fixed; transition: transform .35s ease, background-color .35s ease; }
-  .topbar.pinned { background: linear-gradient(180deg, rgba(19,3,3,.88) 0%, rgba(19,3,3,.6) 70%, rgba(19,3,3,0) 100%); padding-bottom: 2.6rem; }
+  .topbar { position: fixed; padding-bottom: 2.6rem; transition: transform .5s ease; }
+  /* the dark band behind the menu fades in slowly once the page is scrolled */
+  .topbar::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
+    background: linear-gradient(180deg, rgba(19,3,3,.88) 0%, rgba(19,3,3,.6) 70%, rgba(19,3,3,0) 100%); }
+  .topbar.pinned::before { opacity: 1; }
   .topbar.away { transform: translateY(-110%); }
 }
 /* a photo or news post opened full screen hides the menu bar, so their own Close button is the only one */
