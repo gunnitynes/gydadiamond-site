@@ -339,7 +339,7 @@
     var more = list.filter(function (w) { return w.section === 'More'; });
     var h = '';
     if (albums.length) {
-      h += '<h2 class="section-label">Albums</h2><div class="card-grid">' + albums.map(function (w, i) {
+      h += '<h2 class="section-label"><span class="on-wide">Albums</span><span class="on-phone">Albums, scores &amp; collaborations</span></h2><div class="card-grid">' + albums.map(function (w, i) {
         var href = w.page || w.listen || '';
         // with an odd number of albums the newest one gets a wide row of its own
         return '<article class="wcard' + (i === 0 && albums.length % 2 ? ' lead' : '') + '">' + (href ? '<a class="stretch" href="' + esc(href) + '"' + ext(href) + ' aria-label="' + esc(w.title) + '"></a>' : '') +

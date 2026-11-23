@@ -89,3 +89,10 @@ body[local-style] .page { padding-top: 3rem; }
 }
 /* phones: the background stays the size of the full screen, so it doesn't "zoom" as the address bar hides while scrolling */
 @media (max-width: 768px) { .backdrop { bottom: auto; height: 100vh; height: 100lvh; } }
+/* phones, pages with a background photo: the text scrolls inside a full-screen frame instead of the page itself,
+   so the browser's bars never slide away and the photo stays completely still */
+@media (max-width: 768px) {
+  body.has-backdrop { position: fixed; inset: 0; overflow: hidden; }
+  body.has-backdrop .page { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  body.has-backdrop .backdrop { height: 100%; }
+}

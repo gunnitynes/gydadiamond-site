@@ -210,6 +210,7 @@ def page_html(key, page):
         classes.append('cover')
     backdrop = ''
     if bd:
+        classes.append('has-backdrop')
         bg = bd['data'].get('bg_color') or 'transparent'
         img = local_image(bd['url'])
         side = ''

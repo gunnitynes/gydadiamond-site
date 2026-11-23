@@ -340,7 +340,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .card-grid, .card-grid.three { grid-template-columns: 1fr; gap: 5rem; }
   .contact-grid { grid-template-columns: 1fr; }
   body[data-view="contact"] .after-hero #app { margin-top: 3rem; }
-  body[data-view="contact"] .page-hero { position: relative; left: 0; height: 66vh; min-height: 420px; background-size: cover; background-position: 50% 14%; }
+  body[data-view="contact"] .page-hero { position: relative; left: 0; height: 60vh; height: calc(100svh - 270px); min-height: 280px; background-size: cover; background-position: 50% 14%; }  /* leaves room for the title and the first card on any phone */
   body[data-view="contact"] .app-main { padding: 2.4rem 1.8rem 7rem; }
   body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(19,3,3,.4) 0%, rgba(19,3,3,0) 30%, rgba(19,3,3,.3) 60%, var(--ink) 100%); }
   body[data-view="contact"] .ccard { grid-template-columns: 1fr; }
