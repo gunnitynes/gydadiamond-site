@@ -130,7 +130,12 @@ def topbar(key, on_photo=False):
         f'<a href="{html.escape(m["href"])}"{" aria-current=\"page\"" if m["href"] == key else ""}>{html.escape(m["label"])}</a>'
         for m in site['menu'] if not m.get('hidden'))
     cls = 'topbar on-photo' if on_photo else 'topbar'
-    return f'<header class="{cls}"><a class="home" href="./">◆ GYDA</a><nav aria-label="Main">{links}</nav></header>'
+    here = next((m['label'] for m in site['menu'] if m['href'] == key), '')
+    # on phones the links fold away behind the Menu button (js/app.js opens it)
+    return (f'<header class="{cls}"><a class="home" href="./">◆ GYDA</a>'
+            f'<span class="here">{html.escape(here)}</span>'
+            f'<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>'
+            f'<nav id="site-nav" aria-label="Main">{links}</nav></header>')
 
 
 def front_html():
@@ -148,7 +153,7 @@ def front_html():
 </head>
 <body class="front" data-view="front">
 <main class="hero">
-<img class="hero-img" src="{html.escape(site['hero'])}" alt="Gyða Valtýsdóttir" style="object-position:{html.escape(site.get('hero_focus', '50% 50%'))}">
+<img class="hero-img" src="{html.escape(site['hero'])}" alt="Gyða Valtýsdóttir" style="--fx:{html.escape(site.get('hero_focus', '50% 50%').split()[0])};--fy:{html.escape((site.get('hero_focus', '50% 50%').split() + ['50%'])[1])}">
 <div class="hero-text">
 <h1>{html.escape(site['name'])}</h1>
 <p class="tagline">{html.escape(site['tagline'])}</p>

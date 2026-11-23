@@ -26,6 +26,7 @@ html.app-root { font-size: 10px; -webkit-text-size-adjust: 100%; }
 .topbar a { pointer-events: auto; color: var(--soft); text-decoration: none; border: 0 !important; padding: 0 !important; }
 .topbar a:hover, .topbar a[aria-current] { color: var(--paper); }
 .topbar .home { white-space: nowrap; }
+.topbar .here, .topbar .menu-btn { display: none; }
 .topbar nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem 1.8rem; }
 .topbar nav a[aria-current]::before { content: "◆ "; }
 .topbar.on-photo a { text-shadow: 0 1px 6px rgba(0,0,0,.6); }
@@ -35,7 +36,7 @@ html.app-root { font-size: 10px; -webkit-text-size-adjust: 100%; }
 /* ------------------------------------------------------------------ front page */
 body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--paper); font-family: var(--sans); overflow: hidden; }
 .hero { position: fixed; inset: 0; overflow: hidden; background: #2a0404; }
-.hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none;
+.hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; object-position: var(--fx, 50%) var(--fy, 50%);
   animation: hero-in 2.4s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes hero-in { from { opacity: 0; transform: scale(1.035); } to { opacity: 1; transform: none; } }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -61,7 +62,11 @@ body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--p
 
 @media (max-width: 768px) {
   body.front { overflow: auto; }
-  .hero::after { background: linear-gradient(180deg, rgba(20,2,2,.55) 0%, rgba(20,2,2,.1) 45%, rgba(20,2,2,.55) 100%); }
+  /* phones: a dark veil down the left where the text is, the photo moved right so her face sits beside the menu */
+  .hero::after { background: linear-gradient(90deg, rgba(20,2,2,.72) 0%, rgba(20,2,2,.5) 38%, rgba(20,2,2,.08) 70%, rgba(20,2,2,0) 100%),
+                             linear-gradient(180deg, rgba(20,2,2,.45) 0%, rgba(20,2,2,0) 30%, rgba(20,2,2,0) 70%, rgba(20,2,2,.5) 100%); }
+  .hero-img { object-position: calc(var(--fx, 50%) - 16%) var(--fy, 50%); }
+  .hero-menu a { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
   .hero-text { padding: 36px 24px 28px; }
   .hero h1 { font-size: 3rem; }
   .hero .tagline { font-size: 1.1rem; letter-spacing: .04em; }
@@ -282,10 +287,21 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
 
 /* ---------- phones */
 @media (max-width: 768px) {
-  .topbar { flex-direction: column; gap: .8rem; padding: 1.4rem 1.6rem; font-size: 1.05rem; letter-spacing: .2em; }
-  .topbar nav { justify-content: flex-start; gap: .5rem 1.4rem; }
+  /* one line: ◆ GYDA · current page ............ MENU; the links open as a full-screen panel */
+  .topbar { align-items: center; justify-content: flex-start; gap: 1.2rem; padding: 1.6rem 1.8rem; font-size: 1.1rem; letter-spacing: .24em; }
+  .topbar .here { display: inline; pointer-events: none; color: var(--mute); }
+  .topbar .here:not(:empty)::before { content: "·"; margin-right: 1.2rem; }
+  .topbar .menu-btn { display: inline-block; pointer-events: auto; margin-left: auto; position: relative; z-index: 3; font: inherit; letter-spacing: inherit;
+    text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,.45); padding: .7em 1.1em; cursor: pointer; }
+  .topbar .home { position: relative; z-index: 3; }
+  .topbar nav { display: none; }
+  .topbar.open nav { display: flex; position: fixed; inset: 0; z-index: 2; pointer-events: auto; flex-direction: column; justify-content: center;
+    align-items: flex-start; gap: 2.2rem; padding: 0 3rem; background: var(--ox-deep); animation: menu-in .3s ease; }
+  .topbar.open nav a { font-family: var(--display); font-size: 3.6rem; font-weight: 300; letter-spacing: 0; text-transform: none; color: #fff; text-shadow: none; }
+  .topbar.open nav a[aria-current]::before { content: "◆ "; font-size: .6em; vertical-align: .25em; color: var(--glow); }
+  html.menu-open, html.menu-open body { overflow: hidden; }
   body.app { font-size: 1.6rem; }
-  .app-main { padding: 12rem 1.8rem 7rem; }
+  .app-main { padding: 9.5rem 1.8rem 7rem; }
   .page-hero { height: 85vh; min-height: 480px; background-position: 72% 35%; }
   .after-hero #app { margin-top: 16rem; }
   .lede { margin-bottom: 4rem; }
@@ -317,4 +333,5 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .grid { columns: 2 14rem; column-gap: 1.2rem; }
   .lb-btn { width: 25%; font-size: 3.6rem; padding: 0 .6rem; }
 }
+@keyframes menu-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hero-img, .hero-text { animation: none; } }

@@ -95,11 +95,29 @@
   function renderNav(site) {
     var bar = document.querySelector('.topbar');
     if (!bar || !site) return;
+    var cur = '';
     var links = (site.menu || []).filter(function (m) { return !m.hidden; }).map(function (m) {
+      if (here(m.href)) cur = m.label;
       return '<a href="' + esc(m.href) + '"' + (here(m.href) ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
-    bar.innerHTML = '<a class="home" href="./">◆ ' + esc((site.short_name || 'GYDA')) + '</a><nav aria-label="Main">' + links + '</nav>';
+    bar.innerHTML = '<a class="home" href="./">◆ ' + esc((site.short_name || 'GYDA')) + '</a><span class="here">' + esc(cur) + '</span>' +
+      '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>' +
+      '<nav id="site-nav" aria-label="Main">' + links + '</nav>';
   }
+  // phones: the Menu button opens the links as a full-screen panel
+  function setMenu(open) {
+    var bar = document.querySelector('.topbar');
+    if (!bar) return;
+    bar.classList.toggle('open', open);
+    var b = bar.querySelector('.menu-btn');
+    if (b) { b.setAttribute('aria-expanded', open); b.textContent = open ? 'Close' : 'Menu'; }
+    document.documentElement.classList.toggle('menu-open', open);
+  }
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.menu-btn')) setMenu(!document.querySelector('.topbar.open'));
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  window.addEventListener('pageshow', function () { setMenu(false); });
 
   // ------------------------------------------------------------ live booking contact (LIVE header, CONTACT page)
   // Email addresses are stored scrambled ("enc:" + base64 of the address backwards) and only become
@@ -171,7 +189,11 @@
     if (!el || !site) return Promise.resolve();
     var img = el.querySelector('.hero-img');
     if (img && site.hero && img.getAttribute('src') !== site.hero) img.src = site.hero;
-    if (img) img.style.objectPosition = site.hero_focus || '50% 50%';
+    if (img) {
+      var f = String(site.hero_focus || '50% 50%').split(/\s+/);
+      img.style.setProperty('--fx', f[0] || '50%');
+      img.style.setProperty('--fy', f[1] || '50%');
+    }
     var text = el.querySelector('.hero-text');
     var menu = (site.menu || []).filter(function (m) { return !m.hidden; }).map(function (m) {
       return '<a href="' + esc(m.href) + '">◆ ' + esc(String(m.label).toUpperCase()) + ' ◆</a>';
