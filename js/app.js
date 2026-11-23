@@ -178,7 +178,7 @@
       return '<section class="ccard' + (c[0] ? '' : ' short') + '">' + (c[0] ? '<p class="kicker">' + esc(c[0]) + '</p>' : '') + (c[1] ? '<h2>' + c[1] + '</h2>' : '') +
         (c[2] ? '<p>' + esc(c[2]) + '</p>' : '') + '<div class="acts">' + c[3] + '</div></section>';
     }).join('') + '</div>' +
-      (links.length ? '<div class="follow"><span class="kicker">Listen &amp; follow</span>' + links.map(function (l) {
+      (links.length ? '<div class="follow">' + links.map(function (l) {
         return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label || l.url) + ' ↗</a>';
       }).join('') + '</div>' : '');
   }
@@ -491,6 +491,23 @@
     });
     draw('');
   }
+
+  // ------------------------------------------------------------ computers: the menu bar stays at the top,
+  // slides away while scrolling down to read and comes back when scrolling up
+  (function () {
+    var last = 0, ticking = false;
+    function update() {
+      ticking = false;
+      var bar = document.querySelector('.topbar');
+      if (!bar || innerWidth <= 768) return;
+      var y = scrollY;
+      bar.classList.toggle('pinned', y > 10);
+      if (y > 140 && y > last + 4) bar.classList.add('away');
+      else if (y < last - 4 || y <= 140) bar.classList.remove('away');
+      last = y;
+    }
+    addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  })();
 
   // ------------------------------------------------------------ faster page switching
   // Chrome prerenders the next page on hover (speculationrules in each page's head); for other browsers,

@@ -109,3 +109,10 @@ body[local-style="7692056"] .backdrop::after { content: ""; position: absolute; 
 body[local-style="26692190"] .backdrop::after { content: ""; position: absolute; inset: 0; background: rgba(40, 5, 7, .74); }
 /* phones: album backgrounds hold still (no slow drift) */
 @media (max-width: 768px) { .backdrop-wave .backdrop-image, .backdrop-kaleidoscope .backdrop-image { animation: none; } }
+
+/* About on computers: the text column twice as wide (the empty columns either side give way) */
+@media (min-width: 769px) { body[local-style="7680613"] [grid-row] > [grid-col]:nth-child(2) { flex: 70 70 0; } }
+/* Full Bio: show the top of her head */
+body[local-style="7692056"] .backdrop-image { background-position: 50% 0; animation: none; }
+/* Full Bio on computers: the portrait photo is shown whole (fitted to the screen height) instead of stretched to the width */
+@media (min-width: 769px) { body[local-style="7692056"] .backdrop-image { background-size: auto 100%; background-repeat: no-repeat; background-position: 50% 0; } }

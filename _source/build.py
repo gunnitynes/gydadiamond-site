@@ -100,7 +100,7 @@ def convert(content):
     c = c.replace('</iframe>', '</iframe></div>')
     # the hand-spaced "H O M E ... W O R K ➤" row at the bottom of About wrapped onto two lines
     c = re.sub(r'<div grid-row[^>]*>\s*<div grid-col[^>]*><div style="text-align: left"><b>[^<]*<a href="Front-page"[^>]*>H O M E.*?</div>\s*</div>\s*$',
-               '<p class="next-page"><a href="Work">W O R K&nbsp;➤</a></p>', c.rstrip().removesuffix('<br>').rstrip(), flags=re.S)
+               '', c.rstrip().removesuffix('<br>').rstrip(), flags=re.S)
     c = c.replace(' rel="history"', '')
     c = re.sub(r'href="Front-page"', 'href="./"', c)
     # external links open in a new tab, like most of them already did
