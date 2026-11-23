@@ -296,8 +296,18 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   /* phones: only the MENU button; Home is the first item inside the menu */
   .topbar .home { display: none; }
   .topbar.open .nav-home { display: inline; }
-  .topbar .menu-btn { display: inline-block; pointer-events: auto; margin-left: auto; position: relative; z-index: 3; font: inherit; letter-spacing: inherit;
-    text-transform: uppercase; color: #fff; background: none; border: 1px solid rgba(255,255,255,.45); padding: .7em 1.1em; cursor: pointer; }
+  /* the classic three-line menu icon; it turns into an X while the menu is open */
+  .topbar .menu-btn { display: inline-block; pointer-events: auto; margin-left: auto; position: relative; z-index: 3; width: 4.4rem; height: 4.4rem;
+    margin-right: -1rem; background: none; border: 0; padding: 0; cursor: pointer; color: #fff; }
+  .menu-btn .bars, .menu-btn .bars::before, .menu-btn .bars::after { position: absolute; left: 1.1rem; width: 2.2rem; height: 1.5px; background: currentColor;
+    border-radius: 1px; transition: transform .3s ease, top .3s ease, opacity .2s; content: ""; }
+  .menu-btn .bars { top: 50%; }
+  .menu-btn .bars::before { left: 0; top: -.7rem; }
+  .menu-btn .bars::after { left: 0; top: .7rem; }
+  .topbar.open .menu-btn .bars { background: transparent; }
+  .topbar.open .menu-btn .bars::before { top: 0; transform: rotate(45deg); background: #fff; }
+  .topbar.open .menu-btn .bars::after { top: 0; transform: rotate(-45deg); background: #fff; }
+  .topbar.on-photo .menu-btn { filter: drop-shadow(0 1px 4px rgba(0,0,0,.6)); }
   .topbar .home { position: relative; z-index: 3; }
   .topbar nav { display: none; }
   .topbar.open nav { display: flex; position: fixed; inset: 0; z-index: 2; pointer-events: auto; flex-direction: column; justify-content: center;
@@ -307,7 +317,8 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   html.menu-open, html.menu-open body { overflow: hidden; }
   body.app { font-size: 1.6rem; }
   .app-main { padding: 2.2rem 1.8rem 7rem; }
-  body[data-view="work"] .app-main > .kicker, body[data-view="film"] .app-main > .kicker { display: none; }
+  /* phones: no small line above the page titles */
+  body[data-view] .app-main > .kicker { display: none; }
   .page-hero { height: 85vh; min-height: 480px; background-position: 72% 35%; }
   .after-hero #app { margin-top: 16rem; }
   .lede { margin-bottom: 4rem; }
@@ -326,7 +337,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .card-grid, .card-grid.three { grid-template-columns: 1fr; gap: 5rem; }
   .contact-grid { grid-template-columns: 1fr; }
   body[data-view="contact"] .after-hero #app { margin-top: 3rem; }
-  body[data-view="contact"] .page-hero { position: relative; left: 0; height: 62vh; min-height: 420px; background-size: cover; background-position: 50% 12%; }
+  body[data-view="contact"] .page-hero { position: relative; left: 0; height: 36vh; min-height: 250px; background-size: cover; background-position: 50% 14%; }
   body[data-view="contact"] .app-main { padding: 2.4rem 1.8rem 7rem; }
   body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(19,3,3,.4) 0%, rgba(19,3,3,0) 30%, rgba(19,3,3,.3) 60%, var(--ink) 100%); }
   body[data-view="contact"] .ccard { grid-template-columns: 1fr; }

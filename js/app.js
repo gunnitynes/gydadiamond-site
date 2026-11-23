@@ -101,7 +101,7 @@
       return '<a href="' + esc(m.href) + '"' + (here(m.href) ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
     bar.innerHTML = '<a class="home" href="./"><span class="home-full">◆ ' + esc((site.short_name || 'GYDA')) + '</span><span class="home-short">Home</span></a><span class="here">' + esc(cur) + '</span>' +
-      '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>' +
+      '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span class="bars"></span></button>' +
       '<nav id="site-nav" aria-label="Main"><a class="nav-home" href="./">Home</a>' + links + '</nav>';
   }
   // phones: the Menu button opens the links as a full-screen panel
@@ -110,7 +110,7 @@
     if (!bar) return;
     bar.classList.toggle('open', open);
     var b = bar.querySelector('.menu-btn');
-    if (b) { b.setAttribute('aria-expanded', open); b.textContent = open ? 'Close' : 'Menu'; }
+    if (b) { b.setAttribute('aria-expanded', open); b.setAttribute('aria-label', open ? 'Close menu' : 'Menu'); }
     document.documentElement.classList.toggle('menu-open', open);
   }
   document.addEventListener('click', function (e) {

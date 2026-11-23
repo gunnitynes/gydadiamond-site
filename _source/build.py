@@ -134,7 +134,7 @@ def topbar(key, on_photo=False):
     # on phones the links fold away behind the Menu button (js/app.js opens it)
     return (f'<header class="{cls}"><a class="home" href="./"><span class="home-full">◆ GYDA</span><span class="home-short">Home</span></a>'
             f'<span class="here">{html.escape(here)}</span>'
-            f'<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>'
+            f'<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span class="bars"></span></button>'
             f'<nav id="site-nav" aria-label="Main"><a class="nav-home" href="./">Home</a>{links}</nav></header>')
 
 
