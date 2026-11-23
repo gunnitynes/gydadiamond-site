@@ -102,7 +102,7 @@
     }).join('');
     bar.innerHTML = '<a class="home" href="./"><span class="home-full">◆ ' + esc((site.short_name || 'GYDA')) + '</span><span class="home-short">Home</span></a><span class="here">' + esc(cur) + '</span>' +
       '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>' +
-      '<nav id="site-nav" aria-label="Main">' + links + '</nav>';
+      '<nav id="site-nav" aria-label="Main"><a class="nav-home" href="./">Home</a>' + links + '</nav>';
   }
   // phones: the Menu button opens the links as a full-screen panel
   function setMenu(open) {
@@ -196,7 +196,7 @@
     }
     var text = el.querySelector('.hero-text');
     var menu = (site.menu || []).filter(function (m) { return !m.hidden; }).map(function (m) {
-      return '<a href="' + esc(m.href) + '">◆ ' + esc(String(m.label).toUpperCase()) + ' ◆</a>';
+      return '<a href="' + esc(m.href) + '">◆ ' + esc(String(m.label).toUpperCase()) + '<span class="end"> ◆</span></a>';
     }).join('');
     text.innerHTML = '<h1>' + esc(site.name) + '</h1><p class="tagline">' + esc(site.tagline) + '</p>' +
       '<nav class="hero-menu" aria-label="Main">' + menu + '</nav>';

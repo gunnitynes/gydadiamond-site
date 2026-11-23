@@ -135,11 +135,11 @@ def topbar(key, on_photo=False):
     return (f'<header class="{cls}"><a class="home" href="./"><span class="home-full">◆ GYDA</span><span class="home-short">Home</span></a>'
             f'<span class="here">{html.escape(here)}</span>'
             f'<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>'
-            f'<nav id="site-nav" aria-label="Main">{links}</nav></header>')
+            f'<nav id="site-nav" aria-label="Main"><a class="nav-home" href="./">Home</a>{links}</nav></header>')
 
 
 def front_html():
-    menu = ''.join(f'<a href="{html.escape(m["href"])}">◆ {html.escape(m["label"].upper())} ◆</a>'
+    menu = ''.join(f'<a href="{html.escape(m["href"])}">◆ {html.escape(m["label"].upper())}<span class="end"> ◆</span></a>'
                    for m in site['menu'] if not m.get('hidden'))
     return f'''<!doctype html>
 <html lang="en" class="app-root">

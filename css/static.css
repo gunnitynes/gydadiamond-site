@@ -80,4 +80,10 @@ a { color: inherit; }
   width: 100vw; position: relative; left: 50%; transform: translateX(-50%); padding: 0 4rem; }
 /* room for the top bar */
 body[local-style] .page { padding-top: 3rem; }
-@media (max-width: 768px) { body[local-style] .page { padding-top: 2.6rem; } .next-page { padding: 0 1.8rem; } }
+@media (max-width: 768px) { body[local-style] .page { padding-top: 3.4rem; } .next-page { padding: 0 1.8rem; } }
+/* phones: the old Cargo pages begin with empty lines and empty columns; skip them so the text starts at the top */
+@media (max-width: 768px) {
+  bodycopy > br:first-child, bodycopy > br:first-child + br, bodycopy > br:first-child + br + br,
+  [grid-col] > br:first-child { display: none; }
+  [grid-row][grid-responsive] > [grid-col]:empty { display: none; }
+}
