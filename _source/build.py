@@ -25,6 +25,14 @@ APP_PAGES = {
     'LIVE':   ('live',   'Live',  'Concerts', 'hero:images/576e7e30-ata_kam-7.jpg'),
     'NEWS':   ('news',   'News',  'From Gyða', ''),
     'PHOTOS': ('photos', 'Photos', 'Press photos', ''),
+    # "split:" = photo on the right half (computers) / on top (phones); text from data/about.json
+    'About':    ('about', 'About', 'Biography', 'split:images/748b58f2-Gya14-copyI.jpg'),
+    'FULL-BIO': ('bio',   'Full bio', 'Collaborations, education & discography', 'split:images/6bc6f397-gyda_sepia_s.jpg'),
+    # album pages: drawn from the matching entry in data/work.json (its "page" field)
+    'Ox':          ('album', 'Ox',          'Album', 'images/f68d8c29--milk_blood_antjetaiga6.jpg'),
+    'Evolution':   ('album', 'Evolution',   'Album', 'images/475818a3-drawing_2.png'),
+    'Epicycle':    ('album', 'Epicycle',    'Album', 'images/af7fd07e-Epicycle-back.jpg'),
+    'Epicycle-II': ('album', 'Epicycle II', 'Album', 'images/65f21254-EpicycleII-front-digital-copydark.jpg'),
 }
 
 SKIP = {'Running-on-Cargo'}
@@ -169,11 +177,12 @@ def front_html():
 def app_html(key):
     view, title, kicker, bg = APP_PAGES[key]
     hero = bg.startswith('hero:')
-    bg = bg.removeprefix('hero:')
-    bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\')"></div>' if bg and not hero else ''
+    split = bg.startswith('split:')
+    bg = bg.removeprefix('hero:').removeprefix('split:')
+    bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\')"></div>' if bg and not hero and not split else ''
     head = f'<p class="kicker">{html.escape(kicker)}</p>\n<h1 class="page-title">{title}</h1>'
     # a "hero:" photo is shown whole across the top of the page, with the title over it
-    top = f'<div class="page-hero" style="background-image:url(\'{bg}\')" aria-hidden="true"></div>' if hero else ''
+    top = f'<div class="page-hero" style="background-image:url(\'{bg}\')" aria-hidden="true"></div>' if hero or split else ''
     if view == 'live':
         head += '\n<p class="booking" data-booking></p>'
     return f'''<!doctype html>
@@ -184,9 +193,9 @@ def app_html(key):
 <meta name="description" content="Gyða Valtýsdóttir — {html.escape(kicker.lower())}.">
 <link rel="stylesheet" href="css/app.css?v={V}">
 </head>
-<body class="app" data-view="{view}">
+<body class="app{' split' if split else ''}" data-view="{view}"{f' data-slug="{key}"' if view == 'album' else ''}>
 {bg_div}
-{topbar(key, hero)}
+{topbar(key, hero or split)}
 {top}
 <main class="app-main{' after-hero' if hero else ''}">
 {head}

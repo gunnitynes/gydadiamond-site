@@ -162,6 +162,51 @@ body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8re
 .follow a { color: #fff; text-decoration: none; font-size: 1.6rem; border-bottom: 1px solid rgba(255,255,255,.35); }
 .follow a:hover { border-color: #fff; }
 
+/* ---------- SPLIT pages (About, Full bio): the photo holds still on the right half, the text scrolls on the left */
+body.split .page-hero { position: fixed; top: 0; bottom: 0; left: 50%; right: 0; height: auto; max-height: none; min-height: 0;
+  background-size: cover; background-position: 50% 20%; }
+body.split .page-hero::after { content: none; }
+body[data-view="bio"] .page-hero { background-position: 50% 0; }
+body.split .app-main { max-width: none; margin: 0; padding-left: max(3rem, 6vw); padding-right: calc(50vw + 6rem); }
+.longread { font-size: 1.75rem; line-height: 1.65; color: var(--soft); max-width: 62rem; }
+.longread p { margin: 0 0 1.3em; }
+.lead-first p:first-child { font-family: var(--display); font-weight: 300; font-size: clamp(2.2rem, 2vw, 2.8rem); line-height: 1.35; color: #fff; letter-spacing: -.005em; }
+.sep-d { color: var(--glow); font-size: 1.2rem; letter-spacing: 1em; margin: 2.6em 0 !important; }
+.read-on { margin: 4rem 0 0; }
+.bio-sec { margin-bottom: 1rem; }
+.bio-sec .section-label { margin-top: 5rem; }
+.bio-sec:first-child .section-label { margin-top: 0; }
+.bio-para { font-size: 1.7rem; line-height: 1.7; color: var(--soft); margin: 0; }
+.bio-list { list-style: none; margin: 0; padding: 0; }
+.bio-list li { display: flex; justify-content: space-between; gap: 2rem; padding: .75rem 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 1.6rem; }
+.bio-list .yr { color: var(--mute); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- ALBUM pages */
+body[data-view="album"] .app-bg { opacity: .14; }
+.album-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 5rem; align-items: start; margin-top: 1rem; }
+.album-cover img { width: 100%; height: auto; display: block; box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+.album-info .acts { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 2.4rem; }
+.album-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; margin-top: 7rem; }
+.album-cols .section-label, .album-top ~ section .section-label { margin-top: 0; }
+.tracks { margin: 0; padding: 0 0 0 2.6rem; font-size: 1.7rem; }
+.tracks li { padding: .65rem 0 .65rem .6rem; border-bottom: 1px solid rgba(255,255,255,.07); }
+.tracks li::marker { color: var(--mute); font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.tracks a, .awards a { text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.35); }
+.tracks .arr { color: var(--glow); font-size: .85em; }
+.credits { list-style: none; margin: 0; padding: 0; font-size: 1.5rem; color: var(--soft); }
+.credits li { padding: .65rem 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+.pull { margin: 8rem 0; padding: 0; text-align: center; }
+.pull blockquote { margin: 0 auto; max-width: 78rem; font-family: var(--display); font-weight: 300; font-size: clamp(2.4rem, 2.8vw, 3.6rem); line-height: 1.3; letter-spacing: -.01em; }
+.pull figcaption { margin-top: 1.8rem; font-size: 1.15rem; letter-spacing: .3em; text-transform: uppercase; color: var(--mute); }
+.awards { list-style: none; margin: 0 0 2rem; padding: 0; }
+.awards li { display: flex; justify-content: space-between; gap: 2rem; padding: 1.2rem 0; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 1.6rem; color: var(--soft); }
+.awards b { font-weight: 400; color: #fff; text-align: right; }
+body[data-view="album"] .album-top ~ section { margin-top: 6rem; }
+.album-nav { display: flex; justify-content: space-between; gap: 2rem; margin-top: 9rem; padding-top: 2.4rem; border-top: 1px solid var(--line);
+  font-size: 1.15rem; letter-spacing: .26em; text-transform: uppercase; }
+.album-nav a { text-decoration: none; color: var(--soft); }
+.album-nav a:hover { color: #fff; }
+
 /* ---------- FILM: a list that opens */
 .film-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .film { border-bottom: 1px solid var(--line); }
@@ -348,6 +393,16 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .year li { grid-template-columns: 6.4rem 1fr; gap: .2rem 1.2rem; font-size: 1.45rem; }
   .year li .with { grid-column: 2; text-align: left; }
   .card-grid, .card-grid.three { grid-template-columns: 1fr; gap: 5rem; }
+  /* split pages: photo on top, text below */
+  body.split .page-hero { position: relative; left: 0; height: 58vh; height: 58svh; min-height: 320px; }
+  body.split .app-main { padding: 3rem 1.8rem 7rem; }
+  .longread { font-size: 1.65rem; }
+  .bio-list li { font-size: 1.5rem; }
+  .album-top, .album-cols { grid-template-columns: 1fr; gap: 3rem; }
+  .album-cols { margin-top: 5rem; }
+  .pull { margin: 5rem 0; }
+  .awards li { flex-direction: column; gap: .2rem; } .awards b { text-align: left; }
+  .album-nav { letter-spacing: .14em; }
   .contact-grid { grid-template-columns: 1fr; }
   body[data-view="contact"] .after-hero #app { margin-top: 3rem; }
   body[data-view="contact"] .page-hero { position: relative; left: 0; height: 60vh; height: calc(100svh - 270px); min-height: 280px; background-size: cover; background-position: 50% 14%; }  /* leaves room for the title and the first card on any phone */

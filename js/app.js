@@ -97,8 +97,8 @@
     if (!bar || !site) return;
     var cur = '';
     var links = (site.menu || []).filter(function (m) { return !m.hidden; }).map(function (m) {
-      if (here(m.href)) cur = m.label;
-      return '<a href="' + esc(m.href) + '"' + (here(m.href) ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
+      if (here(m.href) || (view === 'album' && m.href === 'Work') || (view === 'bio' && m.href === 'About')) cur = m.label;
+      return '<a href="' + esc(m.href) + '"' + (m.label === cur ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
     bar.innerHTML = '<a class="home" href="./"><span class="home-full">◆ Home</span><span class="home-short">Home</span></a><span class="here">' + esc(cur) + '</span>' +
       '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span class="bars"></span></button>' +
@@ -331,6 +331,89 @@
     });
   }
 
+  // ------------------------------------------------------------ ABOUT, FULL BIO, ALBUMS
+  function lines(t) { return String(t || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); }
+  // "Title | https://…" → a link; plain lines stay text
+  function linkLine(l) {
+    var m = l.split(/\s+\|\s+/);
+    return m[1] ? '<a href="' + esc(m[1]) + '"' + ext(m[1]) + '>' + esc(m[0]) + ' <span class="arr">↗</span></a>' : esc(m[0]);
+  }
+  function setHero(img) {
+    var h = document.querySelector('.page-hero');
+    if (h && img) h.style.backgroundImage = "url('" + img + "')";
+  }
+  // a paragraph that is just ◆ becomes a separator
+  function proseD(t) {
+    return prose(t).replace(/<p>\s*◆\s*<\/p>/g, '<p class="sep-d" aria-hidden="true">◆</p>');
+  }
+  function renderAbout(a) {
+    a = a || {};
+    setHero(a.photo);
+    var root = document.getElementById('app');
+    root.innerHTML = '<div class="longread lead-first">' + proseD(a.text) + '</div>' +
+      '<p class="read-on"><a class="btn" href="FULL-BIO">Full bio →</a></p>';
+  }
+  function renderBio(a) {
+    a = a || {};
+    setHero(a.bio_photo);
+    var root = document.getElementById('app'), h = '';
+    String(a.bio || '').split(/^##\s+/m).forEach(function (sec) {
+      sec = sec.trim();
+      if (!sec) return;
+      var ls = sec.split('\n'), title = ls.shift(), body = ls.map(function (l) { return l.trim(); }).filter(Boolean);
+      h += '<section class="bio-sec"><h2 class="section-label">' + esc(title) + '</h2>';
+      // one long line reads as a paragraph; several short lines as a list
+      if (body.length === 1 && body[0].length > 120) h += '<p class="bio-para">' + esc(body[0]) + '</p>';
+      else h += '<ul class="bio-list">' + body.map(function (l) {
+        var m = l.split(/\s+—\s+/);
+        return '<li><span>' + esc(m[0]) + '</span>' + (m[1] ? '<span class="yr">' + esc(m[1]) + '</span>' : '') + '</li>';
+      }).join('') + '</ul>';
+      h += '</section>';
+    });
+    root.innerHTML = h + '<p class="read-on"><a class="btn" href="About">← About</a></p>';
+  }
+  function renderAlbum(work) {
+    var slug = document.body.getAttribute('data-slug');
+    var albums = (work || []).filter(function (w) { return w.page && !w.hidden && w.section !== 'More'; });
+    var w = albums.filter(function (x) { return x.page === slug; })[0] || (work || []).filter(function (x) { return x.page === slug; })[0];
+    var root = document.getElementById('app');
+    if (!w) { root.innerHTML = '<p class="empty">Not found.</p>'; return; }
+    document.title = w.title + ' — Gyða Valtýsdóttir';
+    var t = document.querySelector('.page-title'), k = document.querySelector('.app-main > .kicker');
+    if (t) t.textContent = w.title;
+    if (k) k.textContent = [w.kind || 'Album', w.year].filter(Boolean).join(' · ');
+    var bg = document.querySelector('.app-bg');
+    if (bg && w.background) bg.style.backgroundImage = "url('" + w.background + "')";
+    var more = lines(w.more_links).map(function (l) { var m = l.split(/\s+\|\s+/); return m[1] ? '<a class="btn" href="' + esc(m[1]) + '"' + ext(m[1]) + '>' + esc(m[0]) + ' ↗</a>' : ''; }).join('');
+    var h = '<div class="album-top">' +
+      (w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '') +
+      '<div class="album-info"><div class="longread">' + proseD(w.story || w.text) + '</div>' +
+      '<div class="acts">' + (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') + more + '</div></div></div>';
+    var tracks = lines(w.tracks), credits = lines(w.credits);
+    if (tracks.length || credits.length) {
+      h += '<div class="album-cols">';
+      if (tracks.length) h += '<section><h2 class="section-label">' + esc(w.tracks_label || 'Tracks') + '</h2><ol class="tracks">' +
+        tracks.map(function (l) { return '<li>' + linkLine(l) + '</li>'; }).join('') + '</ol></section>';
+      if (credits.length) h += '<section><h2 class="section-label">Credits</h2><ul class="credits">' +
+        credits.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></section>';
+      h += '</div>';
+    }
+    String(w.quotes || '').split(/\n\s*\n/).map(function (q) { return q.trim(); }).filter(Boolean).forEach(function (q) {
+      var ls = q.split('\n'), src = /^[—–-]\s*/.test(ls[ls.length - 1]) && ls.length > 1 ? ls.pop().replace(/^[—–-]\s*/, '') : '';
+      h += '<figure class="pull"><blockquote>“' + esc(ls.join(' ').replace(/^[“"]|[”"]$/g, '')) + '”</blockquote>' + (src ? '<figcaption>' + esc(src) + '</figcaption>' : '') + '</figure>';
+    });
+    var awards = lines(w.awards);
+    if (awards.length) h += '<section><h2 class="section-label">Awards</h2><ul class="awards">' + awards.map(function (l) {
+      var m = l.split(/\s+—\s+/);
+      return '<li><span>' + esc(m[0]) + '</span>' + (m[1] ? '<b>' + esc(m[1]) + '</b>' : '') + '</li>';
+    }).join('') + '</ul></section>';
+    // the other albums, in Work order
+    var i = albums.indexOf(w), prev = i > 0 ? albums[i - 1] : null, next = i >= 0 && i < albums.length - 1 ? albums[i + 1] : null;
+    h += '<nav class="album-nav">' + (prev ? '<a href="' + esc(prev.page) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
+      '<a href="Work">All work</a>' + (next ? '<a href="' + esc(next.page) + '">' + esc(next.title) + ' →</a>' : '<span></span>') + '</nav>';
+    root.innerHTML = h;
+  }
+
   // ------------------------------------------------------------ WORK
   function renderWork(items) {
     var root = document.getElementById('app');
@@ -534,13 +617,16 @@
     document.body.appendChild(f);
   }
   // start the page's data downloads now, alongside site.json (load() hands back the same request later)
-  ({ work: ['work'], film: ['films'], news: ['news'], photos: ['photos'], live: ['shows', 'calendar'], front: ['shows', 'calendar'] }[view] || [])
+  ({ about: ['about'], bio: ['about'], album: ['work'], work: ['work'], film: ['films'], news: ['news'], photos: ['photos'], live: ['shows', 'calendar'], front: ['shows', 'calendar'] }[view] || [])
     .forEach(function (n) { load(n); });
   load('site').then(function (site) {
     renderNav(site);
     renderBooking(site);
     if (view === 'front') return renderFront(site);
     if (view === 'work') return load('work').then(renderWork);
+    if (view === 'about') return load('about').then(renderAbout);
+    if (view === 'bio') return load('about').then(renderBio);
+    if (view === 'album') return load('work').then(renderAlbum);
     if (view === 'film') return load('films').then(renderFilm);
     if (view === 'live') return renderLive(site);
     if (view === 'news') return load('news').then(renderNews);

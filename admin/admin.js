@@ -11,7 +11,7 @@
   // admin password: only a salted PBKDF2 hash is stored here, never the password itself
   // (to change it: python3 tools/set_admin_password.py)
   var PASS = { salt: '8fdbb42222829c551788c196403a9ecf', iter: 250000, hash: 'dbe7ed29e67c9794959b2cafd17216548fa1eae009cd794e2d4bf3195341aac1' };
-  var FILES = ['site', 'work', 'news', 'shows', 'films', 'photos'];
+  var FILES = ['site', 'about', 'work', 'news', 'shows', 'films', 'photos'];
   var API = 'https://api.github.com/repos/' + REPO.owner + '/' + REPO.name;
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
@@ -473,10 +473,33 @@
           { k: 'listen', label: 'Listen link', type: 'url', placeholder: 'Bandcamp, Spotify…' },
           { k: 'listen_label', label: 'Listen link name', placeholder: 'Bandcamp' },
           { k: 'page', label: 'Page on this site (optional)', placeholder: 'e.g. Ox', help: 'The page that “About the album →” opens. A full web address also works.' },
-          { k: 'hidden', label: 'Hide this one', type: 'check' }
+          { k: 'hidden', label: 'Hide this one', type: 'check' },
+          { k: 'story', label: 'Album page: the story', type: 'textarea', tall: true, wide: true, help: 'Shown next to the cover on the album page. Empty line = new paragraph.' },
+          { k: 'tracks_label', label: 'Album page: heading for the list', placeholder: 'Tracks' },
+          { k: 'background', label: 'Album page: faint background picture', type: 'image' },
+          { k: 'tracks', label: 'Album page: tracks', type: 'textarea', wide: true, help: 'One per line. To link a track to a video: Title | https://…' },
+          { k: 'credits', label: 'Album page: credits', type: 'textarea', wide: true, help: 'One per line.' },
+          { k: 'quotes', label: 'Album page: press quotes', type: 'textarea', wide: true, help: 'One quote per paragraph; put the source on its own last line starting with — (e.g. — Reykjavík Grapevine).' },
+          { k: 'awards', label: 'Album page: awards', type: 'textarea', wide: true, help: 'One per line: Prize — what (e.g. Icelandic Music Awards — Album of the Year).' },
+          { k: 'more_links', label: 'Album page: extra buttons', type: 'textarea', wide: true, help: 'One per line: Label | https://…' }
         ];
       }
     });
+  };
+
+  TABS.about = function () {
+    var a = D.about;
+    var p = $('#panel');
+    p.innerHTML = '<div class="tab-head"><div><h1>About</h1><p>The About page and the Full bio page. Write as plain text: an empty line starts a new paragraph, ' +
+      'and a line with just ◆ makes a small diamond divider. The first paragraph of About is shown larger.</p></div></div>' +
+      '<div class="card" id="aboutf">' + fieldsHTML(a, [
+        { k: 'photo', label: 'About: photo', type: 'image', wide: true },
+        { k: 'text', label: 'About: text', type: 'textarea', tall: true, wide: true },
+        { k: 'bio_photo', label: 'Full bio: photo', type: 'image', wide: true },
+        { k: 'bio', label: 'Full bio: text', type: 'textarea', tall: true, wide: true,
+          help: 'Start each section with ## and its name (e.g. ## Education). Under it, one item per line; “Title — 2021” puts the year on the right. A section with one long line shows as a paragraph.' }
+      ]) + '</div>';
+    bind($('#aboutf', p), a);
   };
 
   TABS.films = function () {
@@ -707,7 +730,7 @@
         return '<div class="row two" data-row="' + i + '"><input type="text" data-k="label" value="' + esc(l.label) + '" placeholder="Name"><input type="url" data-k="url" value="' + esc(l.url) + '" placeholder="https://…">' +
           '<span class="tools"><button data-l="del" title="Remove">✕</button></span></div>';
       }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-l="add">+ Add link</button></p></div>' +
-      '<div class="card"><h3>The older pages</h3><p>About and the album pages are still the pages from the old Cargo site. ' +
+      '<div class="card"><h3>The older pages</h3><p>Music videos, With others, Instant composition and Store are still the pages from the old Cargo site. ' +
       'Ask Gunnar if something there needs changing.</p></div>';
     var p = $('#panel');
     p.innerHTML = html;
@@ -728,7 +751,7 @@
   };
 
   // ------------------------------------------------------------------ chrome
-  var TAB_FILE = { work: 'work', front: 'site', news: 'news', live: 'shows', films: 'films', photos: 'photos', settings: 'site' };
+  var TAB_FILE = { about: 'about', work: 'work', front: 'site', news: 'news', live: 'shows', films: 'films', photos: 'photos', settings: 'site' };
   function render() {
     var p = $('#panel'), fresh = p.cloneNode(false);
     p.parentNode.replaceChild(fresh, p); // drop old listeners
@@ -760,7 +783,7 @@
     }
   }
 
-  var PREVIEW_PAGE = { work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'CONTACT.html' };
+  var PREVIEW_PAGE = { about: 'About.html', work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'CONTACT.html' };
   function preview() {
     // swap not-yet-uploaded pictures for their in-browser copies, then hand the drafts to the site
     try {
@@ -816,7 +839,7 @@
       $('#status').textContent = 'Saving…';
       return gh('/git/trees', { method: 'POST', body: { base_tree: baseTree, tree: tree } });
     }).then(function (t) {
-      var what = files.map(function (f) { return { work: 'work', site: 'front page/settings', shows: 'live', news: 'news', films: 'films', photos: 'photos' }[f]; });
+      var what = files.map(function (f) { return { about: 'about', work: 'work', site: 'front page/settings', shows: 'live', news: 'news', films: 'films', photos: 'photos' }[f]; });
       if (ups.length) what.push(ups.length + ' picture' + (ups.length === 1 ? '' : 's'));
       return gh('/git/commits', { method: 'POST', body: { message: 'Admin: update ' + what.join(', '), tree: t.sha, parents: [head] } });
     }).then(function (c) {
