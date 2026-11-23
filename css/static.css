@@ -80,4 +80,4 @@ a { color: inherit; }
   width: 100vw; position: relative; left: 50%; transform: translateX(-50%); padding: 0 4rem; }
 /* room for the top bar */
 body[local-style] .page { padding-top: 3rem; }
-@media (max-width: 768px) { body[local-style] .page { padding-top: 5rem; } .next-page { padding: 0 1.8rem; } }
+@media (max-width: 768px) { body[local-style] .page { padding-top: 2.6rem; } .next-page { padding: 0 1.8rem; } }

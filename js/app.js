@@ -100,7 +100,7 @@
       if (here(m.href)) cur = m.label;
       return '<a href="' + esc(m.href) + '"' + (here(m.href) ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
-    bar.innerHTML = '<a class="home" href="./">◆ ' + esc((site.short_name || 'GYDA')) + '</a><span class="here">' + esc(cur) + '</span>' +
+    bar.innerHTML = '<a class="home" href="./"><span class="home-full">◆ ' + esc((site.short_name || 'GYDA')) + '</span><span class="home-short">Home</span></a><span class="here">' + esc(cur) + '</span>' +
       '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>' +
       '<nav id="site-nav" aria-label="Main">' + links + '</nav>';
   }
@@ -392,9 +392,10 @@
       reader.hidden = false;
       reader.querySelector('article').scrollTop = 0;
       document.body.style.overflow = 'hidden';
+      document.documentElement.classList.add('overlay-open');
       reader.querySelector('.close').focus();
     }
-    function close() { reader.hidden = true; document.body.style.overflow = ''; }
+    function close() { reader.hidden = true; document.body.style.overflow = ''; document.documentElement.classList.remove('overlay-open'); }
     root.addEventListener('click', function (e) {
       var c = e.target.closest('[data-n]');
       if (c && !e.target.closest('.reader')) return open(+c.getAttribute('data-n'));
@@ -443,8 +444,9 @@
       dl.textContent = '↓ Download hi-res ' + mb(p.bytes);
       lb.hidden = false;
       document.body.style.overflow = 'hidden';
+      document.documentElement.classList.add('overlay-open');
     }
-    function close() { lb.hidden = true; document.body.style.overflow = ''; }
+    function close() { lb.hidden = true; document.body.style.overflow = ''; document.documentElement.classList.remove('overlay-open'); }
     root.addEventListener('click', function (e) {
       var t = e.target;
       var chip = t.closest('.chip');

@@ -132,7 +132,7 @@ def topbar(key, on_photo=False):
     cls = 'topbar on-photo' if on_photo else 'topbar'
     here = next((m['label'] for m in site['menu'] if m['href'] == key), '')
     # on phones the links fold away behind the Menu button (js/app.js opens it)
-    return (f'<header class="{cls}"><a class="home" href="./">◆ GYDA</a>'
+    return (f'<header class="{cls}"><a class="home" href="./"><span class="home-full">◆ GYDA</span><span class="home-short">Home</span></a>'
             f'<span class="here">{html.escape(here)}</span>'
             f'<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>'
             f'<nav id="site-nav" aria-label="Main">{links}</nav></header>')
