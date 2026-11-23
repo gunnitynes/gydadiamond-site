@@ -385,8 +385,9 @@
     var bg = document.querySelector('.app-bg');
     if (bg && w.background) bg.style.backgroundImage = "url('" + w.background + "')";
     var more = lines(w.more_links).map(function (l) { var m = l.split(/\s+\|\s+/); return m[1] ? '<a class="btn" href="' + esc(m[1]) + '"' + ext(m[1]) + '>' + esc(m[0]) + ' ↗</a>' : ''; }).join('');
+    // cover in its own column down the whole page (it stays in view on computers); everything else beside it
+    var cover = w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '';
     var h = '<div class="album-top">' +
-      (w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '') +
       '<div class="album-info"><div class="longread">' + proseD(w.story || w.text) + '</div>' +
       '<div class="acts">' + (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') + more + '</div></div></div>';
     var tracks = lines(w.tracks), credits = lines(w.credits);
@@ -409,6 +410,7 @@
     }).join('') + '</ul></section>';
     // the other albums, in Work order
     var i = albums.indexOf(w), prev = i > 0 ? albums[i - 1] : null, next = i >= 0 && i < albums.length - 1 ? albums[i + 1] : null;
+    h = '<div class="album-layout' + (cover ? '' : ' no-cover') + '">' + cover + '<div class="album-body">' + h + '</div></div>';
     h += '<nav class="album-nav">' + (prev ? '<a href="' + esc(prev.page) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
       '<a href="Work">All work</a>' + (next ? '<a href="' + esc(next.page) + '">' + esc(next.title) + ' →</a>' : '<span></span>') + '</nav>';
     root.innerHTML = h;
@@ -593,6 +595,47 @@
       last = y;
     }
     addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  })();
+
+  // ------------------------------------------------------------ parallax (computers only, never with reduced motion)
+  //  LIVE: the photo moves up slower than the concert list
+  //  WORK: each cover moves a little inside its frame, so covers and text glide at different speeds
+  //  ALBUM: the faint artwork behind the page drifts slowly (the cover itself stays put with CSS)
+  (function () {
+    var mq = matchMedia('(min-width: 769px) and (prefers-reduced-motion: no-preference)');
+    var ticking = false;
+    function frame() {
+      ticking = false;
+      var on = mq.matches;
+      document.documentElement.classList.toggle('plx', on);
+      var y = on ? scrollY : 0, vh = innerHeight;
+      if (view === 'live') {
+        var hero = document.querySelector('.page-hero');
+        if (hero) hero.style.transform = on ? 'translate3d(0,' + (Math.min(y, hero.offsetHeight) * 0.45).toFixed(1) + 'px,0)' : '';
+      }
+      if (view === 'work') {
+        document.querySelectorAll('.wcard .pic img, .tile img').forEach(function (im) {
+          if (!on) { im.style.removeProperty('--py'); return; }
+          var r = im.parentNode.getBoundingClientRect();
+          if (r.bottom < -100 || r.top > vh + 100) return;
+          var off = ((r.top + r.height / 2) - vh / 2) / vh;      // -1 … 1 as it crosses the screen
+          im.style.setProperty('--py', (off * -7).toFixed(2) + '%');
+        });
+      }
+      if (view === 'album') {
+        var bg = document.querySelector('.app-bg');
+        var span = Math.max(1, document.documentElement.scrollHeight - vh);
+        // drifts up by at most 6% over the whole page; the 1.15 zoom keeps its edges out of sight
+        if (bg) bg.style.transform = on ? 'translate3d(0,' + (-6 * Math.min(1, y / span)).toFixed(2) + '%,0) scale(1.15)' : '';
+      }
+    }
+    function request() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+    addEventListener('scroll', request, { passive: true });
+    addEventListener('resize', request);
+    if (mq.addEventListener) mq.addEventListener('change', request);
+    // Work and album pages draw their content after the data loads
+    new MutationObserver(request).observe(document.getElementById('app') || document.body, { childList: true });
+    request();
   })();
 
   // ------------------------------------------------------------ faster page switching
