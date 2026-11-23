@@ -87,3 +87,5 @@ body[local-style] .page { padding-top: 3rem; }
   [grid-col] > br:first-child { display: none; }
   [grid-row][grid-responsive] > [grid-col]:empty { display: none; }
 }
+/* phones: the background stays the size of the full screen, so it doesn't "zoom" as the address bar hides while scrolling */
+@media (max-width: 768px) { .backdrop { bottom: auto; height: 100vh; height: 100lvh; } }

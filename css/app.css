@@ -27,6 +27,7 @@ html.app-root { font-size: 10px; -webkit-text-size-adjust: 100%; }
 .topbar a:hover, .topbar a[aria-current] { color: var(--paper); }
 .topbar .home { white-space: nowrap; }
 .topbar .here, .topbar .menu-btn, .topbar .home-short, .topbar .nav-home { display: none; }
+.on-phone { display: none; }
 .topbar nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem 1.8rem; }
 .topbar nav a[aria-current]::before { content: "◆ "; }
 .topbar.on-photo a { text-shadow: 0 1px 6px rgba(0,0,0,.6); }
@@ -71,10 +72,10 @@ body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--p
   .hero-menu { gap: 3.5vh; }
   .hero-menu .end { display: none; }  /* phones: one diamond, before the word */
   .hero-menu a { text-shadow: 0 1px 12px rgba(0,0,0,.6); }
-  .hero-text { padding: 36px 24px 28px; }
+  .hero-text { padding: 16px 24px 28px; }
   .hero h1 { font-size: 3rem; }
   .hero .tagline { font-size: 1.1rem; letter-spacing: .04em; }
-  .hero-menu { margin-top: 5vh; }
+  .hero-menu { margin-top: calc(5vh + 20px); }  /* the name moved up; the links stay where they were */
   .hero-menu a { font-size: 1.3rem; }
   .next-show { font-size: 1.05rem; letter-spacing: .14em; }
 }
@@ -83,7 +84,7 @@ body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--p
 body.app { margin: 0; min-height: 100vh; background: var(--ink); color: var(--paper); font-family: var(--sans);
   font-size: 1.7rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 body.app a { color: inherit; }
-.app-bg { position: fixed; inset: 0; z-index: 0; background-size: cover; background-position: center; opacity: .2; pointer-events: none; }
+.app-bg { position: fixed; inset: 0 0 auto 0; height: 100vh; height: 100lvh; z-index: 0; background-size: cover; background-position: center; opacity: .2; pointer-events: none; }
 .app-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,3,3,.2), var(--ink) 85%); }
 .app-main { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 13rem 3rem 10rem; }
 .kicker { font-size: 1.15rem; letter-spacing: .42em; text-transform: uppercase; color: var(--mute); margin: 0 0 1.2rem; }
@@ -268,8 +269,9 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
 .chip { all: unset; cursor: pointer; flex: none; white-space: nowrap; font-size: 1.3rem; letter-spacing: .02em; padding: .5em .85em; border: 1px solid rgba(255,255,255,.22); color: var(--soft); }
 .chip[aria-pressed="true"] { background: var(--paper); color: var(--ink); border-color: var(--paper); }
 .chip:hover { border-color: #fff; }
-.grid { columns: 3 26rem; column-gap: 2rem; }
-.shot { break-inside: avoid; margin: 0 0 2rem; position: relative; }
+.grid { display: flex; gap: 2rem; align-items: flex-start; }
+.grid .col { flex: 1 1 0; min-width: 0; }
+.shot { margin: 0 0 2rem; position: relative; }
 .shot button.open { all: unset; cursor: zoom-in; display: block; width: 100%; }
 .shot img { width: 100%; height: auto; display: block; background: #2a0606; transition: filter .3s; }
 .shot:hover img { filter: brightness(1.06); }
@@ -317,6 +319,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   html.menu-open, html.menu-open body { overflow: hidden; }
   body.app { font-size: 1.6rem; }
   .app-main { padding: 2.2rem 1.8rem 7rem; }
+  .on-phone { display: inline; } .on-wide { display: none; }
   /* phones: no small line above the page titles */
   body[data-view] .app-main > .kicker { display: none; }
   .page-hero { height: 85vh; min-height: 480px; background-position: 72% 35%; }
@@ -337,7 +340,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .card-grid, .card-grid.three { grid-template-columns: 1fr; gap: 5rem; }
   .contact-grid { grid-template-columns: 1fr; }
   body[data-view="contact"] .after-hero #app { margin-top: 3rem; }
-  body[data-view="contact"] .page-hero { position: relative; left: 0; height: 36vh; min-height: 250px; background-size: cover; background-position: 50% 14%; }
+  body[data-view="contact"] .page-hero { position: relative; left: 0; height: 66vh; min-height: 420px; background-size: cover; background-position: 50% 14%; }
   body[data-view="contact"] .app-main { padding: 2.4rem 1.8rem 7rem; }
   body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(19,3,3,.4) 0%, rgba(19,3,3,0) 30%, rgba(19,3,3,.3) 60%, var(--ink) 100%); }
   body[data-view="contact"] .ccard { grid-template-columns: 1fr; }
@@ -347,7 +350,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .tile b { font-size: 1.8rem; } .tile span { left: 1.2rem; right: 1.2rem; bottom: 1.2rem; }
   .feature { grid-template-columns: 1fr; gap: 2rem; }
   .reader article { padding: 6rem 2rem 4rem; }
-  .grid { columns: 2 14rem; column-gap: 1.2rem; }
+  .grid { gap: 1.2rem; }
   /* phones: just the photographer under each photo; the download is in the large view */
   .shot figcaption a { display: none; }
   .lb-btn { width: 25%; font-size: 3.6rem; padding: 0 .6rem; }

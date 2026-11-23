@@ -100,7 +100,7 @@
       if (here(m.href)) cur = m.label;
       return '<a href="' + esc(m.href) + '"' + (here(m.href) ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
-    bar.innerHTML = '<a class="home" href="./"><span class="home-full">◆ ' + esc((site.short_name || 'GYDA')) + '</span><span class="home-short">Home</span></a><span class="here">' + esc(cur) + '</span>' +
+    bar.innerHTML = '<a class="home" href="./"><span class="home-full">◆ Home</span><span class="home-short">Home</span></a><span class="here">' + esc(cur) + '</span>' +
       '<button class="menu-btn" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span class="bars"></span></button>' +
       '<nav id="site-nav" aria-label="Main"><a class="nav-home" href="./">Home</a>' + links + '</nav>';
   }
@@ -160,7 +160,7 @@
   function renderBooking(site) {
     if (!site || !site.booking_email) return;
     document.querySelectorAll('[data-booking]').forEach(function (el) {
-      el.innerHTML = mailLink(site.booking_email, 'Live booking', true);
+      el.innerHTML = mailLink(site.booking_email, 'Live booking contact', true);
     });
   }
 
@@ -224,7 +224,8 @@
     cats.forEach(function (c) {
       var items = (films || []).filter(function (f) { return f.category === c[0] && !f.hidden; });
       if (!items.length) return;
-      html += '<h2 class="section-label">' + esc(c[1]) + '</h2><ul class="film-list">';
+      // on phones the page title already says "Film", so the first heading reads as the page's description instead
+      html += '<h2 class="section-label">' + (n === 0 ? '<span class="on-wide">' + esc(c[1]) + '</span><span class="on-phone">Films, documentaries and art</span>' : esc(c[1])) + '</h2><ul class="film-list">';
       items.forEach(function (f) {
         var id = 'film-' + (n++);
         var who = [f.director ? 'by ' + f.director : '', f.role].filter(Boolean).join(' · ');
@@ -424,15 +425,30 @@
       '<div class="stage"><img alt=""></div><button class="lb-btn lb-prev" aria-label="Previous">‹</button>' +
       '<button class="lb-btn lb-next" aria-label="Next">›</button><div class="bar"><span class="cap"></span><a class="btn solid dl" download>Download</a></div></div>';
     var grid = root.querySelector('.grid'), lb = root.querySelector('.lightbox'), cur = [], at = 0;
+    // Photos go into columns one by one, each into the column that is shortest so far, so every column starts at the top
+    var credit0 = '', ncols = 0;
+    function colsFor() { return innerWidth <= 768 ? 2 : innerWidth <= 1100 ? 2 : 3; }
     function draw(credit) {
+      credit0 = credit;
+      ncols = colsFor();
       cur = list.filter(function (p) { return !credit || p.credit === credit; });
-      grid.innerHTML = cur.map(function (p, i) {
+      var cols = [], heights = [];
+      for (var c = 0; c < ncols; c++) { cols.push(''); heights.push(0); }
+      cur.forEach(function (p, i) {
         var ratio = p.width && p.height ? ' width="' + p.width + '" height="' + p.height + '"' : '';
-        return '<figure class="shot"><button class="open" data-i="' + i + '" aria-label="View larger">' +
+        var k = heights.indexOf(Math.min.apply(null, heights));
+        heights[k] += (p.width && p.height ? p.height / p.width : 1.25) + 0.12;   // + room for the caption
+        cols[k] += '<figure class="shot"><button class="open" data-i="' + i + '" aria-label="View larger">' +
           thumbImg(p.src, ratio.trim() + ' alt="Gyða Valtýsdóttir, photo by ' + esc(p.credit) + '" loading="lazy"') + '</button><figcaption><span>© ' + esc(p.credit) +
           (p.caption ? ' · ' + esc(p.caption) : '') + '</span><a href="' + esc(p.hires || p.src) + '" download>↓ Hi-res ' + mb(p.bytes) + '</a></figcaption></figure>';
-      }).join('');
+      });
+      grid.innerHTML = cols.map(function (h) { return '<div class="col">' + h + '</div>'; }).join('');
     }
+    var rt;
+    addEventListener('resize', function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () { if (colsFor() !== ncols) draw(credit0); }, 150);
+    });
     function show(i) {
       at = (i + cur.length) % cur.length;
       var p = cur[at];
