@@ -320,6 +320,9 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   body.app { font-size: 1.6rem; }
   .app-main { padding: 2.2rem 1.8rem 7rem; }
   .on-phone { display: inline; } .on-wide { display: none; }
+  /* Work: 'About the album' and 'Listen' side by side */
+  .wcard .acts { flex-wrap: nowrap; }
+  .wcard .acts .btn { letter-spacing: .14em; padding: .85em 1em; }
   /* phones: no small line above the page titles */
   body[data-view] .app-main > .kicker { display: none; }
   .page-hero { height: 85vh; min-height: 480px; background-position: 72% 35%; }

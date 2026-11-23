@@ -93,6 +93,19 @@ body[local-style] .page { padding-top: 3rem; }
    so the browser's bars never slide away and the photo stays completely still */
 @media (max-width: 768px) {
   body.has-backdrop { position: fixed; inset: 0; overflow: hidden; }
-  body.has-backdrop .page { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  body.has-backdrop .page { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
   body.has-backdrop .backdrop { height: 100%; }
 }
+
+/* Full Bio: the sepia photo behind the long text is darkened so the text reads easily */
+body[local-style="7692056"] .backdrop::after { content: ""; position: absolute; inset: 0; background: rgba(12, 3, 3, .55); }
+/* phones: stacked Cargo columns stay inside the screen (their negative side margins made pages wiggle sideways) */
+@media (max-width: 768px) {
+  [grid-row][grid-responsive] { margin-left: 0; margin-right: 0; }
+  [grid-row][grid-responsive] > [grid-col] { padding-left: 0; padding-right: 0; }
+}
+@media (max-width: 768px) { bodycopy a { overflow-wrap: anywhere; } }
+/* Ox: the pale pink artwork photo gets a deep oxblood tint so the white text reads */
+body[local-style="26692190"] .backdrop::after { content: ""; position: absolute; inset: 0; background: rgba(40, 5, 7, .74); }
+/* phones: album backgrounds hold still (no slow drift) */
+@media (max-width: 768px) { .backdrop-wave .backdrop-image, .backdrop-kaleidoscope .backdrop-image { animation: none; } }

@@ -347,7 +347,7 @@
           '<div class="txt"><div class="meta">' + (w.year ? '<b>' + esc(w.year) + '</b>' : '') + '<span>' + esc(w.kind || '') + '</span></div>' +
           '<h3>' + esc(w.title) + '</h3>' + (w.text ? '<p>' + esc(w.text) + '</p>' : '') +
           '<div class="acts">' + (w.page ? '<a class="btn" href="' + esc(w.page) + '"' + ext(w.page) + '>About the album →</a>' : '') +
-          (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? ' · ' + esc(w.listen_label) : '') + ' ↗</a>' : '') +
+          (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') +
           '</div></div></article>';
       }).join('') + '</div>';
     }
