@@ -94,7 +94,7 @@ body.app a { color: inherit; }
 .app-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,3,3,.2), var(--ink) 85%); }
 .app-main { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 13rem 3rem 10rem; }
 .kicker { font-size: 1.15rem; letter-spacing: .42em; text-transform: uppercase; color: var(--mute); margin: 0 0 1.2rem; }
-.page-title { font-family: var(--display); font-weight: 300; font-size: clamp(4.4rem, 7.4vw, 10rem); line-height: .92; margin: 0 0 2rem; letter-spacing: -.02em; }
+.page-title { text-transform: uppercase; font-family: var(--display); font-weight: 300; font-size: clamp(4rem, 6.2vw, 8.6rem); line-height: .95; margin: 0 0 2rem; letter-spacing: .02em; }
 .lede { max-width: 56rem; color: var(--soft); margin: 0 0 6rem; font-size: 1.8rem; }
 .section-label { display: flex; align-items: center; gap: 1.4rem; margin: 7rem 0 2.4rem; font-size: 1.2rem; letter-spacing: .42em;
   text-transform: uppercase; color: var(--mute); }
@@ -161,6 +161,13 @@ body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8re
 .follow .kicker { margin: 0 1rem 0 0; }
 .follow a { color: #fff; text-decoration: none; font-size: 1.6rem; border-bottom: 1px solid rgba(255,255,255,.35); }
 .follow a:hover { border-color: #fff; }
+
+/* ---------- OVERLAY page (About): the photo fills the screen and holds still, darkened; the text scrolls over it, centred */
+body.overlay .page-hero { position: fixed; inset: 0; height: auto; max-height: none; min-height: 0; background-size: cover; background-position: 50% 25%; }
+body.overlay .page-hero::after { content: ""; position: absolute; inset: 0; background: rgba(14, 3, 3, .58); }
+body.overlay .app-main { max-width: 76rem; text-align: center; }
+body.overlay .longread { margin: 0 auto; color: rgba(255,255,255,.9); text-shadow: 0 1px 14px rgba(0,0,0,.45); }
+body.overlay .page-title, body.overlay .kicker { text-shadow: 0 2px 24px rgba(0,0,0,.5); }
 
 /* ---------- SPLIT pages (About, Full bio): the photo holds still on the right half, the text scrolls on the left */
 body.split .page-hero { position: fixed; top: 0; bottom: 0; left: 50%; right: 0; height: auto; max-height: none; min-height: 0;
@@ -297,16 +304,27 @@ body[data-view="album"] .album-top ~ section { margin-top: 6rem; }
 .excerpt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 button.wcard { all: unset; cursor: pointer; display: flex; flex-direction: column; }
 button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--glow); outline-offset: 6px; }
-.reader { position: fixed; inset: 0; z-index: 100; background: rgba(10,1,1,.82); backdrop-filter: blur(8px); display: flex; justify-content: flex-end; }
+.reader { position: fixed; inset: 0; z-index: 100; background: rgba(10,1,1,.86); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 4vh 4vw; }
 .reader[hidden] { display: none; }
-.reader article { width: min(720px, 100%); height: 100%; overflow: auto; background: var(--ink); border-left: 1px solid var(--line); padding: 7rem 5rem 6rem;
-  animation: slide-in .45s cubic-bezier(.2,.7,.2,1); }
-@keyframes slide-in { from { transform: translateX(40px); opacity: 0; } }
-.reader img { width: 100%; height: auto; display: block; margin: 0 0 3rem; }
+/* computers: one centred card, picture left and the whole text right */
+.reader article { position: relative; width: min(1180px, 100%); max-height: 88vh; display: grid; grid-template-columns: 1fr;
+  background: var(--ink); border: 1px solid var(--line); box-shadow: 0 30px 90px rgba(0,0,0,.6); overflow: hidden; animation: pop-in .35s cubic-bezier(.2,.7,.2,1); }
+.reader article:not(.has-img) { width: min(760px, 100%); }
+.reader article.has-img { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+.reader .body { display: contents; }
+@keyframes pop-in { from { transform: translateY(14px) scale(.985); opacity: 0; } }
+.reader .r-img { margin: 0; background: #0b0202; display: flex; align-items: center; justify-content: center; min-height: 0; max-height: 88vh; }
+.reader .r-img img { display: block; width: 100%; height: 100%; max-height: 88vh; object-fit: contain; }
+.reader .r-text { padding: 6rem 5rem 5rem; overflow-y: auto; max-height: 88vh; display: flex; flex-direction: column; }
+/* centred when short, but a long post starts at its title and scrolls */
+.reader .r-text > :first-child { margin-top: auto; }
+.reader .r-text > :last-child { margin-bottom: auto; }
 .reader time { font-size: 1.15rem; letter-spacing: .32em; text-transform: uppercase; color: var(--mute); }
-.reader h2 { font-family: var(--display); font-weight: 300; font-size: clamp(3rem, 4vw, 4.6rem); line-height: 1; letter-spacing: -.015em; margin: 1.2rem 0 2.4rem; }
+.reader h2 { font-family: var(--display); font-weight: 300; font-size: clamp(3rem, 3.2vw, 4.4rem); line-height: 1.04; letter-spacing: -.015em; margin: 1.2rem 0 2.4rem; }
 .reader .prose { color: var(--soft); font-size: 1.75rem; }
-.reader .close { all: unset; cursor: pointer; position: absolute; top: 2.2rem; right: 2.6rem; font-size: 1.15rem; letter-spacing: .3em; color: var(--soft); text-transform: uppercase; }
+.reader .r-text .btn { align-self: flex-start; margin-top: 1.4rem; }
+.reader .close { all: unset; cursor: pointer; position: absolute; top: 1.8rem; right: 2.2rem; z-index: 2; font-size: 1.15rem; letter-spacing: .3em; color: var(--soft); text-transform: uppercase; }
 .reader .close:hover { color: #fff; }
 
 /* ---------- PHOTOS (press) */
@@ -393,6 +411,11 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .year li { grid-template-columns: 6.4rem 1fr; gap: .2rem 1.2rem; font-size: 1.45rem; }
   .year li .with { grid-column: 2; text-align: left; }
   .card-grid, .card-grid.three { grid-template-columns: 1fr; gap: 5rem; }
+  /* About on phones: the text scrolls inside a full-screen frame so the browser bars stay and the photo never moves */
+  body.overlay { position: fixed; inset: 0; overflow: hidden; }
+  body.overlay .app-main { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain; touch-action: pan-y; padding: 2.2rem 1.8rem 7rem; }
+  body.overlay .page-hero { background-position: 50% 20%; }
   /* split pages: photo on top, text below */
   body.split .page-hero { position: relative; left: 0; height: 58vh; height: 58svh; min-height: 320px; }
   body.split .app-main { padding: 3rem 1.8rem 7rem; }
@@ -414,7 +437,12 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   .card-grid.small { grid-template-columns: 1fr 1fr; gap: 1.2rem; }
   .tile b { font-size: 1.8rem; } .tile span { left: 1.2rem; right: 1.2rem; bottom: 1.2rem; }
   .feature { grid-template-columns: 1fr; gap: 2rem; }
-  .reader article { padding: 6rem 2rem 4rem; }
+  /* phones: the post fills the screen, picture on top */
+  .reader { padding: 0; }
+  .reader article, .reader article.has-img, .reader article:not(.has-img) { width: 100%; height: 100%; max-height: none; display: block; overflow-y: auto; border: 0; }
+  .reader .r-img { max-height: none; }
+  .reader .r-img img { height: auto; max-height: none; }
+  .reader .r-text { padding: 3rem 2rem 5rem; max-height: none; overflow: visible; display: block; }
   .grid { gap: 1.2rem; }
   /* phones: just the photographer under each photo; the download is in the large view */
   .shot figcaption a { display: none; }

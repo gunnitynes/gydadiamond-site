@@ -469,12 +469,15 @@
     var reader = root.querySelector('.reader');
     function open(n) {
       var p = list[n];
-      reader.querySelector('.body').innerHTML = (p.image ? '<img src="' + esc(p.image) + '" alt="">' : '') +
-        '<time datetime="' + esc(p.date) + '">' + esc(fmtLong(p.date)) + '</time><h2>' + esc(p.title || '') + '</h2>' +
+      // picture and text side by side on computers (stacked on phones), the whole post in view at once
+      reader.querySelector('article').classList.toggle('has-img', !!p.image);
+      reader.querySelector('.body').innerHTML = (p.image ? '<figure class="r-img"><img src="' + esc(p.image) + '" alt=""></figure>' : '') +
+        '<div class="r-text"><time datetime="' + esc(p.date) + '">' + esc(fmtLong(p.date)) + '</time><h2>' + esc(p.title || '') + '</h2>' +
         '<div class="prose">' + prose(p.text) + '</div>' +
-        (p.link ? '<a class="btn solid" href="' + esc(p.link) + '"' + ext(p.link) + '>' + esc(p.link_label || 'More') + ' ↗</a>' : '');
+        (p.link ? '<a class="btn solid" href="' + esc(p.link) + '"' + ext(p.link) + '>' + esc(p.link_label || 'More') + ' ↗</a>' : '') + '</div>';
       reader.hidden = false;
       reader.querySelector('article').scrollTop = 0;
+      var rt = reader.querySelector('.r-text'); if (rt) rt.scrollTop = 0;
       document.body.style.overflow = 'hidden';
       document.documentElement.classList.add('overlay-open');
       reader.querySelector('.close').focus();
