@@ -1,21 +1,25 @@
-/* Opens the guide: guide.bin is encrypted with the admin password (AES-GCM, key from PBKDF2). */
+/* Opens the guide for anyone signed in to the admin in this browser; everyone else is asked for the admin password.
+   guide.bin = salt (16 bytes, the admin password's) + iv (12) + AES-GCM data. Its key comes from the admin password's
+   hash, which the admin keeps in localStorage as gyda.unlocked. */
 (function () {
   'use strict';
-  var SALT = 'c86a485a9e4c8e9c6d73cea768fa3aac';   // must match GUIDE_SALT in ../admin.js
   var $ = function (s) { return document.querySelector(s); };
-  function bytes(h) { return new Uint8Array(h.match(/../g).map(function (x) { return parseInt(x, 16); })); }
   function hex(b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
-  function derive(pw) {
-    return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (k) {
-      return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: bytes(SALT), iterations: 250000 }, k, 256);
-    }).then(hex);
-  }
   var file;
   function load() { return file || (file = fetch('guide.bin', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('load'); return r.arrayBuffer(); }).catch(function (e) { file = null; throw e; })); }
-  function open(key) {
+  function hashOf(pw) {
     return load().then(function (buf) {
-      return crypto.subtle.importKey('raw', bytes(key), 'AES-GCM', false, ['decrypt']).then(function (k) {
-        return crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(buf, 0, 12) }, k, new Uint8Array(buf, 12));
+      return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (k) {
+        return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: new Uint8Array(buf, 0, 16), iterations: 250000 }, k, 256);
+      });
+    }).then(hex);
+  }
+  function open(hash) {
+    return load().then(function (buf) {
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode('guide:' + hash)).then(function (raw) {
+        return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+      }).then(function (k) {
+        return crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(buf, 16, 12) }, k, new Uint8Array(buf, 28));
       });
     }).then(function (plain) {
       $('#lock').hidden = true;
@@ -33,8 +37,8 @@
   $('#f').addEventListener('submit', function (e) {
     e.preventDefault();
     $('#err').textContent = 'One moment…';
-    derive($('#pw').value).then(function (key) {
-      return open(key).then(function () { try { localStorage.setItem('gyda.guide', key); } catch (x) { /* private mode */ } });
+    hashOf($('#pw').value).then(function (hash) {
+      return open(hash).then(function () { try { localStorage.setItem('gyda.unlocked', hash); } catch (x) { /* private mode */ } });
     }).catch(function (x) {
       $('#err').textContent = x && x.message === 'load' ? 'The guide could not be loaded. Check your internet and try again.' : 'Wrong password.';
       $('#pw').select();
@@ -48,7 +52,10 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') $('#zoom').hidden = true; });
   addEventListener('scroll', function () { $('#totop').hidden = scrollY < 700; }, { passive: true });
   addEventListener('hashchange', jump);
-  var key = '';
-  try { key = localStorage.getItem('gyda.guide') || ''; } catch (x) { /* ignore */ }
-  if (/^[0-9a-f]{64}$/.test(key)) open(key).catch(ask); else ask();
+  var hash = '';
+  try { localStorage.removeItem('gyda.guide'); hash = localStorage.getItem('gyda.unlocked') || ''; } catch (x) { /* ignore */ }
+  if (/^[0-9a-f]{64}$/.test(hash)) open(hash).catch(function (x) {
+    ask();
+    if (x && x.message === 'load') $('#err').textContent = 'The guide could not be loaded. Check your internet and reload the page.';
+  }); else ask();
 })();

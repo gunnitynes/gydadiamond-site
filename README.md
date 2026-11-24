@@ -34,9 +34,11 @@ On localhost there is a "try without a key" mode that never writes.
 The repository it writes to is set at the top of `admin/admin.js` (`REPO`).
 
 ## The guide for Gyða
-`/admin/guide/` is a step-by-step guide. Its text and pictures are in `admin/guide/guide.bin`, encrypted with the admin
-password, because this repository is public. The readable source is kept outside the repository, in `~/gydadiamond-guide`;
-`node build.mjs` there makes `guide.bin` again (`tools/set_admin_password.py` runs it when the password changes).
+`/admin/guide/` is a step-by-step guide. It opens straight away for anyone signed in to the admin in that browser;
+everyone else is asked for the admin password. Its text and pictures are in `admin/guide/guide.bin`, scrambled with a key
+made from the password hash in `admin/admin.js`. That keeps it away from casual readers and search engines, but the hash is
+public, so never put real secrets in the guide. The readable source is in `~/gydadiamond-guide`; `node build.mjs` there
+makes `guide.bin` again (`tools/set_admin_password.py` runs it when the password changes).
 
 ## Rebuilding the old pages
 `python3 _source/build.py` regenerates every `.html` page (Cargo pages from `_source/allpages.json`,
