@@ -1,0 +1,17 @@
+{
+  // The sign-in service for gydadiamond.net's admin (a free Cloudflare Worker). See README.md.
+  "name": "gyda-admin",
+  "main": "worker.js",
+  "compatibility_date": "2026-05-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "durable_objects": { "bindings": [{ "name": "DOOR", "class_name": "Door" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Door"] }],
+  "vars": {
+    "REPO": "gunnitynes/gydadiamond-site",
+    "BRANCH": "main",
+    "ORIGINS": "https://gunnitynes.github.io https://gydadiamond.net https://www.gydadiamond.net",
+    "EPOCH": "1"   // change this number and deploy to lift every "wait and try again" pause
+  }
+  // secrets, set by setup.mjs: GITHUB_TOKEN, TOTP_SECRET, PEPPER, GUIDE_KEY
+}

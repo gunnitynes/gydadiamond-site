@@ -36,6 +36,11 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; }
 .signin li { margin-bottom: 8px; }
 .err { color: var(--bad); min-height: 1.5em; }
 
+.signin form label { margin-bottom: 14px; }
+.signin .hint { margin: -4px 0 16px; font-size: 13px; color: var(--mute); }
+.signin .err { margin: 12px 0 0; }
+.top #change-pass { white-space: nowrap; }
+
 /* layout */
 .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 58px;
   background: var(--ox); border-bottom: 1px solid rgba(0,0,0,.4); }
@@ -47,6 +52,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; }
 .tabs button:hover { color: #fff; }
 .tabs button[aria-selected="true"] { color: #fff; border-bottom-color: var(--glow); }
 .tabs button .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--glow); margin-left: 6px; vertical-align: middle; }
+@media (max-width: 1300px) { .top { gap: 16px; } .tabs button { padding-left: 10px; padding-right: 10px; letter-spacing: .14em; } }
 .panel { max-width: 1180px; margin: 0 auto; padding: 32px 24px 140px; }
 .dock { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 16px;
   padding: 14px 24px; background: rgba(20,4,4,.94); border-top: 1px solid var(--line); backdrop-filter: blur(8px); flex-wrap: wrap; }
@@ -157,4 +163,10 @@ code { background: var(--field); padding: 1px 5px; font-size: 13px; word-break: 
   .dock-btns { width: 100%; }
   .dock-btns .btn { flex: 1; }
   .tab-head h1 { font-size: 32px; }
+}
+@media (max-width: 860px) { /* the pages get a row of their own */
+  .top { flex-wrap: wrap; height: auto; padding-top: 12px; row-gap: 2px; }
+  .brand { flex: 1; }
+  .tabs { order: 5; flex: 0 0 100%; }
+  .tabs button { padding-top: 12px; padding-bottom: 12px; }
 }

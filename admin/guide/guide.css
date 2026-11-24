@@ -68,3 +68,4 @@ dd { margin: 2px 0 0; }
   #zoom { place-items: start; }
   #zoom img { max-width: none; width: 900px; }   /* swipe around the picture */
 }
+section h3 { font: 400 24px/1.2 var(--display); color: #fff; margin: 44px 0 10px; scroll-margin-top: 24px; }

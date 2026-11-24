@@ -46,7 +46,7 @@ APP_PAGES = {
 SKIP = {'Running-on-Cargo'}
 
 # cache-busting: asset links get ?v=<hash of the asset files>, so browsers fetch new CSS/JS after a change
-import hashlib
+import hashlib, re
 V = hashlib.sha1(b''.join(open(os.path.join(ROOT, f), 'rb').read() for f in
                           ['css/static.css', 'css/app.css', 'css/fonts.css', 'js/app.js', 'js/site.js', '_source/site.css'])).hexdigest()[:8]
 HOME = 'Front-page'
@@ -306,3 +306,12 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# the admin and the guide: the same cache-busting for their own files
+for page in ('admin/index.html', 'admin/guide/index.html'):
+    p = os.path.join(ROOT, page); d = os.path.dirname(p); t = open(p).read()
+    def bust(m):
+        f = os.path.join(d, m.group(2))
+        return f'{m.group(1)}{m.group(2)}?v={hashlib.sha1(open(f, "rb").read()).hexdigest()[:8]}"'
+    t2 = re.sub(r'((?:src|href)=")((?:\.\./)?(?:admin|service|guide)\.(?:js|css))(?:\?v=\w+)?"', bust, t)
+    if t2 != t: open(p, 'w').write(t2)

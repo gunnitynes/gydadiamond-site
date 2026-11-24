@@ -24,21 +24,29 @@ Internet Archive, January–April 2026) and is now partly data-driven, with an a
   layout scripts; `css/app.css` styles the front page, top menu and data pages.
 
 ## The admin
-`/admin/` signs in with a fine-grained GitHub token for this one repository
-(Contents: read & write, Actions: read & write). Publish makes one commit with all the changes,
-including uploaded pictures (resized in the browser; press photos also keep the original).
-It refuses to publish if someone changed the same data file since the admin was opened.
-"Preview" shows unpublished changes on the real pages (`?preview`).
-On localhost there is a "try without a key" mode that never writes.
+`/admin/` signs in with a password. The password is checked by a small free service on Cloudflare (`service/`), which holds
+the GitHub key and is the only thing that writes to this repository. It accepts changes to `data/*.json` and pictures in
+`images/`, `images/t/` and `press/`, nothing else. Publish makes one commit with all the changes (press photos also keep the
+original) and refuses if someone changed the same data file since the admin was opened.
+"Preview" shows unpublished changes on the real pages (`?preview`). On localhost there is a "try without signing in" mode
+that never writes.
 
-The repository it writes to is set at the top of `admin/admin.js` (`REPO`).
+- **Passwords**: Gyða chooses and changes it in the admin, with a 6-digit code from Gunnar's authenticator app. Nobody else
+  can see it. Wrong tries lead to longer and longer pauses. A new password signs every other device out.
+- **The service's address** is at the top of `admin/service.js` (`URL_LIVE`); `setup.mjs` fills it in.
+
+In `service/` (run `npm install` once):
+- `node setup.mjs` sets everything up, or continues where it stopped.
+- `node setup.mjs key` replaces the GitHub key (fine-grained, this repository only, Contents and Actions: read and write).
+- `node setup.mjs code` moves the codes to a new phone; the old phone's codes stop working.
+- `npm test` and `node browser-test.mjs` test everything against a pretend GitHub.
+- All the pauses can be lifted by changing `EPOCH` in `wrangler.jsonc` and running `npx wrangler deploy`.
 
 ## The guide for Gyða
-`/admin/guide/` is a step-by-step guide. It opens straight away for anyone signed in to the admin in that browser;
-everyone else is asked for the admin password. Its text and pictures are in `admin/guide/guide.bin`, scrambled with a key
-made from the password hash in `admin/admin.js`. That keeps it away from casual readers and search engines, but the hash is
-public, so never put real secrets in the guide. The readable source is in `~/gydadiamond-guide`; `node build.mjs` there
-makes `guide.bin` again (`tools/set_admin_password.py` runs it when the password changes).
+`/admin/guide/` is a step-by-step guide that opens straight away for anyone signed in to the admin; everyone else is asked
+for the admin password. `admin/guide/guide.bin` is encrypted; the sign-in service gives the key to signed-in browsers only.
+The readable source and the key are in `~/gydadiamond-guide` (not in this public repository); `node build.mjs` there makes
+`guide.bin` again.
 
 ## Rebuilding the old pages
 `python3 _source/build.py` regenerates every `.html` page (Cargo pages from `_source/allpages.json`,

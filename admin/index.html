@@ -9,44 +9,39 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Vollkorn&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css">
+<link rel="stylesheet" href="admin.css?v=8ff1ab23">
 </head>
 <body>
-
-<section id="lock" class="signin" hidden>
-  <div class="signin-card">
-    <p class="kicker">gydadiamond.net</p>
-    <h1>Site admin</h1>
-    <form id="lock-form">
-      <label>Password<input id="pass" type="password" autocomplete="current-password" required></label>
-      <button class="btn solid" type="submit">Open</button>
-      <p class="err" id="lock-err" role="alert"></p>
-    </form>
-  </div>
-</section>
 
 <section id="signin" class="signin" hidden>
   <div class="signin-card">
     <p class="kicker">gydadiamond.net</p>
     <h1>Site admin</h1>
-    <p>Paste your key to start. You only need to do this once on each computer or phone.</p>
     <form id="signin-form">
-      <label>Key<input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required></label>
+      <input type="text" name="username" value="Gyða" autocomplete="username" hidden>
+      <label>Password<input id="pass" type="password" autocomplete="current-password" required></label>
       <button class="btn solid" type="submit">Sign in</button>
       <p class="err" id="signin-err" role="alert"></p>
     </form>
-    <details>
-      <summary>Where do I get a key?</summary>
-      <ol>
-        <li>Sign in to GitHub and open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a>.</li>
-        <li>Name it “Gyða website”, pick an expiry (up to a year), and under <b>Repository access</b> choose <b>Only select repositories</b> → <span class="repo-name"></span>.</li>
-        <li>Under <b>Permissions → Repository permissions</b> set <b>Contents</b> to <b>Read and write</b> and <b>Actions</b> to <b>Read and write</b>.</li>
-        <li>Click <b>Generate token</b>, copy it and paste it above.</li>
-      </ol>
-      <p>The key stays in this browser only. Sign out on shared computers.</p>
-    </details>
-    <p><a href="guide/#start" target="_blank">Open the guide</a></p>
-    <p class="local-only" hidden><button class="link" id="try-local" type="button">Try it without a key (local test, nothing is saved)</button></p>
+    <p><button class="link" id="forgot" type="button">Forgot the password, or first time here?</button></p>
+    <p class="local-only" hidden><button class="link" id="try-local" type="button">Try it without signing in (local test, nothing is saved)</button></p>
+  </div>
+</section>
+
+<section id="newpass" class="signin" hidden>
+  <div class="signin-card">
+    <p class="kicker">gydadiamond.net</p>
+    <h1>New password</h1>
+    <p>Choose at least 12 characters. Three or four words that don’t belong together are easy to remember and hard to guess.</p>
+    <form id="newpass-form">
+      <input type="text" name="username" value="Gyða" autocomplete="username" hidden>
+      <label>New password<input id="new1" type="password" autocomplete="new-password" minlength="12" required></label>
+      <label>The same again<input id="new2" type="password" autocomplete="new-password" required></label>
+      <label>Code from Gunnar<input id="code" type="text" inputmode="numeric" autocomplete="off" placeholder="6 digits" maxlength="7" required></label>
+      <p class="hint">Ask Gunnar for a code when you are ready to press Save. It only works for about a minute.</p>
+      <button class="btn solid" type="submit">Save</button> <button class="btn" type="button" id="newpass-cancel">Cancel</button>
+      <p class="err" id="newpass-err" role="alert"></p>
+    </form>
   </div>
 </section>
 
@@ -65,6 +60,7 @@
       <button role="tab" data-tab="settings">Contact &amp; press</button>
     </nav>
     <a class="link guide-link" id="guide-link" href="guide/" target="_blank">Guide</a>
+    <button class="link" id="change-pass">Password</button>
     <button class="link" id="signout">Sign out</button>
   </header>
   <main id="panel" class="panel"></main>
@@ -79,6 +75,7 @@
 </div>
 
 <div id="toast" class="toast" role="status" hidden></div>
-<script src="admin.js"></script>
+<script src="service.js?v=2677012a"></script>
+<script src="admin.js?v=aa4edf5e"></script>
 </body>
 </html>

@@ -1,21 +1,13 @@
 /* Admin for gydadiamond.net.
-   Everything the site shows from data/*.json is edited here. "Publish" makes ONE commit to the GitHub
-   repository (through the GitHub API, with the key pasted at sign-in); GitHub Pages puts it live
-   about a minute later. New pictures are resized in the browser before upload; press photos also keep
-   the full-size original for download. */
+   Everything the site shows from data/*.json is edited here. "Publish" makes ONE commit to the GitHub repository
+   through the sign-in service (service/worker.js, see service.js); GitHub Pages puts it live about a minute later.
+   New pictures are resized in the browser before upload; press photos also keep the full-size original for download. */
 (function () {
   'use strict';
 
-  // ---- where the site lives on GitHub
-  var REPO = { owner: 'gunnitynes', name: 'gydadiamond-site', branch: 'main' };
-  // admin password: only a salted PBKDF2 hash is stored here, never the password itself
-  // (to change it: python3 tools/set_admin_password.py)
-  var PASS = { salt: '8fdbb42222829c551788c196403a9ecf', iter: 250000, hash: 'dbe7ed29e67c9794959b2cafd17216548fa1eae009cd794e2d4bf3195341aac1' };
   var FILES = ['site', 'about', 'work', 'videos', 'news', 'shows', 'films', 'photos'];
-  var API = 'https://api.github.com/repos/' + REPO.owner + '/' + REPO.name;
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
-  var token = '';
   var offline = false;          // local test mode: reads ../data, never writes
   var D = {};                   // current data, per file
   var orig = {};                // published text, per file
@@ -23,6 +15,7 @@
   var cal = [];                 // data/calendar.json (written by the calendar sync, read-only here)
   var uploads = {};             // repo path -> { blob, url }
   var removals = {};            // repo path -> true
+  var loaded = false;
   var tab = 'front';
   var sel = {};                 // selected item per tab
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -66,26 +59,15 @@
     return p;
   }
 
-  // ------------------------------------------------------------------ GitHub
-  function gh(path, opts) {
-    opts = opts || {};
-    return fetch(path.indexOf('http') === 0 ? path : API + path, {
-      method: opts.method || 'GET',
-      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
-      body: opts.body ? JSON.stringify(opts.body) : undefined,
-      cache: 'no-store'
-    }).then(function (r) {
-      if (r.status === 204) return null;
-      return r.json().then(function (j) {
-        if (!r.ok) { var e = new Error(j.message || ('GitHub said ' + r.status)); e.status = r.status; throw e; }
-        return j;
-      });
+  // ------------------------------------------------------------------ the sign-in service
+  function call(method, path, body) {
+    return SERVICE.call(method, path, body).catch(function (e) {
+      if (e.status === 401) {
+        SERVICE.forget();
+        showSignin(loaded ? 'Please sign in again. Your changes are still here.' : '');
+      }
+      throw e;
     });
-  }
-  function b64ToText(b64) {
-    var bin = atob(b64.replace(/\n/g, '')), bytes = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new TextDecoder().decode(bytes);
   }
   function blobToB64(blob) {
     return new Promise(function (res, rej) {
@@ -95,32 +77,33 @@
       fr.readAsDataURL(blob);
     });
   }
-  function getFile(name) {
-    if (offline) {
-      return fetch('../data/' + name + '.json', { cache: 'no-store' }).then(function (r) {
-        return r.ok ? r.text() : null;
-      }).then(function (t) { return t == null ? null : { text: t, sha: 'local' }; });
-    }
-    return gh('/contents/data/' + name + '.json?ref=' + REPO.branch).then(function (j) {
-      return { text: b64ToText(j.content), sha: j.sha };
-    }, function (e) { if (e.status === 404) return null; throw e; });
+  function getData() {
+    if (!offline) return call('GET', '/data');
+    var files = {};
+    return Promise.all(FILES.concat(['calendar']).map(function (n) {
+      return fetch('../data/' + n + '.json', { cache: 'no-store' }).then(function (r) { return r.ok ? r.text() : null; })
+        .then(function (t) { if (t != null) files[n] = { text: t, sha: 'local' }; });
+    })).then(function () { return { files: files }; });
   }
 
   function loadAll() {
     $('#status').textContent = 'Loading…';
-    return Promise.all(FILES.concat(['calendar']).map(getFile)).then(function (res) {
-      FILES.forEach(function (n, i) {
-        var r = res[i] || { text: n === 'site' ? '{}\n' : '[]\n', sha: null };
+    return getData().then(function (res) {
+      FILES.forEach(function (n) {
+        var r = res.files[n] || { text: n === 'site' ? '{}\n' : '[]\n', sha: null };
         orig[n] = r.text;
         sha[n] = r.sha;
         D[n] = JSON.parse(r.text);
         orig[n] = text(n); // normalise formatting so "changed" only means real edits
       });
-      var c = res[FILES.length];
+      var c = res.files.calendar;
       try { cal = c ? JSON.parse(c.text) : []; } catch (e) { cal = []; }
       uploads = {};
       removals = {};
+      loaded = true;
       render();
+      var days = res.expires ? Math.floor((new Date(res.expires.slice(0, 10)) - Date.now()) / 864e5) : 999;
+      if (days < 30) toast('Please tell Gunnar: the website’s GitHub key runs out in ' + Math.max(0, days) + ' days.', true);
     });
   }
 
@@ -439,7 +422,7 @@
       onAct: function (act) {
         if (act === 'sync') {
           if (offline) return toast('Sync only works on the real site.');
-          gh('/actions/workflows/sync-calendar.yml/dispatches', { method: 'POST', body: { ref: REPO.branch } }).then(function () {
+          call('POST', '/sync-calendar', {}).then(function () {
             toast('Syncing the calendar… the shows appear on the site in a couple of minutes.');
           }, function (e) { toast('Could not start the sync: ' + e.message, true); });
         }
@@ -840,42 +823,19 @@
     var btn = $('#publish');
     btn.disabled = true;
     btn.textContent = 'Publishing…';
-    var head, baseTree;
-    // 1. make sure nobody else changed the same files since this page was loaded
-    Promise.all(files.map(function (f) {
-      return getFile(f).then(function (r) {
-        if ((r && r.sha) !== sha[f]) throw new Error('data/' + f + '.json was changed somewhere else since you opened the admin. Copy your text somewhere safe, reload the page and try again.');
+    // pictures go up one by one (big ones take a moment); then everything is saved in one go
+    var adds = {}, body = { files: {}, shas: {}, adds: adds, dels: dels }, done = 0;
+    files.forEach(function (f) { body.files[f] = text(f); body.shas[f] = sha[f]; });
+    ups.reduce(function (chain, path) {
+      return chain.then(function () {
+        $('#status').textContent = 'Uploading pictures… ' + (++done) + ' of ' + ups.length;
+        return blobToB64(uploads[path].blob).then(function (b64) {
+          return call('POST', '/blob', { content: b64, encoding: 'base64' });
+        }).then(function (b) { adds[path] = b.sha; });
       });
-    })).then(function () {
-      return gh('/git/ref/heads/' + REPO.branch);
-    }).then(function (ref) {
-      head = ref.object.sha;
-      return gh('/git/commits/' + head);
-    }).then(function (c) {
-      baseTree = c.tree.sha;
-      // 2. upload new pictures one by one (big ones take a moment)
-      var tree = [], done = 0;
-      return ups.reduce(function (chain, path) {
-        return chain.then(function () {
-          $('#status').textContent = 'Uploading pictures… ' + (++done) + ' of ' + ups.length;
-          return blobToB64(uploads[path].blob).then(function (b64) {
-            return gh('/git/blobs', { method: 'POST', body: { content: b64, encoding: 'base64' } });
-          }).then(function (b) { tree.push({ path: path, mode: '100644', type: 'blob', sha: b.sha }); });
-        });
-      }, Promise.resolve()).then(function () {
-        files.forEach(function (f) { tree.push({ path: 'data/' + f + '.json', mode: '100644', type: 'blob', content: text(f) }); });
-        dels.forEach(function (p) { tree.push({ path: p, mode: '100644', type: 'blob', sha: null }); });
-        return tree;
-      });
-    }).then(function (tree) {
+    }, Promise.resolve()).then(function () {
       $('#status').textContent = 'Saving…';
-      return gh('/git/trees', { method: 'POST', body: { base_tree: baseTree, tree: tree } });
-    }).then(function (t) {
-      var what = files.map(function (f) { return { videos: 'videos', about: 'about', work: 'work', site: 'front page/settings', shows: 'live', news: 'news', films: 'films', photos: 'photos' }[f]; });
-      if (ups.length) what.push(ups.length + ' picture' + (ups.length === 1 ? '' : 's'));
-      return gh('/git/commits', { method: 'POST', body: { message: 'Admin: update ' + what.join(', '), tree: t.sha, parents: [head] } });
-    }).then(function (c) {
-      return gh('/git/refs/heads/' + REPO.branch, { method: 'PATCH', body: { sha: c.sha } });
+      return call('POST', '/publish', body);
     }).then(function () {
       return loadAll();
     }).then(function () {
@@ -889,20 +849,27 @@
   // ------------------------------------------------------------------ start
   function start() {
     $('#signin').hidden = true;
+    $('#newpass').hidden = true;
     $('#app').hidden = false;
-    loadAll().catch(function (e) {
-      if (e.status === 401 || e.status === 403 || e.status === 404) {
-        localStorage.removeItem('gyda.key');
-        showSignin('That key does not work for this website (' + e.message + ').');
-      } else toast('Could not load: ' + e.message, true);
-    });
+    if (loaded) return dirty();      // signed in again in the middle of something
+    loadAll().catch(function (e) { if (e.status !== 401) toast('Could not load: ' + e.message, true); });
   }
   function showSignin(err) {
     $('#app').hidden = true;
+    $('#newpass').hidden = true;
     $('#signin').hidden = false;
     $('#signin-err').textContent = err || '';
-    document.querySelectorAll('.repo-name').forEach(function (n) { n.textContent = REPO.owner + '/' + REPO.name; });
     if (LOCAL) $('.local-only').hidden = false;
+    $('#pass').value = '';
+    $('#pass').focus();
+  }
+  function showNewpass(back) {       // back: where Cancel goes
+    ['#app', '#signin'].forEach(function (x) { $(x).hidden = true; });
+    $('#newpass').hidden = false;
+    $('#newpass-form').reset();
+    $('#newpass-err').textContent = '';
+    $('#newpass-cancel').onclick = back;
+    $('#new1').focus();
   }
 
   document.querySelector('.tabs').addEventListener('click', function (e) {
@@ -915,24 +882,36 @@
   });
   $('#signin-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    token = $('#token').value.trim();
-    $('#signin-err').textContent = 'Checking…';
-    gh('').then(function (repo) {
-      if (!repo.permissions || !repo.permissions.push) throw new Error('This key can read the website but not change it. Give it “Contents: Read and write”.');
-      localStorage.setItem('gyda.key', token);
+    var err = $('#signin-err'), b = $('#signin-form .btn');
+    err.textContent = 'One moment…';
+    b.disabled = true;
+    SERVICE.login($('#pass').value).then(function () {
+      $('#pass').value = '';
+      err.textContent = '';
       start();
-    }).catch(function (err) {
-      $('#signin-err').textContent = err.status === 401 ? 'GitHub did not accept that key. Check it was copied whole.' :
-        err.status === 404 ? 'That key cannot see ' + REPO.owner + '/' + REPO.name + '. Check the repository was selected when making the key.' : err.message;
-    });
+    }, function (x) { err.textContent = x.message; $('#pass').select(); }).then(function () { b.disabled = false; });
+  });
+  $('#forgot').addEventListener('click', function () { showNewpass(function () { showSignin(); }); });
+  $('#change-pass').addEventListener('click', function () { showNewpass(start); });
+  $('#newpass-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var err = $('#newpass-err'), b = $('#newpass-form .btn'), pw = $('#new1').value;
+    if (pw.length < 12) { err.textContent = 'Please make it at least 12 characters.'; return $('#new1').focus(); }
+    if (pw !== $('#new2').value) { err.textContent = 'The two passwords are not the same.'; return $('#new2').select(); }
+    err.textContent = 'One moment…';
+    b.disabled = true;
+    SERVICE.setPassword(pw, $('#code').value).then(function () {
+      $('#newpass-form').reset();
+      start();
+      toast('Your new password is saved. Other devices have been signed out.');
+    }).catch(function (x) { err.textContent = x.message; }).then(function () { b.disabled = false; });
   });
   $('#try-local').addEventListener('click', function () { offline = true; start(); });
   $('#signout').addEventListener('click', function () {
     if (changes() && !confirm('You have unpublished changes. Sign out and lose them?')) return;
-    localStorage.removeItem('gyda.key');
-    localStorage.removeItem('gyda.unlocked');
-    localStorage.removeItem('gyda.guide');
-    location.reload();
+    uploads = {}; removals = {};
+    FILES.forEach(function (n) { if (orig[n]) D[n] = JSON.parse(orig[n]); });   // so the browser doesn't ask a second time
+    (offline ? Promise.resolve() : SERVICE.logout()).then(function () { location.reload(); });
   });
   $('#publish').addEventListener('click', publish);
   $('#preview').addEventListener('click', preview);
@@ -949,32 +928,7 @@
     if (changes()) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join(''); }
-  function checkPass(pw) {
-    var salt = new Uint8Array(PASS.salt.match(/../g).map(function (x) { return parseInt(x, 16); }));
-    return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (k) {
-      return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: PASS.iter }, k, 256);
-    }).then(function (bits) { return hex(bits) === PASS.hash; });
-  }
-  function boot() {
-    var h = location.hash.slice(1);
-    if (TABS[h]) tab = h;
-    token = localStorage.getItem('gyda.key') || '';
-    if (token) start(); else showSignin();
-  }
-  $('#lock-form').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var err = $('#lock-err');
-    err.textContent = 'Checking…';
-    checkPass($('#pass').value).then(function (ok) {
-      if (!ok) { err.textContent = 'Wrong password.'; $('#pass').select(); return; }
-      try { localStorage.setItem('gyda.unlocked', PASS.hash); } catch (x) { /* private mode: ask again next time */ }
-      $('#lock').hidden = true;
-      boot();
-    });
-  });
-  var unlocked = false;
-  try { unlocked = localStorage.getItem('gyda.unlocked') === PASS.hash; } catch (x) { /* ignore */ }
-  if (unlocked) boot();
-  else { $('#lock').hidden = false; $('#pass').focus(); }
+  var h = location.hash.slice(1);
+  if (TABS[h]) tab = h;
+  if (SERVICE.signedIn()) start(); else showSignin();
 })();
