@@ -365,7 +365,7 @@
     var m = String(w.bandcamp || '').match(/album=(\d+)/) || String(w.bandcamp || '').match(/^\s*(\d{6,})\s*$/);
     if (!m) return '';
     return '<div class="bc-player"><iframe title="Listen to ' + esc(w.title) + ' on Bandcamp" seamless ' +
-      'src="https://bandcamp.com/EmbeddedPlayer/album=' + m[1] + '/size=large/bgcol=130303/linkcol=e8b8a8/artwork=none/transparent=true/"></iframe></div>';
+      'src="https://bandcamp.com/EmbeddedPlayer/album=' + m[1] + '/size=large/bgcol=ffffff/linkcol=174757/artwork=none/transparent=true/"></iframe></div>';
   }
 
   // ------------------------------------------------------------ VIDEO WALLS (Music videos, With others, Instant composition)
