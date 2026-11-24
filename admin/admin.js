@@ -278,7 +278,7 @@
       html += '<div class="ed-head"><h2>' + esc(r.venue) + '</h2></div><p class="info">This show comes from the calendar, so change it in the calendar itself. ' +
         'The website picks up calendar changes once a day, or straight away with “Sync now”.</p><p>' + esc(fmt(r.date)) + ' · ' + esc([r.city, r.country].filter(Boolean).join(', ')) +
         (r.note ? '<br>' + esc(r.note) : '') + (r.link ? '<br><a href="' + esc(r.link) + '" target="_blank">' + esc(r.link) + '</a>' : '') + '</p>';
-    } else html += '<p class="blank">Choose something on the left to edit it,<br>or press “+ ' + o.addLabel + '”.</p>';
+    } else html += '<p class="blank">Choose something in the list to edit it,<br>or press “+ ' + o.addLabel + '”.</p>';
     html += '</div></div>';
     var p = $('#panel');
     p.innerHTML = html;
@@ -303,7 +303,7 @@
           sel[o.name + ':ro'] = roList[+it.getAttribute('data-ro')].it;
         } else { sel[o.name] = list[+it.getAttribute('data-i')]; sel[o.name + ':ro'] = null; }
         render();
-        if (window.innerWidth < 860) $('.editor').scrollIntoView({ behavior: 'smooth' });
+        if (window.innerWidth <= 860) $('.editor').scrollIntoView({ behavior: 'smooth' });
         return;
       }
       var a = e.target.closest('[data-act]');
@@ -317,7 +317,8 @@
         dirty();
         render();
         var first = $('.editor input, .editor textarea');
-        if (first) first.focus();
+        if (first) first.focus({ preventScroll: window.innerWidth <= 860 });
+        if (window.innerWidth <= 860) $('.editor').scrollIntoView();   // on a phone the form is below the list
       }
       if (act === 'del' && cur && confirm('Delete “' + (o.label(cur) || 'this') + '”?')) {
         list.splice(list.indexOf(cur), 1);
@@ -382,7 +383,7 @@
         var url = D.site.calendar_ics || '';
         return '<div class="card"><h3>Calendar sync <span class="muted" style="font-size:14px">· optional</span></h3>' +
           '<p>Put shows in a Google Calendar from your phone instead of typing them here. The website reads the calendar every morning; “Sync now” reads it straight away.</p>' +
-          '<details' + (url ? '' : ' open') + '><summary class="muted" style="cursor:pointer;margin-bottom:10px">How to set it up</summary><div class="info"><ol>' +
+          '<details' + (url || window.innerWidth <= 860 ? '' : ' open') + '><summary class="muted" style="cursor:pointer;margin-bottom:10px">How to set it up</summary><div class="info"><ol>' +
           '<li>In Google Calendar on a computer, make a new calendar called <b>Gyða – shows</b>.</li>' +
           '<li>In its settings, tick <b>Make available to public</b>, then copy the <b>Public address in iCal format</b> (ends in <code>.ics</code>).</li>' +
           '<li>Paste it below and press Publish.</li>' +
@@ -772,6 +773,7 @@
     document.querySelectorAll('.tabs button').forEach(function (b) {
       var t = b.getAttribute('data-tab');
       b.setAttribute('aria-selected', t === tab);
+      if (t === tab && b.parentNode.scrollWidth > b.parentNode.clientWidth) b.parentNode.scrollLeft = b.offsetLeft - b.parentNode.offsetLeft - (b.parentNode.clientWidth - b.offsetWidth) / 2;
       if (t === tab) $('#guide-link').href = 'guide/#' + tab;   // the guide opens at the page she is on
       var dot = b.querySelector('.dot');
       var isDirty = changed(TAB_FILE[t]) || (t === 'live' && changed('site') && D.site.calendar_ics !== JSON.parse(orig.site).calendar_ics);

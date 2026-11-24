@@ -69,3 +69,5 @@ dd { margin: 2px 0 0; }
   #zoom img { max-width: none; width: 900px; }   /* swipe around the picture */
 }
 section h3 { font: 400 24px/1.2 var(--display); color: #fff; margin: 44px 0 10px; scroll-margin-top: 24px; }
+.phones { display: flex; gap: 12px; align-items: flex-start; }
+.phones img { width: calc(50% - 6px); min-width: 0; }
