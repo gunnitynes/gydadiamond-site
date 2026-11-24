@@ -11,6 +11,8 @@
   // admin password: only a salted PBKDF2 hash is stored here, never the password itself
   // (to change it: python3 tools/set_admin_password.py)
   var PASS = { salt: '8fdbb42222829c551788c196403a9ecf', iter: 250000, hash: 'dbe7ed29e67c9794959b2cafd17216548fa1eae009cd794e2d4bf3195341aac1' };
+  // the guide (admin/guide/) is encrypted with the admin password; this salt makes its key (it must match admin/guide/guide.js)
+  var GUIDE_SALT = 'c86a485a9e4c8e9c6d73cea768fa3aac';
   var FILES = ['site', 'about', 'work', 'videos', 'news', 'shows', 'films', 'photos'];
   var API = 'https://api.github.com/repos/' + REPO.owner + '/' + REPO.name;
   var LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
@@ -472,7 +474,7 @@
           { k: 'text', label: 'One or two sentences', type: 'textarea', wide: true },
           { k: 'listen', label: 'Listen link', type: 'url', placeholder: 'Bandcamp, Spotify…' },
           { k: 'listen_label', label: 'Listen link name', placeholder: 'Bandcamp' },
-          { k: 'page', label: 'Page on this site (optional)', placeholder: 'e.g. Ox', help: 'The page that “About the album →” opens. A full web address also works.' },
+          { k: 'page', label: 'Page on this site', placeholder: 'leave empty for albums', help: 'Leave empty for a new album: it gets its own page as soon as it has a story or tracks. Only needed for tiles under “More work” (e.g. FILM).' },
           { k: 'hidden', label: 'Hide this one', type: 'check' },
           { k: 'buy', label: 'Bandcamp page (buy)', type: 'url', placeholder: 'https://gyda.bandcamp.com/album/…', help: 'Used by the Store page and the “Buy on Bandcamp” button.' },
           { k: 'tidal', label: 'TIDAL player', type: 'url', placeholder: 'https://tidal.com/album/…', help: 'The album’s TIDAL address. Visitors without TIDAL hear 30-second previews. Leave empty to use the Bandcamp player instead.' },
@@ -689,7 +691,7 @@
           '<input type="text" data-k="href" value="' + esc(m.href) + '" aria-label="Page or link"><span class="tools"><button data-m="up" title="Up">↑</button><button data-m="down" title="Down">↓</button>' +
           '<button data-m="hide" title="Hide / show">◐</button><button data-m="del" title="Remove">✕</button></span></div>';
       }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-m="add">+ Add menu item</button></p>' +
-      '<p class="muted" style="font-size:12.5px;margin-top:12px">Pages: About, Work, FILM, LIVE, PHOTOS, NEWS, CONTACT, STORE, FULL-BIO, Epicycle, Epicycle-II, Evolution, Ox. A full web address works too.</p></div></div></div>';
+      '<p class="muted" style="font-size:12.5px;margin-top:12px">Pages: About, Work, FILM, LIVE, PHOTOS, NEWS, CONTACT, STORE, FULL-BIO, Music-Video, With-Others, Instant-composition. A full web address works too.</p></div></div></div>';
     var p = $('#panel');
     p.innerHTML = html;
     s.show_next_show = s.show_next_show !== false;
@@ -789,6 +791,7 @@
     document.querySelectorAll('.tabs button').forEach(function (b) {
       var t = b.getAttribute('data-tab');
       b.setAttribute('aria-selected', t === tab);
+      if (t === tab) $('#guide-link').href = 'guide/#' + tab;   // the guide opens at the page she is on
       var dot = b.querySelector('.dot');
       var isDirty = changed(TAB_FILE[t]) || (t === 'live' && changed('site') && D.site.calendar_ics !== JSON.parse(orig.site).calendar_ics);
       if (isDirty && !dot) b.insertAdjacentHTML('beforeend', '<span class="dot" title="Unpublished changes"></span>');
@@ -930,6 +933,7 @@
     if (changes() && !confirm('You have unpublished changes. Sign out and lose them?')) return;
     localStorage.removeItem('gyda.key');
     localStorage.removeItem('gyda.unlocked');
+    localStorage.removeItem('gyda.guide');
     location.reload();
   });
   $('#publish').addEventListener('click', publish);
@@ -954,6 +958,13 @@
       return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: PASS.iter }, k, 256);
     }).then(function (bits) { return hex(bits) === PASS.hash; });
   }
+  // remember the guide's key too, so the guide opens without asking again
+  function guideKey(pw) {
+    var salt = new Uint8Array(GUIDE_SALT.match(/../g).map(function (x) { return parseInt(x, 16); }));
+    crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (k) {
+      return crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt: salt, iterations: 250000 }, k, 256);
+    }).then(function (b) { localStorage.setItem('gyda.guide', hex(b)); }).catch(function () { /* the guide will ask */ });
+  }
   function boot() {
     var h = location.hash.slice(1);
     if (TABS[h]) tab = h;
@@ -967,6 +978,7 @@
     checkPass($('#pass').value).then(function (ok) {
       if (!ok) { err.textContent = 'Wrong password.'; $('#pass').select(); return; }
       try { localStorage.setItem('gyda.unlocked', PASS.hash); } catch (x) { /* private mode: ask again next time */ }
+      guideKey($('#pass').value);
       $('#lock').hidden = true;
       boot();
     });

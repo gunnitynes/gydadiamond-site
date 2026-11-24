@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Guide — Gyða</title>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="guide.css">
+</head>
+<body>
+<!-- The guide itself is in guide.bin, encrypted with the admin password. -->
+<section id="lock" hidden>
+  <form id="f">
+    <p class="k">gydadiamond.net</p>
+    <h1>The guide</h1>
+    <label>Admin password<input id="pw" type="password" autocomplete="current-password" required></label>
+    <button>Open</button>
+    <p id="err" role="alert"></p>
+  </form>
+</section>
+<main id="guide" hidden></main>
+<a id="totop" href="#top" hidden>↑ All topics</a>
+<div id="zoom" hidden><img alt=""></div>
+<script src="guide.js"></script>
+</body>
+</html>

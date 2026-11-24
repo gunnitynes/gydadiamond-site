@@ -419,7 +419,7 @@
         '<div class="pic">' + (w.image ? thumbImg(w.image, 'alt="' + esc(w.title) + ' cover" loading="lazy"') : '') + '</div>' +
         '<div class="txt"><div class="meta"><b>' + esc(w.year || '') + '</b><span>' + esc(w.kind || 'Album') + '</span></div><h3>' + esc(w.title) + '</h3>' +
         '<div class="acts"><a class="btn solid" href="' + esc(href) + '" target="_blank" rel="noopener">Vinyl, CD &amp; digital ↗</a>' +
-        (w.page ? '<a class="btn" href="' + esc(w.page) + '">About →</a>' : '') + '</div></div></article>';
+        (albumHref(w) ? '<a class="btn" href="' + esc(albumHref(w)) + '">About →</a>' : '') + '</div></div></article>';
     }).join('') + '</div>';
   }
 
@@ -449,10 +449,25 @@
     });
     root.innerHTML = h + '<p class="read-on"><a class="btn" href="About">← About</a></p>';
   }
+  // The page of an album: its own file (Ox, Evolution…) when it has one, otherwise Album?a=<title>, which shows any album
+  // added in the admin as soon as it has a story or a track list.
+  function slugify(t) {
+    return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ð/g, 'd').replace(/þ/g, 'th').replace(/æ/g, 'ae')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  function albumHref(w) {
+    if (w.page) return w.page;
+    return w.section !== 'More' && (w.story || w.tracks) ? 'Album?a=' + slugify(w.title) : '';
+  }
   function renderAlbum(work) {
     var slug = document.body.getAttribute('data-slug');
-    var albums = (work || []).filter(function (w) { return w.page && !w.hidden && w.section !== 'More'; });
-    var w = albums.filter(function (x) { return x.page === slug; })[0] || (work || []).filter(function (x) { return x.page === slug; })[0];
+    if (slug === 'Album') {
+      var q = (location.search.match(/[?&]a=([^&]+)/) || [])[1] || '';
+      var found = (work || []).filter(function (x) { return slugify(x.title) === decodeURIComponent(q); })[0];
+      slug = found ? albumHref(found) : '';
+    }
+    var albums = (work || []).filter(function (w) { return albumHref(w) && !w.hidden && w.section !== 'More'; });
+    var w = albums.filter(function (x) { return albumHref(x) === slug; })[0] || (work || []).filter(function (x) { return slug && x.page === slug; })[0];
     var root = document.getElementById('app');
     if (!w) { root.innerHTML = '<p class="empty">Not found.</p>'; return; }
     document.title = w.title + ' — Gyða Valtýsdóttir';
@@ -460,7 +475,7 @@
     if (t) t.textContent = w.title;
     if (k) k.textContent = [w.kind || 'Album', w.year].filter(Boolean).join(' · ');
     var bg = document.querySelector('.app-bg');
-    if (bg && w.background) bg.style.backgroundImage = "url('" + w.background + "')";
+    if (bg && (w.background || w.image)) bg.style.backgroundImage = "url('" + (w.background || w.image) + "')";
     var more = lines(w.more_links).map(function (l) { var m = l.split(/\s+\|\s+/); return m[1] ? '<a class="btn" href="' + esc(m[1]) + '"' + ext(m[1]) + '>' + esc(m[0]) + ' ↗</a>' : ''; }).join('');
     // cover in its own column down the whole page (it stays in view on computers); everything else beside it
     var cover = w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '';
@@ -490,8 +505,8 @@
     // the other albums, in Work order
     var i = albums.indexOf(w), prev = i > 0 ? albums[i - 1] : null, next = i >= 0 && i < albums.length - 1 ? albums[i + 1] : null;
     h = '<div class="album-layout' + (cover ? '' : ' no-cover') + '">' + cover + '<div class="album-body">' + h + '</div></div>';
-    h += '<nav class="album-nav">' + (prev ? '<a href="' + esc(prev.page) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
-      '<a href="Work">All work</a>' + (next ? '<a href="' + esc(next.page) + '">' + esc(next.title) + ' →</a>' : '<span></span>') + '</nav>';
+    h += '<nav class="album-nav">' + (prev ? '<a href="' + esc(albumHref(prev)) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
+      '<a href="Work">All work</a>' + (next ? '<a href="' + esc(albumHref(next)) + '">' + esc(next.title) + ' →</a>' : '<span></span>') + '</nav>';
     root.innerHTML = h;
   }
 
@@ -504,13 +519,13 @@
     var h = '';
     if (albums.length) {
       h += '<h2 class="section-label"><span class="on-wide">Albums</span><span class="on-phone">Albums, scores &amp; collaborations</span></h2><div class="card-grid">' + albums.map(function (w, i) {
-        var href = w.page || w.listen || '';
+        var href = albumHref(w) || w.listen || '';
         // with an odd number of albums the newest one gets a wide row of its own
         return '<article class="wcard' + (i === 0 && albums.length % 2 ? ' lead' : '') + '">' + (href ? '<a class="stretch" href="' + esc(href) + '"' + ext(href) + ' aria-label="' + esc(w.title) + '"></a>' : '') +
           '<div class="pic">' + (w.image ? thumbImg(w.image, 'alt="' + esc(w.title) + ' cover" loading="lazy"') : '') + '</div>' +
           '<div class="txt"><div class="meta">' + (w.year ? '<b>' + esc(w.year) + '</b>' : '') + '<span>' + esc(w.kind || '') + '</span></div>' +
           '<h3>' + esc(w.title) + '</h3>' + (w.text ? '<p>' + esc(w.text) + '</p>' : '') +
-          '<div class="acts">' + (w.page ? '<a class="btn" href="' + esc(w.page) + '"' + ext(w.page) + '>About the album →</a>' : '') +
+          '<div class="acts">' + (albumHref(w) ? '<a class="btn" href="' + esc(albumHref(w)) + '"' + ext(w.page) + '>About the album →</a>' : '') +
           (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') +
           '</div></div></article>';
       }).join('') + '</div>';

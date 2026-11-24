@@ -33,6 +33,7 @@ APP_PAGES = {
     'Evolution':   ('album', 'Evolution',   'Album', 'images/475818a3-drawing_2.png'),
     'Epicycle':    ('album', 'Epicycle',    'Album', 'images/af7fd07e-Epicycle-back.jpg'),
     'Epicycle-II': ('album', 'Epicycle II', 'Album', 'images/65f21254-EpicycleII-front-digital-copydark.jpg'),
+    'Album': ('album', 'Album', 'Album', 'images/20260320-mother-pearl-cover.jpg'),  # any album added in the admin: Album?a=title
     'AUGA': ('album', 'AUGA', 'Album', 'images/20250314-auga-cover.jpg'),
     'Mother-Pearl': ('album', 'Mother Pearl', 'Album', 'images/20260320-mother-pearl-cover.jpg'),
     # video walls, drawn from data/videos.json (each video's "page" says where it shows)

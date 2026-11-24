@@ -21,6 +21,8 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; }
 .btn.small { padding: 7px 10px; font-size: 11px; }
 .link { all: unset; cursor: pointer; color: var(--mute); text-decoration: underline; text-underline-offset: 3px; font-size: 13px; }
 .link:hover { color: #fff; }
+.top .guide-link { color: var(--glow); font-weight: 700; white-space: nowrap; }
+.top #signout { white-space: nowrap; }
 
 /* sign in */
 .signin { min-height: 100vh; display: grid; place-items: center; padding: 24px;

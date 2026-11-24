@@ -12,4 +12,9 @@ p = os.path.join(ROOT, 'admin', 'admin.js')
 s = open(p).read()
 s = re.sub(r"var PASS = \{[^}]*\};", f"var PASS = {{ salt: '{salt}', iter: 250000, hash: '{h}' }};", s)
 open(p, 'w').write(s)
-print('Password changed. Commit and push admin/admin.js to make it live.')
+print('Password changed. Commit and push admin/ to make it live.')
+# the guide is encrypted with the password, so it has to be made again with the new one
+guide = os.path.expanduser('~/gydadiamond-guide/build.mjs')
+if os.path.exists(guide):
+    import subprocess
+    subprocess.run(['node', guide], env={**os.environ, 'GYDA_PASS': pw, 'SITE': ROOT})
