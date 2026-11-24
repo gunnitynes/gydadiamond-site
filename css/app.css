@@ -233,6 +233,9 @@ body[data-view="album"] .album-body > section { margin-top: 6rem; }
 /* Bandcamp only offers a white or a grey player: we take the white one, invert it and let the page show through,
    so it reads as white text and controls on the page's own colour (the link colour 174757 inverts to the warm --glow) */
 .bc-player iframe { display: block; width: calc(100% + 4px); height: 124px; margin: -2px; border: 0; filter: invert(1); mix-blend-mode: lighten; }
+/* TIDAL's player is black in its dark version, so blending alone lets the page show through */
+.td-player { margin: 2.2rem 0 0; }
+.td-player iframe { display: block; width: 100%; height: 120px; border: 0; color-scheme: dark; mix-blend-mode: lighten; }
 /* the blend only reaches the page background if the text column is not a layer of its own; the faint artwork goes behind it instead */
 body[data-view="album"] .app-main { z-index: auto; }
 body[data-view="album"] .app-bg { z-index: -1; }

@@ -475,6 +475,7 @@
           { k: 'page', label: 'Page on this site (optional)', placeholder: 'e.g. Ox', help: 'The page that “About the album →” opens. A full web address also works.' },
           { k: 'hidden', label: 'Hide this one', type: 'check' },
           { k: 'buy', label: 'Bandcamp page (buy)', type: 'url', placeholder: 'https://gyda.bandcamp.com/album/…', help: 'Used by the Store page and the “Buy on Bandcamp” button.' },
+          { k: 'tidal', label: 'TIDAL player', type: 'url', placeholder: 'https://tidal.com/album/…', help: 'The album’s TIDAL address. Visitors without TIDAL hear 30-second previews. Leave empty to use the Bandcamp player instead.' },
           { k: 'bandcamp', label: 'Bandcamp player', placeholder: 'Paste the embed code from Bandcamp', help: 'On the album’s Bandcamp page: Share / Embed → choose any player → copy the code and paste it here. The album page then gets a player.' },
           { k: 'story', label: 'Album page: the story', type: 'textarea', tall: true, wide: true, help: 'Shown next to the cover on the album page. Empty line = new paragraph.' },
           { k: 'tracks_label', label: 'Album page: heading for the list', placeholder: 'Tracks' },

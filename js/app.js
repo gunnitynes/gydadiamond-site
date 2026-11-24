@@ -360,6 +360,14 @@
   function proseD(t) {
     return prose(t).replace(/<p>\s*◆\s*<\/p>/g, '<p class="sep-d" aria-hidden="true">◆</p>');
   }
+  // The music player on an album page: TIDAL's when the album has a TIDAL link, otherwise Bandcamp's.
+  // (TIDAL plays 30-second previews to visitors without a subscription; Bandcamp plays whole tracks.)
+  function player(w) {
+    var m = String(w.tidal || '').match(/albums?\/(\d+)/) || String(w.tidal || '').match(/^\s*(\d{5,})\s*$/);
+    if (!m) return bandcamp(w);
+    return '<div class="td-player"><iframe title="Listen to ' + esc(w.title) + ' on TIDAL" src="https://embed.tidal.com/albums/' + m[1] + '" ' +
+      'allow="encrypted-media; fullscreen; clipboard-write https://embed.tidal.com; web-share"></iframe></div>';
+  }
   // Bandcamp's own player for an album: "bandcamp" holds the album number, or the whole embed code pasted from Bandcamp
   function bandcamp(w) {
     var m = String(w.bandcamp || '').match(/album=(\d+)/) || String(w.bandcamp || '').match(/^\s*(\d{6,})\s*$/);
@@ -458,9 +466,9 @@
     var cover = w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '';
     var h = '<div class="album-top">' +
       '<div class="album-info"><div class="longread">' + proseD(w.story || w.text) + '</div>' +
-      bandcamp(w, 'large') +
+      player(w) +
       '<div class="acts">' + (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') +
-      (w.buy && w.buy !== w.listen ? '<a class="btn" href="' + esc(w.buy) + '" target="_blank" rel="noopener">Buy on Bandcamp ↗</a>' : '') + more + '</div></div></div>';
+      (w.buy && w.buy !== w.listen ? '<a class="btn" href="' + esc(w.buy) + '" target="_blank" rel="noopener">' + (/bandcamp/.test(w.buy) ? 'Buy on Bandcamp' : 'Buy the album') + ' ↗</a>' : '') + more + '</div></div></div>';
     var tracks = lines(w.tracks), credits = lines(w.credits);
     if (tracks.length || credits.length) {
       h += '<div class="album-cols">';
