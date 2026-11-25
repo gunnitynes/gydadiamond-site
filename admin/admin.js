@@ -250,7 +250,7 @@
     var q = (sel[o.name + ':q'] || '').toLowerCase();
     var shown = o.items ? o.items() : list.map(function (it) { return { it: it }; });
     if (q) shown = shown.filter(function (x) { return JSON.stringify(x.it).toLowerCase().indexOf(q) >= 0; });
-    var html = '<div class="tab-head"><div><h1>' + o.title + '</h1><p>' + o.intro + '</p></div><div class="acts">' +
+    var html = '<div class="tab-head"><div><h1>' + o.title + '</h1><p>' + o.intro + (window.innerWidth <= 860 && /^(news|shows)$/.test(o.name) ? ' <a href="post/">Quick post</a> is easier on a phone.' : '') + '</p></div><div class="acts">' +
       '<button class="btn solid" data-act="add">+ ' + o.addLabel + '</button></div></div>' + (o.extraTop ? o.extraTop() : '') +
       '<div class="split"><div><input type="search" class="search" placeholder="Search…" value="' + esc(sel[o.name + ':q'] || '') + '"><div class="list">';
     var lastGroup = null, roList = shown.filter(function (x) { return x.readonly; });

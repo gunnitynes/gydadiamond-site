@@ -308,10 +308,10 @@ if __name__ == '__main__':
     main()
 
 # the admin and the guide: the same cache-busting for their own files
-for page in ('admin/index.html', 'admin/guide/index.html'):
+for page in ('admin/index.html', 'admin/guide/index.html', 'admin/post/index.html'):
     p = os.path.join(ROOT, page); d = os.path.dirname(p); t = open(p).read()
     def bust(m):
         f = os.path.join(d, m.group(2))
         return f'{m.group(1)}{m.group(2)}?v={hashlib.sha1(open(f, "rb").read()).hexdigest()[:8]}"'
-    t2 = re.sub(r'((?:src|href)=")((?:\.\./)?(?:admin|service|guide)\.(?:js|css))(?:\?v=\w+)?"', bust, t)
+    t2 = re.sub(r'((?:src|href)=")((?:\.\./)?(?:admin|service|guide|post)\.(?:js|css))(?:\?v=\w+)?"', bust, t)
     if t2 != t: open(p, 'w').write(t2)

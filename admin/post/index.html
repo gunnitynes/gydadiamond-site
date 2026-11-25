@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#470606">
+<meta name="apple-mobile-web-app-title" content="Gyða post">
+<title>Quick post — Gyða</title>
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="post.css?v=5b96b7b5">
+</head>
+<body>
+
+<main id="signin" class="screen mid" hidden>
+  <p class="k">gydadiamond.net</p>
+  <h1>Quick post</h1>
+  <form id="signin-form">
+    <input type="text" name="username" value="Gyða" autocomplete="username" hidden>
+    <label>Password<input id="pass" type="password" autocomplete="current-password" required></label>
+    <button class="big">Sign in</button>
+    <p class="err" role="alert"></p>
+  </form>
+  <p class="foot"><a href="../" target="_blank">Forgot the password, or first time here?</a></p>
+</main>
+
+<main id="home" class="screen mid" hidden>
+  <p class="k">gydadiamond.net</p>
+  <h1>What’s new?</h1>
+  <button class="choice" data-go="news"><b>News</b><span></span></button>
+  <button class="choice" data-go="shows"><b>Show</b><span></span></button>
+  <p class="foot"><a href="../" target="_blank">Change something else</a> <a href="../guide/#quick" target="_blank">Guide</a></p>
+</main>
+
+<main id="news" class="screen" hidden>
+  <header><button class="link" data-back>‹ Back</button><button class="link" data-clear>Clear</button></header>
+  <h1>News</h1>
+  <form autocomplete="off" novalidate>
+    <div class="pic"><img alt="" hidden><label class="pick"><span>+ Add a picture</span><input type="file" accept="image/*"></label><button type="button" class="link nopic" hidden>Remove picture</button></div>
+    <label>Headline<input data-k="title" autocapitalize="sentences"></label>
+    <label>Text<textarea data-k="text" rows="7"></textarea></label>
+    <label>Link <i>if there is one</i><input data-k="link" type="url" inputmode="url" placeholder="https://…" autocapitalize="off"></label>
+    <label class="iflink" hidden>Words on the button<input data-k="link_label" placeholder="Listen"></label>
+    <label>Date<input data-k="date" type="date"></label>
+    <p class="err" role="alert"></p>
+    <button class="big">Preview</button>
+  </form>
+</main>
+
+<main id="shows" class="screen" hidden>
+  <header><button class="link" data-back>‹ Back</button><button class="link" data-clear>Clear</button></header>
+  <h1>Show</h1>
+  <form autocomplete="off" novalidate>
+    <label>Venue or festival<input data-k="venue" list="venues" autocapitalize="words"></label>
+    <label>Date<input data-k="date" type="date"></label>
+    <div class="two">
+      <label>City<input data-k="city" list="cities" autocapitalize="words"></label>
+      <label>Country<input data-k="country" list="countries" placeholder="IS" autocapitalize="characters"></label>
+    </div>
+    <label>With <i>if you play with others</i><input data-k="with" list="withs"></label>
+    <label>Ticket link <i>if there is one</i><input data-k="link" type="url" inputmode="url" placeholder="https://…" autocapitalize="off"></label>
+    <details><summary>More</summary>
+      <label>Last day <i>for a festival</i><input data-k="end" type="date"></label>
+      <label>Note<input data-k="note"></label>
+    </details>
+    <p class="err" role="alert"></p>
+    <button class="big">Preview</button>
+  </form>
+  <datalist id="venues"></datalist><datalist id="cities"></datalist><datalist id="countries"></datalist><datalist id="withs"></datalist>
+</main>
+
+<main id="preview" hidden>
+  <iframe title="How it will look"></iframe>
+  <div class="bar"><p class="err" role="alert"></p><button class="plain" data-edit>Change</button><button class="big" id="publish">Publish</button></div>
+</main>
+
+<main id="done" class="screen mid" hidden>
+  <p class="k">Done</p>
+  <h1></h1>
+  <p class="state" role="status"></p>
+  <a class="big" id="see" target="_blank">See it on the website</a>
+  <button class="plain" id="share" hidden>Share the link</button>
+  <button class="plain" id="undo">Take it back</button>
+  <p class="err" role="alert"></p>
+  <p class="foot"><button class="link" data-home>Post something else</button></p>
+</main>
+
+<script src="../service.js?v=2677012a"></script>
+<script src="post.js?v=9abb71f3"></script>
+</body>
+</html>

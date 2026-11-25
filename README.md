@@ -42,6 +42,10 @@ In `service/` (run `npm install` once):
 - `npm test` and `node browser-test.mjs` test everything against a pretend GitHub.
 - All the pauses can be lifted by changing `EPOCH` in `wrangler.jsonc` and running `npx wrangler deploy`.
 
+## Quick post
+`/admin/post/` is a phone page that adds one news post or one show (same password and service; drafts stay on the phone).
+`node post-test.mjs` in `service/` tests it.
+
 ## The guide for Gyða
 `/admin/guide/` is a step-by-step guide that opens straight away for anyone signed in to the admin; everyone else is asked
 for the admin password. `admin/guide/guide.bin` is encrypted; the sign-in service gives the key to signed-in browsers only.
