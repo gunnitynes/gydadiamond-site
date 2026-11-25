@@ -45,6 +45,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; }
 .top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 24px; padding: 0 24px; height: 58px;
   background: var(--ox); border-bottom: 1px solid rgba(0,0,0,.4); }
 .brand { color: var(--paper); text-decoration: none; letter-spacing: .3em; font-size: 12px; white-space: nowrap; }
+.brand em { font-style: normal; }
 .brand span { color: var(--glow); letter-spacing: .2em; }
 .tabs { display: flex; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
 .tabs button { all: unset; cursor: pointer; padding: 19px 14px 17px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
@@ -52,7 +53,6 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; }
 .tabs button:hover { color: #fff; }
 .tabs button[aria-selected="true"] { color: #fff; border-bottom-color: var(--glow); }
 .tabs button .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--glow); margin-left: 6px; vertical-align: middle; }
-@media (max-width: 1300px) { .top { gap: 16px; } .tabs button { padding-left: 10px; padding-right: 10px; letter-spacing: .14em; } }
 .panel { max-width: 1180px; margin: 0 auto; padding: 32px 24px 140px; }
 .dock { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 16px;
   padding: 14px 24px; background: rgba(20,4,4,.94); border-top: 1px solid var(--line); backdrop-filter: blur(8px); flex-wrap: wrap; }
@@ -165,9 +165,11 @@ code { background: var(--field); padding: 1px 5px; font-size: 13px; word-break: 
   .dock-btns .btn { flex: 1; }
   .tab-head h1 { font-size: 32px; }
 }
-@media (max-width: 860px) { /* the pages get a row of their own */
+@media (max-width: 1420px) { /* the pages get a row of their own */
   .top { flex-wrap: wrap; height: auto; padding-top: 12px; row-gap: 2px; }
   .brand { flex: 1; }
   .tabs { order: 5; flex: 0 0 100%; }
   .tabs button { padding-top: 12px; padding-bottom: 12px; }
 }
+@media (min-width: 861px) and (max-width: 1420px) { .list { top: 106px; max-height: calc(100vh - 290px); } .top .tabs { margin-left: -14px; } }
+@media (max-width: 430px) { .brand em { display: none; } .dock-btns .btn { min-width: 0; padding-left: 6px; padding-right: 6px; letter-spacing: .1em; } }

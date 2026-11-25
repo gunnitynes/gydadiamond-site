@@ -71,3 +71,8 @@ dd { margin: 2px 0 0; }
 section h3 { font: 400 24px/1.2 var(--display); color: #fff; margin: 44px 0 10px; scroll-margin-top: 24px; }
 .phones { display: flex; gap: 12px; align-items: flex-start; }
 .phones img { width: calc(50% - 6px); min-width: 0; }
+.go { display: flex; flex-wrap: wrap; gap: 12px; margin: 28px 0 0; }
+.go a { padding: 13px 24px; border: 1px solid var(--line); border-radius: 6px; color: #fff; text-decoration: none; font-weight: 700; }
+.go a.main { background: #fff; border-color: #fff; color: var(--ink); }
+.go a:hover { border-color: var(--glow); } .go a.main:hover { background: var(--glow); }
+.tiles a.main { border-color: var(--glow); }
