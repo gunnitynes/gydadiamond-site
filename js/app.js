@@ -96,7 +96,7 @@
     var bar = document.querySelector('.topbar');
     if (!bar || !site) return;
     var cur = '';
-    var links = (site.menu || []).filter(function (m) { return !m.hidden; }).map(function (m) {
+    var links = (site.menu || []).filter(function (m) { return !m.hidden && m.href; }).map(function (m) {
       if (here(m.href) || (view === 'album' && m.href === 'Work') || (view === 'bio' && m.href === 'About')) cur = m.label;
       return '<a href="' + esc(m.href) + '"' + (m.label === cur ? ' aria-current="page"' : '') + '>' + esc(m.label) + '</a>';
     }).join('');
@@ -195,7 +195,7 @@
       img.style.setProperty('--fy', f[1] || '50%');
     }
     var text = el.querySelector('.hero-text');
-    var menu = (site.menu || []).filter(function (m) { return !m.hidden; }).map(function (m) {
+    var menu = (site.menu || []).filter(function (m) { return !m.hidden && m.href; }).map(function (m) {
       return '<a href="' + esc(m.href) + '">◆ ' + esc(String(m.label).toUpperCase()) + '<span class="end"> ◆</span></a>';
     }).join('');
     text.innerHTML = '<h1>' + esc(site.name) + '</h1><p class="tagline">' + esc(site.tagline) + '</p>' +

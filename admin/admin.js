@@ -18,6 +18,7 @@
   var loaded = false;
   var tab = 'front';
   var sel = {};                 // selected item per tab
+  var otherAddr = [];           // menu items whose web address is being typed
   var $ = function (s, r) { return (r || document).querySelector(s); };
 
   // ------------------------------------------------------------------ helpers
@@ -556,7 +557,7 @@
     if (cur && list.indexOf(cur) < 0) cur = sel.photos = null;
     var credits = [];
     list.forEach(function (p) { if (p.credit && credits.indexOf(p.credit) < 0) credits.push(p.credit); });
-    var html = '<div class="tab-head"><div><h1>Press photos</h1><p>Journalists can view these large and download the full-size file. ' +
+    var html = '<div class="tab-head"><div><h1>Photos</h1><p>Journalists can view these large and download the full-size file. ' +
       'Upload the full-resolution original: the site makes the small version by itself.</p></div></div>' +
       '<div class="drop" id="drop">Drop photos here, or <button class="link" data-act="addp">choose files</button>.<br><span class="muted">' +
       'New photos get the photographer credit of the photo selected below, which you can change.</span></div>' +
@@ -655,25 +656,37 @@
   TABS.front = function () {
     var s = D.site;
     s.menu = s.menu || [];
+    // every page the menu can open: the fixed ones and each album's own page
+    var pages = [['About', 'About'], ['Work', 'Work'], ['FILM', 'Film'], ['LIVE', 'Live'], ['PHOTOS', 'Photos'], ['NEWS', 'News'], ['CONTACT', 'Contact'], ['STORE', 'Store'],
+      ['FULL-BIO', 'Full bio'], ['Music-Video', 'Music videos'], ['With-Others', 'With others'], ['Instant-composition', 'Instant composition']];
+    D.work.forEach(function (w) {
+      if (w.page && w.section !== 'More' && !pages.some(function (p) { return p[0] === w.page; })) pages.push([w.page, 'Album: ' + w.title]);
+    });
+    var known = function (href) { return pages.some(function (p) { return p[0] === href; }); };
+    var isOther = function (m) { return !!m.href && !known(m.href) || otherAddr.indexOf(m) >= 0; };
+    var pageOptions = function (m) {
+      var opt = function (v, t, on) { return '<option value="' + esc(v) + '"' + (on ? ' selected' : '') + '>' + esc(t) + '</option>'; };
+      return (m.href || isOther(m) ? '' : opt('', 'Choose a page…', true)) + pages.map(function (p) { return opt(p[0], p[1], !isOther(m) && p[0] === m.href); }).join('') + opt('*', 'Another web address…', isOther(m));
+    };
     var fp = (s.hero_focus || '50% 50%');
-    var html = '<div class="tab-head"><div><h1>Front page</h1><p>The big photo, the name and the menu. Click the photo where her face is: that spot stays in view on every screen, from phones to wide monitors.</p></div></div>' +
+    var html = '<div class="tab-head"><div><h1>Front page</h1><p>The big photo, the name and the menu. Click the big picture to choose which part stays in view on every screen, from phones to wide monitors.</p></div></div>' +
       '<div class="front-grid"><div><div class="card"><div class="focus-box" id="focus"><div class="frame"><img src="' + esc(img(s.hero)) + '" alt="" style="object-position:' + esc(fp) + '">' +
       '<div class="t">' + esc(s.name) + '</div></div></div><div class="focus-row"><div class="phone"><img src="' + esc(img(s.hero)) + '" alt="" style="object-position:' + esc(fp) + '"></div>' +
       '<p class="focus-tip">Left: a computer screen. Right: a phone. Click the big picture to choose what stays in view (now ' + esc(fp) + ').<br><br>' +
       '<button class="btn small" data-act="hero-up">Upload a new photo</button></p></div>' +
-      '<p class="muted" style="margin:16px 0 6px">…or pick one of the press photos:</p><div class="picker">' +
+      '<p class="muted" style="margin:16px 0 6px">…or pick one of the photos:</p><div class="picker">' +
       D.photos.map(function (p, i) { return '<button data-pick="' + i + '" aria-pressed="' + (p.src === s.hero) + '"><img src="' + esc(img(p.src)) + '" alt="" loading="lazy"></button>'; }).join('') +
       '</div></div></div><div><div class="card" id="words">' + fieldsHTML(s, [
         { k: 'name', label: 'Name', wide: true },
         { k: 'tagline', label: 'Line under the name', wide: true },
         { k: 'show_next_show', label: 'Show the next concert on the front page', type: 'check', wide: true }
-      ]) + '</div><div class="card"><h3>Menu</h3><p>The words in the menu and the pages they open. Use ↑ ↓ to reorder, ◐ to hide.</p><div class="rows" id="menu">' +
+      ]) + '</div><div class="card"><h3>Menu</h3><p>Left: the word in the menu. Right: the page it opens. Use ↑ ↓ to reorder, ◐ to hide.</p><div class="rows" id="menu">' +
       s.menu.map(function (m, i) {
         return '<div class="row two' + (m.hidden ? ' off' : '') + '" data-row="' + i + '"><input type="text" data-k="label" value="' + esc(m.label) + '" aria-label="Label">' +
-          '<input type="text" data-k="href" value="' + esc(m.href) + '" aria-label="Page or link"><span class="tools"><button data-m="up" title="Up">↑</button><button data-m="down" title="Down">↓</button>' +
-          '<button data-m="hide" title="Hide / show">◐</button><button data-m="del" title="Remove">✕</button></span></div>';
-      }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-m="add">+ Add menu item</button></p>' +
-      '<p class="muted" style="font-size:12.5px;margin-top:12px">Pages: About, Work, FILM, LIVE, PHOTOS, NEWS, CONTACT, STORE, FULL-BIO, Music-Video, With-Others, Instant-composition. A full web address works too.</p></div></div></div>';
+          '<select data-page aria-label="The page it opens">' + pageOptions(m) + '</select><span class="tools"><button data-m="up" title="Up">↑</button><button data-m="down" title="Down">↓</button>' +
+          '<button data-m="hide" title="Hide / show">◐</button><button data-m="del" title="Remove">✕</button></span>' +
+          (isOther(m) ? '<input type="url" class="addr" data-k="href" value="' + esc(m.href) + '" placeholder="https://…" aria-label="Web address">' : '') + '</div>';
+      }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-m="add">+ Add menu item</button></p></div></div></div>';
     var p = $('#panel');
     p.innerHTML = html;
     s.show_next_show = s.show_next_show !== false;
@@ -696,9 +709,22 @@
       dirty();
     });
     $('#menu').addEventListener('input', function (e) {
-      var row = e.target.closest('[data-row]');
-      s.menu[+row.getAttribute('data-row')][e.target.getAttribute('data-k')] = e.target.value;
+      if (!e.target.hasAttribute('data-k')) return;
+      s.menu[+e.target.closest('[data-row]').getAttribute('data-row')][e.target.getAttribute('data-k')] = e.target.value;
       dirty();
+    });
+    $('#menu').addEventListener('change', function (e) {
+      var row = e.target.closest('[data-row]'), m = s.menu[+row.getAttribute('data-row')], v = e.target.value.trim();
+      if (e.target.hasAttribute('data-page')) {
+        otherAddr = otherAddr.filter(function (x) { return x !== m; });
+        if (v === '*') { otherAddr.push(m); m.href = ''; } else m.href = v;
+        dirty();
+        render();
+        if (v === '*') { var a = $('#menu [data-row="' + row.getAttribute('data-row') + '"] .addr'); if (a) a.focus(); }
+      } else if (e.target.classList.contains('addr') && v && !/^(https?:|mailto:)/i.test(v) && !known(v)) {
+        m.href = e.target.value = 'https://' + v;
+        dirty();
+      }
     });
     p.addEventListener('click', function (e) {
       var pick = e.target.closest('[data-pick]');

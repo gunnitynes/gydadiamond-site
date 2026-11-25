@@ -127,7 +127,8 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
 .row .tools { display: flex; gap: 4px; }
 .row .tools button { all: unset; cursor: pointer; width: 30px; height: 34px; display: grid; place-items: center; background: var(--field); color: var(--soft); }
 .row .tools button:hover { color: #fff; background: #3a1414; }
-.row.off input { opacity: .45; }
+.row.off input, .row.off select { opacity: .45; }
+.row .addr { grid-column: 1 / -1; margin-bottom: 8px; }
 .card { background: var(--panel); padding: 22px; border-radius: 2px; margin-bottom: 20px; }
 .card h3 { font-size: 21px; margin-bottom: 4px; }
 .card > p { color: var(--mute); margin: 0 0 14px; font-size: 14px; }
