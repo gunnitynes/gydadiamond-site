@@ -552,44 +552,88 @@
     });
   };
 
+  // The photos are shown the way the website shows them: in columns, each photo going into the column that is
+  // shortest so far (the same rule as renderPhotos in js/app.js). Hidden photos are not on the site, so they wait below.
+  function photoCols() { return sel['photos:cols'] || (innerWidth <= 700 ? 2 : 3); }
+  function masonry(grid, tiles, items, n) {
+    var cols = [], h = [];
+    for (var c = 0; c < n; c++) { var d = document.createElement('div'); d.className = 'pcol'; cols.push(d); h.push(0); }
+    tiles.forEach(function (t, i) {
+      var p = items[i], k = h.indexOf(Math.min.apply(null, h));
+      h[k] += (p.width && p.height ? p.height / p.width : 1.25) + 0.12;
+      cols[k].appendChild(t);
+    });
+    grid.replaceChildren.apply(grid, cols);
+  }
+  // put the shown photos back into the list in their new order; hidden ones keep their places
+  function reorderShown(list, order) {
+    var k = 0;
+    for (var i = 0; i < list.length; i++) if (!list[i].hidden) list[i] = order[k++];
+  }
   TABS.photos = function () {
     var list = D.photos, cur = sel.photos;
     if (cur && list.indexOf(cur) < 0) cur = sel.photos = null;
     var credits = [];
     list.forEach(function (p) { if (p.credit && credits.indexOf(p.credit) < 0) credits.push(p.credit); });
+    var shown = list.filter(function (p) { return !p.hidden; }), hid = list.filter(function (p) { return p.hidden; });
+    var ncols = photoCols();
+    function tile(p) {
+      var r = p.width && p.height ? ' style="aspect-ratio:' + p.width + '/' + p.height + '"' : '';
+      return '<button class="ptile' + (p.hidden ? ' off' : '') + '" data-i="' + list.indexOf(p) + '"' + (p === cur ? ' aria-current="true"' : '') + '>' +
+        '<img src="' + esc(img(p.src)) + '" alt="" loading="lazy" draggable="false"' + r + '><span>© ' + esc(p.credit || '—') +
+        (p.caption ? ' · ' + esc(p.caption) : '') + '</span></button>';
+    }
     var html = '<div class="tab-head"><div><h1>Photos</h1><p>Journalists can view these large and download the full-size file. ' +
       'Upload the full-resolution original: the site makes the small version by itself.</p></div></div>' +
-      '<p class="muted drag-tip">Drag the photos into the order you want. On a phone or tablet: hold a photo for a moment, then drag.</p>' +
       '<div class="drop" id="drop">Drop photos here, or <button class="link" data-act="addp">choose files</button>.<br><span class="muted">' +
-      'New photos get the photographer credit of the photo selected below, which you can change.</span></div>' +
+      'New photos get the photographer credit of the selected photo, which you can change.</span></div>' +
       '<datalist id="credits">' + credits.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>' +
-      '<div class="split"><div class="pgrid">' + list.map(function (p, i) {
-        return '<button class="ptile' + (p.hidden ? ' off' : '') + '" data-i="' + i + '"' + (p === cur ? ' aria-current="true"' : '') + '><img src="' + esc(img(p.src)) + '" alt="" loading="lazy" draggable="false"><span>' + esc(p.credit || '—') + '</span></button>';
-      }).join('') + '</div><div class="editor">';
+      '<div class="photos-wrap"><div class="photos-main">' +
+      '<div class="as-site"><p class="muted drag-tip">This is how the photos page looks. Drag them into the order you want. ' +
+      'On a phone or tablet: hold a photo for a moment, then drag.</p>' +
+      '<div class="seg" role="group" aria-label="Show the page as on">' +
+      '<button data-cols="3" aria-pressed="' + (ncols === 3) + '">On a computer</button>' +
+      '<button data-cols="2" aria-pressed="' + (ncols === 2) + '">On a phone</button></div></div>' +
+      '<div class="pgrid">' + shown.map(tile).join('') + '</div>' +
+      (shown.length ? '' : '<p class="blank">No photos on the site yet.</p>') +
+      (hid.length ? '<h3 class="hid-head">Hidden: not on the site</h3><div class="phidden">' + hid.map(tile).join('') + '</div>' : '') +
+      '</div><div class="editor">';
     if (cur) {
-      var i = list.indexOf(cur);
-      html += '<div class="ed-head"><h2>Photo ' + (i + 1) + ' of ' + list.length + '</h2><div class="acts"><button class="btn small" data-act="up"' + (i ? '' : ' disabled') + '>← Earlier</button>' +
-        '<button class="btn small" data-act="down"' + (i < list.length - 1 ? '' : ' disabled') + '>Later →</button><button class="btn small danger" data-act="del">Delete</button></div></div>' +
-        '<img src="' + esc(img(cur.src)) + '" alt="" style="max-width:100%;max-height:340px;display:block;margin-bottom:16px">' +
+      var at = shown.indexOf(cur);
+      html += '<div class="ed-head"><h2>' + (cur.hidden ? 'Hidden photo' : 'Photo ' + (at + 1) + ' of ' + shown.length) + '</h2><div class="acts">' +
+        (cur.hidden ? '' : '<button class="btn small" data-act="up"' + (at ? '' : ' disabled') + '>← Earlier</button>' +
+        '<button class="btn small" data-act="down"' + (at < shown.length - 1 ? '' : ' disabled') + '>Later →</button>') +
+        '<button class="btn small danger" data-act="del">Delete</button></div></div>' +
+        '<img class="ed-img" src="' + esc(img(cur.src)) + '" alt=""' + (cur.width && cur.height ? ' width="' + cur.width + '" height="' + cur.height + '"' : '') + '>' +
         fieldsHTML(cur, [
           { k: 'credit', label: 'Photographer (credit)', list: 'credits' },
           { k: 'caption', label: 'Caption (optional)' },
           { k: 'hidden', label: 'Hide this photo', type: 'check' }
         ]) + '<p class="muted" style="margin-top:14px">Full size: ' + (cur.width ? cur.width + ' × ' + cur.height + ' px, ' : '') + (cur.bytes ? (cur.bytes / 1048576).toFixed(1) + ' MB' : '') +
         '</p><button class="btn small" data-act="hero">Use as front-page photo</button>';
-    } else html += '<p class="blank">Click a photo to edit its credit or delete it. Drag photos to change the order.</p>';
+    } else html += '<p class="blank">Click a photo to edit its credit, caption or hide it.</p>';
     html += '</div></div>';
     var p = $('#panel');
     p.innerHTML = html;
+    var grid = $('.pgrid', p);
+    masonry(grid, Array.prototype.slice.call(grid.children), shown, ncols);
     if (cur) bind($('.editor', p), cur, function () {
       var t = $('.ptile[aria-current="true"] span', p);
-      if (t) t.textContent = cur.credit || '—';
+      if (t) t.textContent = '© ' + (cur.credit || '—') + (cur.caption ? ' · ' + cur.caption : '');
+      if (!!cur.hidden !== (hid.indexOf(cur) >= 0)) render();   // hidden or shown again: it moves
     });
-    arrange($('.pgrid', p), list);
+    arrange(grid, list, shown, ncols);
     p.addEventListener('click', function (e) {
+      var c = e.target.closest('[data-cols]');
+      if (c) { sel['photos:cols'] = +c.getAttribute('data-cols'); render(); return; }
       var t = e.target.closest('.ptile');
       if (t && arrange.justDropped) return;
-      if (t) { sel.photos = list[+t.getAttribute('data-i')]; render(); return; }
+      if (t) {
+        sel.photos = list[+t.getAttribute('data-i')];
+        render();
+        if (window.innerWidth <= 1100) $('.editor').scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
       var a = e.target.closest('[data-act]');
       if (!a) return;
       var act = a.getAttribute('data-act');
@@ -603,9 +647,10 @@
         render();
       }
       if (act === 'up' || act === 'down') {
-        var i = list.indexOf(cur), j = act === 'up' ? i - 1 : i + 1;
-        list.splice(i, 1);
-        list.splice(j, 0, cur);
+        var i = shown.indexOf(cur), j = act === 'up' ? i - 1 : i + 1;
+        shown.splice(i, 1);
+        shown.splice(j, 0, cur);
+        reorderShown(list, shown);
         dirty();
         render();
       }
@@ -623,9 +668,19 @@
     });
   };
   // Drag photos into a new order. Mouse: press and move. Touch: hold a moment, then move (a quick swipe still scrolls).
-  function arrange(grid, list) {
-    var tiles = function () { return Array.prototype.slice.call(grid.querySelectorAll('.ptile')); };
+  // While a photo is held the columns are laid out again with it in its new place, so what you see is what the site will show.
+  function arrange(grid, list, shown, ncols) {
+    var tiles = Array.prototype.slice.call(grid.querySelectorAll('.ptile'));   // in the same order as shown
     var drag = null;
+    function itemOf(t) { return list[+t.getAttribute('data-i')]; }
+    function under(x, y) {
+      var hit = null;
+      tiles.forEach(function (t) {
+        var r = t.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) hit = t;
+      });
+      return hit;
+    }
     grid.addEventListener('pointerdown', function (e) {
       var t = e.target.closest('.ptile');
       if (!t || e.button > 0 || drag) return;
@@ -642,7 +697,9 @@
       drag.on = true;
       drag.dx = x - r.left; drag.dy = y - r.top;
       drag.px = x; drag.py = y;
-      drag.from = tiles().indexOf(drag.tile);
+      drag.order = shown.slice();
+      drag.last = drag.tile;
+      drag.sy = scrollY;
       drag.ghost = drag.tile.cloneNode(true);
       drag.ghost.className = 'ptile lifted';
       drag.ghost.style.width = r.width + 'px';
@@ -669,16 +726,29 @@
     }
     function place(x, y) {
       drag.ghost.style.transform = 'translate(' + (x - drag.dx) + 'px,' + (y - drag.dy) + 'px)';
-      var over = null;
-      tiles().forEach(function (t) {
-        if (t === drag.tile) return;
-        var r = t.getBoundingClientRect();
-        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) over = t;
+      var over = under(x, y);
+      if (over === drag.last) return;
+      drag.last = over;                       // a photo only moves again once the finger reaches another photo
+      if (!over || over === drag.tile) return;
+      // Try the places around the photo it is over and keep the one that puts the empty spot under the pointer,
+      // so the photo always lands where it is let go, even though the columns shift around it.
+      var it = itemOf(drag.tile), base = drag.order.filter(function (p) { return p !== it; });
+      var to = base.indexOf(itemOf(over)), best = null, bestD = Infinity;
+      [0, 1, -1, 2, -2, 3, -3, 4].forEach(function (k) {
+        var c = to + k;
+        if (c < 0 || c > base.length || bestD === 0) return;
+        drag.order = base.slice(); drag.order.splice(c, 0, it); lay();
+        var r = drag.tile.getBoundingClientRect();
+        var d = Math.max(r.left - x, 0, x - r.right) + Math.max(r.top - y, 0, y - r.bottom);
+        if (d < bestD) { bestD = d; best = drag.order; }
       });
-      if (!over) return;
-      var r = over.getBoundingClientRect();
-      var ref = x > r.left + r.width / 2 ? over.nextSibling : over;
-      if (ref !== drag.tile) grid.insertBefore(drag.tile, ref);
+      drag.order = best; lay();
+      drag.last = under(x, y);
+    }
+    function lay() {
+      var byItem = drag.order.map(function (p) { return tiles[shown.indexOf(p)]; });
+      masonry(grid, byItem, drag.order, ncols);
+      if (scrollY !== drag.sy) window.scrollTo(scrollX, drag.sy);   // the browser must not shift the page as the columns change
     }
     function scroll() { // near the top or bottom of the window, the page scrolls along
       cancelAnimationFrame(drag.raf);
@@ -688,6 +758,7 @@
       drag.raf = requestAnimationFrame(function step() {
         if (!drag || !drag.on) return;
         window.scrollBy(0, Math.max(-24, Math.min(24, v / 3)));
+        drag.sy = scrollY;
         place(drag.px, drag.py);
         drag.raf = requestAnimationFrame(step);
       });
@@ -695,16 +766,18 @@
     function end(e) {
       if (!drag || e.pointerId !== drag.id) return;
       if (!drag.on) return stop();
-      var to = tiles().indexOf(drag.tile), from = drag.from;
+      var order = drag.order, it = itemOf(drag.tile), top0 = drag.tile.getBoundingClientRect().top;
       stop();
       arrange.justDropped = true;
       setTimeout(function () { arrange.justDropped = false; }, 0);
-      if (to === from) return;
-      var it = list.splice(from, 1)[0];
-      list.splice(to, 0, it);
+      if (order.every(function (p, i) { return p === shown[i]; })) return;
+      reorderShown(list, order);
       sel.photos = it;
       dirty();
       render();
+      // the photo stays where it was let go, even when its editor opens above the columns
+      var t = document.querySelector('.pgrid .ptile[data-i="' + list.indexOf(it) + '"]');
+      if (t) window.scrollBy(0, t.getBoundingClientRect().top - top0);
     }
     function cancel() {
       if (!drag) return;

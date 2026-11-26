@@ -137,20 +137,44 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
 .picker button img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .picker button[aria-pressed="true"] { border-color: var(--glow); }
 
-/* photos tab */
-.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.ptile { all: unset; cursor: pointer; display: block; background: var(--panel); border: 2px solid transparent; }
-.ptile[aria-current="true"] { border-color: var(--glow); }
-.ptile img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
-.ptile span { display: block; padding: 6px 8px; font-size: 12px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ptile.off { opacity: .4; }
+/* photos tab: the photos sit in columns just as on the website's photos page; the editor stays beside them */
+.photos-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
+.photos-wrap .editor { position: sticky; top: 82px; max-height: calc(100vh - 82px - 96px); overflow: auto; }
+.ed-img { width: auto; height: auto; max-width: 100%; max-height: 260px; display: block; margin: 0 auto 16px; }
+.as-site { display: flex; justify-content: space-between; align-items: center; gap: 12px 20px; flex-wrap: wrap; margin: 0 0 14px; }
+.as-site .drag-tip { margin: 0; flex: 1 1 260px; }
+.seg { display: inline-flex; border: 1px solid var(--line); }
+.seg button { all: unset; cursor: pointer; padding: 7px 12px; font-size: 12px; color: var(--soft); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); }
+.pgrid { overflow-anchor: none; display: flex; gap: 14px; align-items: flex-start; background: #130303; padding: 18px; }
+.pcol { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.ptile { all: unset; cursor: pointer; display: block; position: relative; box-sizing: border-box; }
+.ptile img { width: 100%; height: auto; display: block; background: #2a0606; outline: 2px solid transparent; outline-offset: 2px; }
+.ptile[aria-current="true"] img { outline-color: var(--glow); }
+.ptile span { display: block; padding: 6px 0 0; font-size: 12px; color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ptile[aria-current="true"] span { color: var(--glow); }
+.ptile:hover img { filter: brightness(1.08); }
+.hid-head { font-family: var(--sans); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--mute); margin: 28px 0 10px; }
+.phidden { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; }
+.phidden .ptile img { aspect-ratio: 4 / 5; object-fit: cover; }
+.ptile.off { opacity: .5; }
 .ptile { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
 .ptile img { -webkit-user-drag: none; pointer-events: none; }
-.ptile.gap { opacity: .25; outline: 2px dashed var(--glow); outline-offset: -2px; }
-.ptile.lifted { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; border-color: var(--glow);
+.ptile.gap { opacity: .25; }
+.ptile.gap img { outline: 2px dashed var(--glow); outline-offset: -2px; }
+.ptile.lifted { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none;
   box-shadow: 0 18px 40px rgba(0,0,0,.6); opacity: .95; }
+.ptile.lifted span { display: none; }
+.arranging { overflow-anchor: none; }
 .arranging, .arranging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
 .drag-tip { margin: -6px 0 14px; font-size: 13px; }
+@media (max-width: 1420px) { .photos-wrap .editor { top: 126px; max-height: calc(100vh - 126px - 96px); } }
+@media (max-width: 1100px) { /* narrower: the chosen photo is edited above the columns */
+  .photos-wrap { grid-template-columns: minmax(0, 1fr); }
+  .photos-wrap .editor { order: -1; position: static; max-height: none; min-height: 0; scroll-margin-top: 130px; }
+  .photos-wrap .editor .blank { padding: 8px 0; }
+}
+@media (max-width: 860px) { .pgrid { padding: 10px; gap: 10px; } .pcol { gap: 10px; } }
 .drop { border: 1px dashed rgba(255,255,255,.3); padding: 22px; text-align: center; color: var(--mute); margin-bottom: 18px; }
 .drop.over { border-color: var(--glow); color: #fff; background: rgba(232,184,168,.06); }
 
