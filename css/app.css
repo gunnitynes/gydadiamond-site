@@ -208,6 +208,7 @@ body.split .app-main { max-width: none; margin: 0; padding-left: max(3rem, 6vw);
 
 /* ---------- ALBUM pages */
 body[data-view="album"] .app-bg { opacity: .14; }
+body[data-view="film"] .app-bg { opacity: .1; }   /* very faint: just a hint of misty mountain */
 .album-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 5rem; align-items: start; margin-top: 1rem; }
 .album-layout.no-cover { grid-template-columns: 1fr; }
 .album-top { margin: 0; }

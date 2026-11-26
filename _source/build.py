@@ -20,7 +20,7 @@ site = json.load(open(os.path.join(ROOT, 'data', 'site.json')))
 # Pages drawn by js/app.js from data/*.json (edited in /admin/), with their background photo
 APP_PAGES = {
     'Work':   ('work',   'Work',  'Albums, scores & collaborations', ''),
-    'FILM':   ('film',   'Film',  'Films, documentaries and art', 'images/b784a330-MIHKEL-cover.jpg'),
+    'FILM':   ('film',   'Film',  'Films, documentaries and art', 'images/film-bg-mountains.jpg'),  # the top of the MIHKEL cover, above its lettering
     'CONTACT': ('contact', 'Contact', 'Get in touch', 'hero:images/09f593f7-759A5994.jpg'),
     'LIVE':   ('live',   'Live',  'Concerts', 'hero:images/576e7e30-ata_kam-7.jpg'),
     'NEWS':   ('news',   'News',  'From Gyða', ''),

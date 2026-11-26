@@ -360,12 +360,37 @@
   function proseD(t) {
     return prose(t).replace(/<p>\s*◆\s*<\/p>/g, '<p class="sep-d" aria-hidden="true">◆</p>');
   }
-  // The music player on an album page: TIDAL's when the album has a TIDAL link, otherwise Bandcamp's.
+  // Where an album is listened to: TIDAL, or Bandcamp, chosen per album in the admin ("player").
+  // Left on automatic: TIDAL when the album has a TIDAL address, otherwise Bandcamp.
   // (TIDAL plays 30-second previews to visitors without a subscription; Bandcamp plays whole tracks.)
-  function player(w) {
+  function tidalId(w) {
     var m = String(w.tidal || '').match(/albums?\/(\d+)/) || String(w.tidal || '').match(/^\s*(\d{5,})\s*$/);
-    if (!m) return bandcamp(w);
-    return '<div class="td-player"><iframe title="Listen to ' + esc(w.title) + ' on TIDAL" src="https://embed.tidal.com/albums/' + m[1] + '" ' +
+    return m ? m[1] : '';
+  }
+  function bandcampPage(w) {
+    return [w.buy, w.listen].filter(function (u) { return /bandcamp\.com/.test(u || ''); })[0] || '';
+  }
+  function source(w) {
+    if (w.player === 'none') return '';
+    if (w.player === 'tidal' || w.player === 'bandcamp') return w.player;
+    return tidalId(w) ? 'tidal' : (w.bandcamp || bandcampPage(w)) ? 'bandcamp' : '';
+  }
+  // the Listen button goes to the same place the player is from; without a player, to the album's own listen link
+  function listenAt(w) {
+    var s = source(w);
+    if (s === 'tidal' && tidalId(w)) return ['https://tidal.com/album/' + tidalId(w), 'TIDAL'];
+    if (s === 'bandcamp' && bandcampPage(w)) return [bandcampPage(w), 'Bandcamp'];
+    return [w.listen, w.listen_label];
+  }
+  function listenBtn(w) {
+    var at = listenAt(w), href = at[0], name = at[1];
+    return href ? '<a class="btn solid" href="' + esc(href) + '" target="_blank" rel="noopener">Listen' + (name ? '<span class="on-wide"> · ' + esc(name) + '</span>' : '') + ' ↗</a>' : '';
+  }
+  function player(w) {
+    var s = source(w);
+    if (s === 'bandcamp') return bandcamp(w);
+    if (s !== 'tidal' || !tidalId(w)) return '';
+    return '<div class="td-player"><iframe title="Listen to ' + esc(w.title) + ' on TIDAL" src="https://embed.tidal.com/albums/' + tidalId(w) + '" ' +
       'allow="encrypted-media; fullscreen; clipboard-write https://embed.tidal.com; web-share"></iframe></div>';
   }
   // Bandcamp's own player for an album: "bandcamp" holds the album number, or the whole embed code pasted from Bandcamp
@@ -482,8 +507,8 @@
     var h = '<div class="album-top">' +
       '<div class="album-info"><div class="longread">' + proseD(w.story || w.text) + '</div>' +
       player(w) +
-      '<div class="acts">' + (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') +
-      (w.buy && w.buy !== w.listen ? '<a class="btn" href="' + esc(w.buy) + '" target="_blank" rel="noopener">' + (/bandcamp/.test(w.buy) ? 'Buy on Bandcamp' : 'Buy the album') + ' ↗</a>' : '') + more + '</div></div></div>';
+      '<div class="acts">' + listenBtn(w) +
+      (w.buy && w.buy !== listenAt(w)[0] ? '<a class="btn" href="' + esc(w.buy) + '" target="_blank" rel="noopener">' + (/bandcamp/.test(w.buy) ? 'Buy on Bandcamp' : 'Buy the album') + ' ↗</a>' : '') + more + '</div></div></div>';
     var tracks = lines(w.tracks), credits = lines(w.credits);
     if (tracks.length || credits.length) {
       h += '<div class="album-cols">';
@@ -526,7 +551,7 @@
           '<div class="txt"><div class="meta">' + (w.year ? '<b>' + esc(w.year) + '</b>' : '') + '<span>' + esc(w.kind || '') + '</span></div>' +
           '<h3>' + esc(w.title) + '</h3>' + (w.text ? '<p>' + esc(w.text) + '</p>' : '') +
           '<div class="acts">' + (albumHref(w) ? '<a class="btn" href="' + esc(albumHref(w)) + '"' + ext(w.page) + '>About the album →</a>' : '') +
-          (w.listen ? '<a class="btn solid" href="' + esc(w.listen) + '" target="_blank" rel="noopener">Listen' + (w.listen_label ? '<span class="on-wide"> · ' + esc(w.listen_label) + '</span>' : '') + ' ↗</a>' : '') +
+          listenBtn(w) +
           '</div></div></article>';
       }).join('') + '</div>';
     }
