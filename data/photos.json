@@ -18,20 +18,20 @@
   "caption": ""
  },
  {
-  "src": "images/20261125-gyda-26minnagul.jpg",
-  "hires": "press/20261125-gyda-26minnagul.jpg",
-  "width": 8192,
-  "height": 5464,
-  "bytes": 14870253,
-  "credit": "Saga Sig",
-  "caption": ""
- },
- {
   "src": "images/20261125-gyda-1minnagul.jpg",
   "hires": "press/20261125-gyda-1minnagul.jpg",
   "width": 7723,
   "height": 5464,
   "bytes": 24141851,
+  "credit": "Saga Sig",
+  "caption": ""
+ },
+ {
+  "src": "images/20261125-gyda-26minnagul.jpg",
+  "hires": "press/20261125-gyda-26minnagul.jpg",
+  "width": 8192,
+  "height": 5464,
+  "bytes": 14870253,
   "credit": "Saga Sig",
   "caption": ""
  },
