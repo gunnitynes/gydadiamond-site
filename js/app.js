@@ -6,6 +6,11 @@
 (function () {
   'use strict';
   var PREVIEW = /[?&]preview\b/.test(location.search);
+  // edit mode: ?edit in the address, in a browser signed in to the admin (js/edit.js does the editing)
+  var EDIT = (function () {
+    if (!/[?&]edit\b/.test(location.search) || PREVIEW) return false;
+    try { return !!localStorage.getItem('gyda.session'); } catch (e) { return false; }
+  })();
   var view = document.body.getAttribute('data-view') || '';
 
   // Font try-out: add ?font=raleway (etc.) to any page address to see the headings in another font.
@@ -52,6 +57,11 @@
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
+  // ---- edit mode (js/edit.js): every editable word and picture says where it comes from. Off for visitors.
+  var ED = null;   // set by edit mode: { id(item, file, list) → number }
+  function EI(item, file, list) { return ED && item ? ' data-ei="' + ED.id(item, file, list) + '"' : ''; }
+  function NOPIC(field, label) { return ED ? '<span class="ed-nopic"' + EF(field, 'img') + '>' + label + '</span>' : ''; }
+  function EF(field, kind) { return ED ? ' data-ef="' + field + '"' + (kind ? ' data-ek="' + kind + '"' : '') : ''; }
   // Plain text with blank lines between paragraphs; links are made clickable; **bold** and *italic* work.
   function prose(text) {
     return String(text || '').trim().split(/\n\s*\n/).map(function (para) {
@@ -179,7 +189,7 @@
         (c[2] ? '<p>' + esc(c[2]) + '</p>' : '') + '<div class="acts">' + c[3] + '</div></section>';
     }).join('') + '</div>' +
       (links.length ? '<div class="follow">' + links.map(function (l) {
-        return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label || l.url) + ' ↗</a>';
+        return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener"' + EI(l, 'site', site.links) + '><span' + EF('label') + '>' + esc(l.label || l.url) + '</span> ↗</a>';
       }).join('') + '</div>' : '');
   }
 
@@ -198,7 +208,7 @@
     var menu = (site.menu || []).filter(function (m) { return !m.hidden && m.href; }).map(function (m) {
       return '<a href="' + esc(m.href) + '">◆ ' + esc(String(m.label).toUpperCase()) + '<span class="end"> ◆</span></a>';
     }).join('');
-    text.innerHTML = '<h1>' + esc(site.name) + '</h1><p class="tagline">' + esc(site.tagline) + '</p>' +
+    text.innerHTML = '<h1' + EI(site, 'site') + EF('name') + '>' + esc(site.name) + '</h1><p class="tagline"' + EI(site, 'site') + EF('tagline') + '>' + esc(site.tagline) + '</p>' +
       '<nav class="hero-menu" aria-label="Main">' + menu + '</nav>';
     if (site.show_next_show === false) return Promise.resolve();
     return allShows().then(function (shows) {
@@ -229,14 +239,14 @@
       items.forEach(function (f) {
         var id = 'film-' + (n++);
         var who = [f.director ? 'by ' + f.director : '', f.role].filter(Boolean).join(' · ');
-        html += '<li class="film"><button aria-expanded="false" aria-controls="' + id + '">' +
-          '<span class="yr">' + esc(f.year) + '</span>' +
-          '<span class="ttl">' + esc(f.title) + '<span class="who">' + esc(who) + '</span></span>' +
+        html += '<li class="film"' + EI(f, 'films') + '><button aria-expanded="false" aria-controls="' + id + '">' +
+          '<span class="yr"' + EF('year') + '>' + esc(f.year) + '</span>' +
+          '<span class="ttl"><span' + EF('title') + '>' + esc(f.title) + '</span><span class="who">' + esc(who) + '</span></span>' +
           '<span class="plus" aria-hidden="true">+</span></button>' +
           '<div class="more" id="' + id + '"><div><div class="more-in">' +
-          (f.image ? thumbImg(f.image, 'alt="" loading="lazy"') : '') +
+          (f.image ? thumbImg(f.image, 'alt="" loading="lazy"' + EF('image', 'img')) : NOPIC('image', '+ Add a picture')) +
           '<div><p class="role">' + esc(f.role || '') + (f.year ? ' · ' + esc(f.year) : '') + '</p>' +
-          '<div class="prose">' + (f.text ? prose(f.text) : '<p>' + esc(f.director ? 'Directed by ' + f.director + '.' : '') + '</p>') + '</div>' +
+          '<div class="prose"' + EF('text', 'block') + '>' + (f.text ? prose(f.text) : '<p>' + esc(f.director ? 'Directed by ' + f.director + '.' : '') + '</p>') + '</div>' +
           (f.link ? '<a class="btn" href="' + esc(f.link) + '"' + ext(f.link) + '>' + esc(f.link_label || linkName(f.link)) + ' ↗</a>' : '') +
           '</div></div></div></div></li>';
       });
@@ -275,7 +285,9 @@
   }
   function renderLive(site) {
     var root = document.getElementById('app');
-    return allShows().then(function (shows) {
+    return Promise.all([allShows(), load('shows')]).then(function (r) {
+      var shows = r[0], own = r[1] || [];
+      function mine(s) { return own.indexOf(s) >= 0 ? EI(s, 'shows') : ''; }   // calendar shows are changed in the calendar
       var up = shows.filter(isUpcoming);
       // let search engines show the upcoming concerts (schema.org MusicEvent)
       var ld = up.filter(function (s) { return s.status !== 'cancelled'; }).map(function (s) {
@@ -301,15 +313,15 @@
           if (s.status === 'cancelled') tags += '<span class="tag hot">Cancelled</span>';
           if (s.status === 'soldout') tags += '<span class="tag hot">Sold out</span>';
           if (s.end && s.end !== s.date) tags += '<span class="tag">until ' + esc(fmtDay(s.end)) + '</span>';
-          return '<article class="show-card"><div class="show-date"><span class="d">' + d.getDate() + '</span><span class="m">' +
+          return '<article class="show-card"' + mine(s) + '><div class="show-date"><span class="d">' + d.getDate() + '</span><span class="m">' +
             MONTHS[d.getMonth()] + '</span><span class="y">' + d.getFullYear() + '</span></div>' +
-            '<div><h3>' + esc(s.venue) + '</h3><p class="place">' + esc(place(s)) + '</p>' +
-            (s.note ? '<p class="place">' + esc(s.note) + '</p>' : '') +
+            '<div><h3' + EF('venue') + '>' + esc(s.venue) + '</h3><p class="place">' + esc(place(s)) + '</p>' +
+            (s.note ? '<p class="place"' + EF('note') + '>' + esc(s.note) + '</p>' : '') +
             (tags ? '<div class="tags">' + tags + '</div>' : '') + '</div>' +
             '<div class="acts">' +
             (s.link && s.status !== 'cancelled' ? '<a class="btn solid" href="' + esc(s.link) + '"' + ext(s.link) + '>' + (s.status === 'soldout' ? 'Info' : 'Tickets') + ' ↗</a>' : '') +
             (s.status !== 'cancelled' ? '<a class="btn" href="' + icsFor(s) + '" download="gyda-' + esc(s.date) + '.ics">+ Calendar</a>' : '') +
-            (s.image ? '<a href="' + esc(s.image) + '" target="_blank"><img class="poster" src="' + esc(s.image) + '" alt="Poster" loading="lazy"></a>' : '') +
+            (s.image ? '<a href="' + esc(s.image) + '" target="_blank"><img class="poster" src="' + esc(s.image) + '" alt="Poster" loading="lazy"' + EF('image', 'img') + '></a>' : '') +
             '</div></article>';
         }).join('') + '</div>';
       } else {
@@ -327,7 +339,7 @@
             ' <small>' + list.length + (list.length === 1 ? ' concert' : ' concerts') + '</small></button><ol>' +
             list.map(function (s) {
               var what = s.link ? '<a href="' + esc(s.link) + '"' + ext(s.link) + '>' + esc(s.venue) + '</a>' : esc(s.venue);
-              return '<li class="' + (s.status === 'cancelled' ? 'cancelled' : '') + '"><span class="when">' + esc(fmtDay(s.date)) + '</span>' +
+              return '<li class="' + (s.status === 'cancelled' ? 'cancelled' : '') + '"' + mine(s) + '><span class="when">' + esc(fmtDay(s.date)) + '</span>' +
                 '<span class="what">' + what + (place(s) ? '<span class="sep">·</span>' + esc(place(s)) : '') +
                 (s.note ? '<span class="sep">·</span><i>' + esc(s.note) + '</i>' : '') +
                 (s.status === 'cancelled' ? ' <span class="tag">Cancelled</span>' : '') + '</span>' +
@@ -409,10 +421,10 @@
     if (!list.length) { root.innerHTML = '<p class="empty">No videos yet.</p>'; return; }
     root.innerHTML = '<div class="vwall' + (list.length < 3 ? ' few' : '') + '">' + list.map(function (v) {
       var id = ytId(v.youtube);
-      return '<figure class="vcard"><button class="vplay" data-yt="' + id + '" aria-label="Play ' + esc(v.title) + '">' +
+      return '<figure class="vcard"' + EI(v, 'videos') + '><button class="vplay" data-yt="' + id + '" aria-label="Play ' + esc(v.title) + '">' +
         '<img src="https://i.ytimg.com/vi/' + id + '/hqdefault.jpg" alt="" loading="lazy"><span class="vbtn" aria-hidden="true"></span></button>' +
-        '<figcaption><h3>' + esc(v.title) + '</h3>' + (v.by ? '<p class="by">' + esc(v.by) + '</p>' : '') +
-        (v.credits ? '<p class="cr">' + lines(v.credits).map(esc).join('<br>') + '</p>' : '') + '</figcaption></figure>';
+        '<figcaption><h3' + EF('title') + '>' + esc(v.title) + '</h3>' + (v.by ? '<p class="by"' + EF('by') + '>' + esc(v.by) + '</p>' : '') +
+        (v.credits ? '<p class="cr"' + EF('credits', 'block') + '>' + lines(v.credits).map(esc).join('<br>') + '</p>' : '') + '</figcaption></figure>';
     }).join('') + '</div>' +
       // the three video pages lead on to each other
       '<nav class="album-nav">' + [['Music-Video', 'Music videos'], ['With-Others', 'With others'], ['Instant-composition', 'Instant composition'], ['FILM', 'Film & art']]
@@ -447,7 +459,7 @@
   function renderAbout(a) {
     a = a || {};
     var root = document.getElementById('app');
-    root.innerHTML = '<div class="longread lead-first">' + proseD(a.text) + '</div>' +
+    root.innerHTML = '<div class="longread lead-first"' + EI(a, 'about') + EF('text', 'block') + '>' + proseD(a.text) + '</div>' +
       '<p class="read-on"><a class="btn" href="FULL-BIO">Full bio →</a></p>';
   }
   function renderBio(a) {
@@ -466,7 +478,7 @@
       }).join('') + '</ul>';
       h += '</section>';
     });
-    root.innerHTML = h + '<p class="read-on"><a class="btn" href="About">← About</a></p>';
+    root.innerHTML = '<div' + EI(a, 'about') + EF('bio', 'block') + '>' + h + '</div><p class="read-on"><a class="btn" href="About">← About</a></p>';
   }
   // The page of an album: its own file (Ox, Evolution…) when it has one, otherwise Album?a=<title>, which shows any album
   // added in the admin as soon as it has a story or a track list.
@@ -491,39 +503,41 @@
     if (!w) { root.innerHTML = '<p class="empty">Not found.</p>'; return; }
     document.title = w.title + ' — Gyða Valtýsdóttir';
     var t = document.querySelector('.page-title'), k = document.querySelector('.app-main > .kicker');
-    if (t) t.textContent = w.title;
+    if (t) { t.textContent = w.title; if (ED) { t.setAttribute('data-ei', ED.id(w, 'work')); t.setAttribute('data-ef', 'title'); } }
     if (k) k.textContent = [w.kind || 'Album', w.year].filter(Boolean).join(' · ');
     var bg = document.querySelector('.app-bg');
     if (bg && (w.background || w.image)) bg.style.backgroundImage = "url('" + (w.background || w.image) + "')";
     var more = lines(w.more_links).map(function (l) { var m = l.split(/\s+\|\s+/); return m[1] ? '<a class="btn" href="' + esc(m[1]) + '"' + ext(m[1]) + '>' + esc(m[0]) + ' ↗</a>' : ''; }).join('');
     // cover in its own column down the whole page (it stays in view on computers); everything else beside it
-    var cover = w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"></div>' : '';
+    var cover = w.image ? '<div class="album-cover"><img src="' + esc(w.image) + '" alt="' + esc(w.title) + ' cover"' + EF('image', 'img') + '></div>' : '';
     var h = '<div class="album-top">' +
-      '<div class="album-info"><div class="longread">' + proseD(w.story || w.text) + '</div>' +
+      '<div class="album-info"><div class="longread"' + EF(w.story || !w.text ? 'story' : 'text', 'block') + '>' + proseD(w.story || w.text) + '</div>' +
       player(w) +
       '<div class="acts">' + listenBtn(w) +
       (w.buy && w.buy !== listenAt(w)[0] ? '<a class="btn" href="' + esc(w.buy) + '" target="_blank" rel="noopener">' + (/bandcamp/.test(w.buy) ? 'Buy on Bandcamp' : 'Buy the album') + ' ↗</a>' : '') + more + '</div></div></div>';
     var tracks = lines(w.tracks), credits = lines(w.credits);
     if (tracks.length || credits.length) {
       h += '<div class="album-cols">';
-      if (tracks.length) h += '<section><h2 class="section-label">' + esc(w.tracks_label || 'Tracks') + '</h2><ol class="tracks">' +
+      if (tracks.length) h += '<section><h2 class="section-label">' + esc(w.tracks_label || 'Tracks') + '</h2><ol class="tracks"' + EF('tracks', 'block') + '>' +
         tracks.map(function (l) { return '<li>' + linkLine(l) + '</li>'; }).join('') + '</ol></section>';
-      if (credits.length) h += '<section><h2 class="section-label">Credits</h2><ul class="credits">' +
+      if (credits.length) h += '<section><h2 class="section-label">Credits</h2><ul class="credits"' + EF('credits', 'block') + '>' +
         credits.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></section>';
       h += '</div>';
     }
+    var qs = '';
     String(w.quotes || '').split(/\n\s*\n/).map(function (q) { return q.trim(); }).filter(Boolean).forEach(function (q) {
       var ls = q.split('\n'), src = /^[—–-]\s*/.test(ls[ls.length - 1]) && ls.length > 1 ? ls.pop().replace(/^[—–-]\s*/, '') : '';
-      h += '<figure class="pull"><blockquote>“' + esc(ls.join(' ').replace(/^[“"]|[”"]$/g, '')) + '”</blockquote>' + (src ? '<figcaption>' + esc(src) + '</figcaption>' : '') + '</figure>';
+      qs += '<figure class="pull"><blockquote>“' + esc(ls.join(' ').replace(/^[“"]|[”"]$/g, '')) + '”</blockquote>' + (src ? '<figcaption>' + esc(src) + '</figcaption>' : '') + '</figure>';
     });
+    if (qs) h += '<div' + EF('quotes', 'block') + '>' + qs + '</div>';
     var awards = lines(w.awards);
-    if (awards.length) h += '<section><h2 class="section-label">Awards</h2><ul class="awards">' + awards.map(function (l) {
+    if (awards.length) h += '<section><h2 class="section-label">Awards</h2><ul class="awards"' + EF('awards', 'block') + '>' + awards.map(function (l) {
       var m = l.split(/\s+—\s+/);
       return '<li><span>' + esc(m[0]) + '</span>' + (m[1] ? '<b>' + esc(m[1]) + '</b>' : '') + '</li>';
     }).join('') + '</ul></section>';
     // the other albums, in Work order
     var i = albums.indexOf(w), prev = i > 0 ? albums[i - 1] : null, next = i >= 0 && i < albums.length - 1 ? albums[i + 1] : null;
-    h = '<div class="album-layout' + (cover ? '' : ' no-cover') + '">' + cover + '<div class="album-body">' + h + '</div></div>';
+    h = '<div class="album-layout' + (cover ? '' : ' no-cover') + '"' + EI(w, 'work') + '>' + cover + '<div class="album-body">' + h + '</div></div>';
     h += '<nav class="album-nav">' + (prev ? '<a href="' + esc(albumHref(prev)) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
       '<a href="Work">All work</a>' + (next ? '<a href="' + esc(albumHref(next)) + '">' + esc(next.title) + ' →</a>' : '<span></span>') + '</nav>';
     root.innerHTML = h;
@@ -540,10 +554,10 @@
       h += '<h2 class="section-label"><span class="on-wide">Albums</span><span class="on-phone">Albums, scores &amp; collaborations</span></h2><div class="card-grid">' + albums.map(function (w, i) {
         var href = albumHref(w) || w.listen || '';
         // with an odd number of albums the newest one gets a wide row of its own
-        return '<article class="wcard' + (i === 0 && albums.length % 2 ? ' lead' : '') + '">' + (href ? '<a class="stretch" href="' + esc(href) + '"' + ext(href) + ' aria-label="' + esc(w.title) + '"></a>' : '') +
-          '<div class="pic">' + (w.image ? thumbImg(w.image, 'alt="' + esc(w.title) + ' cover" loading="lazy"') : '') + '</div>' +
-          '<div class="txt"><div class="meta">' + (w.year ? '<b>' + esc(w.year) + '</b>' : '') + '<span>' + esc(w.kind || '') + '</span></div>' +
-          '<h3>' + esc(w.title) + '</h3>' + (w.text ? '<p>' + esc(w.text) + '</p>' : '') +
+        return '<article class="wcard' + (i === 0 && albums.length % 2 ? ' lead' : '') + '"' + EI(w, 'work') + '>' + (href ? '<a class="stretch" href="' + esc(href) + '"' + ext(href) + ' aria-label="' + esc(w.title) + '"></a>' : '') +
+          '<div class="pic">' + (w.image ? thumbImg(w.image, 'alt="' + esc(w.title) + ' cover" loading="lazy"' + EF('image', 'img')) : NOPIC('image', '+ Add a cover')) + '</div>' +
+          '<div class="txt"><div class="meta">' + (w.year ? '<b' + EF('year') + '>' + esc(w.year) + '</b>' : '') + '<span' + EF('kind') + '>' + esc(w.kind || '') + '</span></div>' +
+          '<h3' + EF('title') + '>' + esc(w.title) + '</h3>' + (w.text || ED ? '<p' + EF('text') + '>' + esc(w.text || '') + '</p>' : '') +
           '<div class="acts">' + (albumHref(w) ? '<a class="btn" href="' + esc(albumHref(w)) + '"' + ext(w.page) + '>About the album →</a>' : '') +
           listenBtn(w) +
           '</div></div></article>';
@@ -551,9 +565,9 @@
     }
     if (more.length) {
       h += '<h2 class="section-label" style="margin-top:9rem">More work</h2><div class="card-grid small">' + more.map(function (w) {
-        return '<a class="tile" href="' + esc(w.page || w.listen || '#') + '"' + ext(w.page || w.listen) + '>' +
-          (w.image ? thumbImg(w.image, 'alt="" loading="lazy"') : '') +
-          '<span><small>' + esc(w.kind || '') + '</small><b>' + esc(w.title) + '</b></span></a>';
+        return '<a class="tile" href="' + esc(w.page || w.listen || '#') + '"' + ext(w.page || w.listen) + EI(w, 'work') + '>' +
+          (w.image ? thumbImg(w.image, 'alt="" loading="lazy"' + EF('image', 'img')) : '') +
+          '<span><small' + EF('kind') + '>' + esc(w.kind || '') + '</small><b' + EF('title') + '>' + esc(w.title) + '</b></span></a>';
       }).join('') + '</div>';
     }
     root.innerHTML = h || '<p class="empty">Nothing here yet.</p>';
@@ -567,15 +581,15 @@
       .sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
     if (!list.length) { root.innerHTML = '<p class="empty">No news yet.</p>'; return; }
     var first = list[0], rest = list.slice(1);
-    var h = '<article class="feature" tabindex="0" data-n="0">' +
-      (first.image ? '<div class="pic"><img src="' + esc(first.image) + '" alt=""></div>' : '') +
+    var h = '<article class="feature" tabindex="0" data-n="0"' + EI(first, 'news') + '>' +
+      (first.image ? '<div class="pic"><img src="' + esc(first.image) + '" alt=""' + EF('image', 'img') + '></div>' : ED ? '<div class="pic">' + NOPIC('image', '+ Add a picture') + '</div>' : '') +
       '<div><div class="wcard"><div class="meta"><b>Latest</b><span>' + esc(fmtLong(first.date)) + '</span></div></div>' +
-      '<h2>' + esc(first.title || '') + '</h2><p class="excerpt">' + esc(plain(first.text)) + '</p>' +
+      '<h2' + EF('title') + '>' + esc(first.title || '') + '</h2><p class="excerpt">' + esc(plain(first.text)) + '</p>' +
       '<span class="btn">Read →</span></div></article>';
     if (rest.length) {
       h += '<h2 class="section-label" style="margin-top:8rem">Earlier</h2><div class="card-grid three">' + rest.map(function (p, i) {
-        return '<button class="wcard" data-n="' + (i + 1) + '"><div class="pic">' + (p.image ? thumbImg(p.image, 'alt="" loading="lazy"') : '') + '</div>' +
-          '<div class="meta"><span>' + esc(fmtLong(p.date)) + '</span></div><h3>' + esc(p.title || '') + '</h3>' +
+        return '<button class="wcard" data-n="' + (i + 1) + '"' + EI(p, 'news') + '><div class="pic">' + (p.image ? thumbImg(p.image, 'alt="" loading="lazy"' + EF('image', 'img')) : NOPIC('image', '+ Add a picture')) + '</div>' +
+          '<div class="meta"><span>' + esc(fmtLong(p.date)) + '</span></div><h3' + EF('title') + '>' + esc(p.title || '') + '</h3>' +
           '<p class="excerpt">' + esc(plain(p.text)) + '</p></button>';
       }).join('') + '</div>';
     }
@@ -586,11 +600,14 @@
       var p = list[n];
       // picture and text side by side on computers (stacked on phones), the whole post in view at once
       reader.querySelector('article').classList.toggle('has-img', !!p.image);
-      reader.querySelector('.body').innerHTML = (p.image ? '<figure class="r-img"><img src="' + esc(p.image) + '" alt=""></figure>' : '') +
-        '<div class="r-text"><time datetime="' + esc(p.date) + '">' + esc(fmtLong(p.date)) + '</time><h2>' + esc(p.title || '') + '</h2>' +
-        '<div class="prose">' + prose(p.text) + '</div>' +
+      var bd = reader.querySelector('.body');
+      if (ED) bd.setAttribute('data-ei', ED.id(p, 'news')); else bd.removeAttribute('data-ei');
+      bd.innerHTML = (p.image ? '<figure class="r-img"><img src="' + esc(p.image) + '" alt=""' + EF('image', 'img') + '></figure>' : '') +
+        '<div class="r-text"><time datetime="' + esc(p.date) + '">' + esc(fmtLong(p.date)) + '</time><h2' + EF('title') + '>' + esc(p.title || '') + '</h2>' +
+        '<div class="prose"' + EF('text', 'block') + '>' + prose(p.text) + '</div>' +
         (p.link ? '<a class="btn solid" href="' + esc(p.link) + '"' + ext(p.link) + '>' + esc(p.link_label || 'More') + ' ↗</a>' : '') + '</div>';
       reader.hidden = false;
+      if (ED && ED.decorate) ED.decorate(reader);
       reader.querySelector('article').scrollTop = 0;
       var rt = reader.querySelector('.r-text'); if (rt) rt.scrollTop = 0;
       document.body.style.overflow = 'hidden';
@@ -618,7 +635,7 @@
     var credits = [];
     list.forEach(function (p) { if (p.credit && credits.indexOf(p.credit) < 0) credits.push(p.credit); });
     root.innerHTML =
-      ((site && site.press_intro) ? '<p class="press-intro">' + esc(site.press_intro) + '</p>' : '') +
+      ((site && site.press_intro) || ED ? '<p class="press-intro"' + EI(site, 'site') + EF('press_intro') + '>' + esc(site && site.press_intro || '') + '</p>' : '') +
       '<div class="chips" role="group" aria-label="Photographer"><button class="chip" aria-pressed="true" data-c="">All</button>' +
       credits.map(function (c) { return '<button class="chip" aria-pressed="false" data-c="' + esc(c) + '">' + esc(c) + '</button>'; }).join('') +
       '</div><div class="grid"></div>' +
@@ -639,9 +656,9 @@
         var ratio = p.width && p.height ? ' width="' + p.width + '" height="' + p.height + '"' : '';
         var k = heights.indexOf(Math.min.apply(null, heights));
         heights[k] += (p.width && p.height ? p.height / p.width : 1.25) + 0.12;   // + room for the caption
-        cols[k] += '<figure class="shot"><button class="open" data-i="' + i + '" aria-label="View larger">' +
-          thumbImg(p.src, ratio.trim() + ' alt="Gyða Valtýsdóttir, photo by ' + esc(p.credit) + '" loading="lazy"') + '</button><figcaption><span>© ' + esc(p.credit) +
-          (p.caption ? ' · ' + esc(p.caption) : '') + '</span><a href="' + esc(p.hires || p.src) + '" download>↓ Hi-res ' + mb(p.bytes) + '</a></figcaption></figure>';
+        cols[k] += '<figure class="shot"' + EI(p, 'photos') + '><button class="open" data-i="' + i + '" aria-label="View larger">' +
+          thumbImg(p.src, ratio.trim() + ' alt="Gyða Valtýsdóttir, photo by ' + esc(p.credit) + '" loading="lazy"') + '</button><figcaption><span>© <span' + EF('credit') + '>' + esc(p.credit) + '</span>' +
+          (p.caption || ED ? '<span class="cap-sep"> · </span><span' + EF('caption') + '>' + esc(p.caption || '') + '</span>' : '') + '</span><a href="' + esc(p.hires || p.src) + '" download>↓ Hi-res ' + mb(p.bytes) + '</a></figcaption></figure>';
       });
       grid.innerHTML = cols.map(function (h) { return '<div class="col">' + h + '</div>'; }).join('');
     }
@@ -821,9 +838,11 @@
       var q = (location.search.match(/[?&]a=([^&]+)/) || [])[1];
       where = 'work:' + (q ? decodeURIComponent(q) : slug || page);
     }
+    document.body.setAttribute('data-admin', 'admin/#' + where);   // the edit bar's Admin button opens this same place
+    if (EDIT) return;
     var a = document.createElement('a');
     a.className = 'edit-me';
-    a.href = 'admin/#' + where;
+    a.href = location.pathname + (location.search ? location.search + '&' : '?') + 'edit' + location.hash;   // edit right here (js/edit.js)
     a.textContent = '✎ Edit this page';
     a.title = 'Only you see this, because you are signed in to the admin';
     document.body.appendChild(a);
@@ -843,10 +862,13 @@
     document.documentElement.classList.add('look-set');
   }
   setTimeout(function () { document.documentElement.classList.add('look-set'); }, 1500);   // never hide a photo for long
-  load('site').then(function (site) {
+  function renderAll(site) {
     applyLook(site);
     renderNav(site);
     renderBooking(site);
+    // a fresh #app each time, so drawing a page again (edit mode) never doubles its click handlers
+    var app = document.getElementById('app');
+    if (app) app.parentNode.replaceChild(app.cloneNode(false), app);
     if (view === 'front') return renderFront(site);
     if (view === 'work') return load('work').then(renderWork);
     if (view === 'about') return load('about').then(renderAbout);
@@ -859,5 +881,29 @@
     if (view === 'news') return load('news').then(renderNews);
     if (view === 'contact') return renderContact(site);
     if (view === 'photos') return load('photos').then(function (p) { renderPhotos(p, site); });
-  });
+  }
+  function script(src) {
+    return new Promise(function (res, rej) {
+      var s = document.createElement('script');
+      s.src = src; s.onload = res; s.onerror = function () { rej(new Error('Could not load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+  if (EDIT) {
+    // the editor brings the data itself (fresh from the sign-in service), and keeps it in these same objects while she edits
+    script('admin/service.js?v=' + Date.now().toString(36)).then(function () { return script('js/edit.js?v=' + Date.now().toString(36)); }).then(function () {
+      return window.GYDA_EDIT.boot({
+        view: view,
+        draw: function () { return renderAll(cache.siteObj); },
+        use: function (data) {
+          Object.keys(data).forEach(function (n) { cache[n] = Promise.resolve(data[n]); });
+          cache.siteObj = data.site;
+        },
+        link: function (ed) { ED = ed; }
+      });
+    }).catch(function (e) {
+      alert('Edit mode could not start: ' + e.message);
+      load('site').then(renderAll);
+    });
+  } else load('site').then(renderAll);
 })();

@@ -75,3 +75,9 @@ DNS at Bluehost (nameservers set back to Bluehost's own):
 - **Edit this page**: a button on the website for a browser signed in to the admin.
 - **History**: `GET /history` and `GET /history/<sha>` in the service; a version comes back as unpublished changes, with deleted pictures put back from GitHub's own copies.
 
+## Edit on the page (Round 32)
+- Signed in to the admin in this browser, every page shows **✎ Edit this page**: the same page with `?edit`. `js/app.js` then loads `admin/service.js` and `js/edit.js` (+ `css/edit.css`), which fetch the data from the service and keep it in the objects the page is drawn from.
+- In edit mode only, the renderers in app.js tag what can be edited: `data-ei` (which thing), `data-ef` (which field), `data-ek` (`block` = several lines, `img` = picture). Visitors' pages carry none of it.
+- Typing changes the data at once; blocks open a writing box; pictures open a small menu; each thing has tools (drag ⠿, ✎ Details, ⋯ hide/delete); `+ New …` adds; **Page photo** edits the Look of that page. Publish is the same one-commit publish as the admin. Unpublished texts are kept in localStorage (`gyda-edit:draft`) and follow her from page to page.
+- Local test: `/<page>?edit&local` with any `gyda.session` set reads `data/` and never writes. Test: `service/edit-test.mjs`.
+
