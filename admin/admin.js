@@ -559,11 +559,12 @@
     list.forEach(function (p) { if (p.credit && credits.indexOf(p.credit) < 0) credits.push(p.credit); });
     var html = '<div class="tab-head"><div><h1>Photos</h1><p>Journalists can view these large and download the full-size file. ' +
       'Upload the full-resolution original: the site makes the small version by itself.</p></div></div>' +
+      '<p class="muted drag-tip">Drag the photos into the order you want. On a phone or tablet: hold a photo for a moment, then drag.</p>' +
       '<div class="drop" id="drop">Drop photos here, or <button class="link" data-act="addp">choose files</button>.<br><span class="muted">' +
       'New photos get the photographer credit of the photo selected below, which you can change.</span></div>' +
       '<datalist id="credits">' + credits.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>' +
       '<div class="split"><div class="pgrid">' + list.map(function (p, i) {
-        return '<button class="ptile' + (p.hidden ? ' off' : '') + '" data-i="' + i + '"' + (p === cur ? ' aria-current="true"' : '') + '><img src="' + esc(img(p.src)) + '" alt="" loading="lazy"><span>' + esc(p.credit || '—') + '</span></button>';
+        return '<button class="ptile' + (p.hidden ? ' off' : '') + '" data-i="' + i + '"' + (p === cur ? ' aria-current="true"' : '') + '><img src="' + esc(img(p.src)) + '" alt="" loading="lazy" draggable="false"><span>' + esc(p.credit || '—') + '</span></button>';
       }).join('') + '</div><div class="editor">';
     if (cur) {
       var i = list.indexOf(cur);
@@ -576,7 +577,7 @@
           { k: 'hidden', label: 'Hide this photo', type: 'check' }
         ]) + '<p class="muted" style="margin-top:14px">Full size: ' + (cur.width ? cur.width + ' × ' + cur.height + ' px, ' : '') + (cur.bytes ? (cur.bytes / 1048576).toFixed(1) + ' MB' : '') +
         '</p><button class="btn small" data-act="hero">Use as front-page photo</button>';
-    } else html += '<p class="blank">Click a photo to edit its credit, move it or delete it.</p>';
+    } else html += '<p class="blank">Click a photo to edit its credit or delete it. Drag photos to change the order.</p>';
     html += '</div></div>';
     var p = $('#panel');
     p.innerHTML = html;
@@ -584,8 +585,10 @@
       var t = $('.ptile[aria-current="true"] span', p);
       if (t) t.textContent = cur.credit || '—';
     });
+    arrange($('.pgrid', p), list);
     p.addEventListener('click', function (e) {
       var t = e.target.closest('.ptile');
+      if (t && arrange.justDropped) return;
       if (t) { sel.photos = list[+t.getAttribute('data-i')]; render(); return; }
       var a = e.target.closest('[data-act]');
       if (!a) return;
@@ -619,6 +622,111 @@
       addPhotos(Array.prototype.filter.call(e.dataTransfer.files, function (f) { return /^image\//.test(f.type); }));
     });
   };
+  // Drag photos into a new order. Mouse: press and move. Touch: hold a moment, then move (a quick swipe still scrolls).
+  function arrange(grid, list) {
+    var tiles = function () { return Array.prototype.slice.call(grid.querySelectorAll('.ptile')); };
+    var drag = null;
+    grid.addEventListener('pointerdown', function (e) {
+      var t = e.target.closest('.ptile');
+      if (!t || e.button > 0 || drag) return;
+      var touch = e.pointerType !== 'mouse';
+      drag = { tile: t, x: e.clientX, y: e.clientY, id: e.pointerId, on: false, touch: touch };
+      if (touch) drag.timer = setTimeout(function () { if (drag && !drag.on) begin(drag.x, drag.y); }, 320);
+      document.addEventListener('pointermove', move, true);
+      document.addEventListener('pointerup', end, true);
+      document.addEventListener('pointercancel', cancel, true);
+      document.addEventListener('keydown', key, true);
+    });
+    function begin(x, y) {
+      var r = drag.tile.getBoundingClientRect();
+      drag.on = true;
+      drag.dx = x - r.left; drag.dy = y - r.top;
+      drag.px = x; drag.py = y;
+      drag.from = tiles().indexOf(drag.tile);
+      drag.ghost = drag.tile.cloneNode(true);
+      drag.ghost.className = 'ptile lifted';
+      drag.ghost.style.width = r.width + 'px';
+      document.body.appendChild(drag.ghost);
+      drag.tile.classList.add('gap');
+      document.documentElement.classList.add('arranging');
+      document.addEventListener('touchmove', still, { passive: false });   // the page must not scroll while a photo is held
+      if (navigator.vibrate) navigator.vibrate(12);
+      place(x, y);
+    }
+    function still(e) { e.preventDefault(); }
+    function move(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.on) {
+        var far = Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y);
+        if (drag.touch) { if (far > 10) stop(); return; }        // moved before holding: that's scrolling
+        if (far < 6) return;
+        begin(e.clientX, e.clientY);
+      }
+      e.preventDefault();
+      drag.px = e.clientX; drag.py = e.clientY;
+      place(e.clientX, e.clientY);
+      scroll();
+    }
+    function place(x, y) {
+      drag.ghost.style.transform = 'translate(' + (x - drag.dx) + 'px,' + (y - drag.dy) + 'px)';
+      var over = null;
+      tiles().forEach(function (t) {
+        if (t === drag.tile) return;
+        var r = t.getBoundingClientRect();
+        if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) over = t;
+      });
+      if (!over) return;
+      var r = over.getBoundingClientRect();
+      var ref = x > r.left + r.width / 2 ? over.nextSibling : over;
+      if (ref !== drag.tile) grid.insertBefore(drag.tile, ref);
+    }
+    function scroll() { // near the top or bottom of the window, the page scrolls along
+      cancelAnimationFrame(drag.raf);
+      var top = 130, bottom = innerHeight - 140;
+      var v = drag.py < top ? drag.py - top : drag.py > bottom ? drag.py - bottom : 0;
+      if (!v) return;
+      drag.raf = requestAnimationFrame(function step() {
+        if (!drag || !drag.on) return;
+        window.scrollBy(0, Math.max(-24, Math.min(24, v / 3)));
+        place(drag.px, drag.py);
+        drag.raf = requestAnimationFrame(step);
+      });
+    }
+    function end(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.on) return stop();
+      var to = tiles().indexOf(drag.tile), from = drag.from;
+      stop();
+      arrange.justDropped = true;
+      setTimeout(function () { arrange.justDropped = false; }, 0);
+      if (to === from) return;
+      var it = list.splice(from, 1)[0];
+      list.splice(to, 0, it);
+      sel.photos = it;
+      dirty();
+      render();
+    }
+    function cancel() {
+      if (!drag) return;
+      var was = drag.on;
+      stop();
+      if (was) render();                                    // put the photos back where they were
+    }
+    function key(e) { if (e.key === 'Escape' && drag && drag.on) { e.preventDefault(); cancel(); } }
+    function stop() {
+      clearTimeout(drag.timer);
+      cancelAnimationFrame(drag.raf);
+      if (drag.ghost) drag.ghost.remove();
+      drag.tile.classList.remove('gap');
+      document.documentElement.classList.remove('arranging');
+      document.removeEventListener('touchmove', still, { passive: false });
+      document.removeEventListener('pointermove', move, true);
+      document.removeEventListener('pointerup', end, true);
+      document.removeEventListener('pointercancel', cancel, true);
+      document.removeEventListener('keydown', key, true);
+      drag = null;
+    }
+  }
   function addPhotos(files) {
     if (!files || !files.length) return;
     var credit = (sel.photos && sel.photos.credit) || '';

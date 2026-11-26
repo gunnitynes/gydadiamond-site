@@ -144,6 +144,13 @@ label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
 .ptile img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block; }
 .ptile span { display: block; padding: 6px 8px; font-size: 12px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ptile.off { opacity: .4; }
+.ptile { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.ptile img { -webkit-user-drag: none; pointer-events: none; }
+.ptile.gap { opacity: .25; outline: 2px dashed var(--glow); outline-offset: -2px; }
+.ptile.lifted { position: fixed; left: 0; top: 0; z-index: 50; pointer-events: none; border-color: var(--glow);
+  box-shadow: 0 18px 40px rgba(0,0,0,.6); opacity: .95; }
+.arranging, .arranging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+.drag-tip { margin: -6px 0 14px; font-size: 13px; }
 .drop { border: 1px dashed rgba(255,255,255,.3); padding: 22px; text-align: center; color: var(--mute); margin-bottom: 18px; }
 .drop.over { border-color: var(--glow); color: #fff; background: rgba(232,184,168,.06); }
 
