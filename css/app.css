@@ -2,9 +2,15 @@
    (FILM, LIVE, NEWS, PHOTOS). The older pages (About, Work, the albums...) keep Cargo's stylesheet. */
 
 :root {
-  --ox: #470606;          /* the front page frame */
+  /* the colours: the admin's Look tab can replace these (js/app.js applyLook); keep each *-rgb in step with its colour */
+  --ox: #470606;          /* the front page frame, cards */
+  --ox-rgb: 71,6,6;
   --ox-deep: #1f0404;     /* panels */
   --ink: #130303;         /* page background */
+  --ink-rgb: 19,3,3;
+  --panel: #2a0606;       /* behind pictures while they load */
+  --dark: #0b0202;        /* behind videos and the large photo view */
+  --dark-rgb: 10,1,1;
   --paper: #fff;
   --soft: rgba(255,255,255,.78);
   --mute: rgba(255,255,255,.52);
@@ -17,6 +23,8 @@
 }
 
 html.app-root { font-size: 10px; -webkit-text-size-adjust: 100%; }
+/* a page's photo waits for its look (js/look.js) so a photo changed in the admin never flashes up the old one */
+html.app-root:not(.look-set) .page-hero, html.app-root:not(.look-set) .app-bg { visibility: hidden; }
 * { box-sizing: border-box; }
 
 /* ------------------------------------------------------------------ top bar (every page except home) */
@@ -38,7 +46,7 @@ html.app-root { font-size: 10px; -webkit-text-size-adjust: 100%; }
   .topbar { position: fixed; padding-bottom: 2.6rem; transition: transform .5s ease; }
   /* the dark band behind the menu fades in slowly once the page is scrolled */
   .topbar::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity 1.2s ease;
-    background: linear-gradient(180deg, rgba(19,3,3,.88) 0%, rgba(19,3,3,.6) 70%, rgba(19,3,3,0) 100%); }
+    background: linear-gradient(180deg, rgba(var(--ink-rgb),.88) 0%, rgba(var(--ink-rgb),.6) 70%, rgba(var(--ink-rgb),0) 100%); }
   .topbar.pinned::before { opacity: 1; }
   .topbar.away { transform: translateY(-110%); }
 }
@@ -56,12 +64,12 @@ html.overlay-open .topbar { visibility: hidden; }
 
 /* ------------------------------------------------------------------ front page */
 body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--paper); font-family: var(--sans); overflow: hidden; }
-.hero { position: fixed; inset: 0; overflow: hidden; background: #2a0404; }
+.hero { position: fixed; inset: 0; overflow: hidden; background: var(--panel); }
 .hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; object-position: var(--fx, 50%) var(--fy, 50%);
   animation: hero-in 2.4s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes hero-in { from { opacity: 0; transform: scale(1.035); } to { opacity: 1; transform: none; } }
 .hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(90deg, rgba(20,2,2,.42) 0%, rgba(20,2,2,.16) 26%, rgba(20,2,2,0) 46%); }
+  background: linear-gradient(90deg, rgba(var(--ink-rgb),.42) 0%, rgba(var(--ink-rgb),.16) 26%, rgba(var(--ink-rgb),0) 46%); }
 .hero-text { position: relative; z-index: 2; height: 100%; padding: 7vh 5vw 6vh; display: flex; flex-direction: column;
   animation: text-in 1.6s .5s ease both; }
 @keyframes text-in { from { opacity: 0; } to { opacity: 1; } }
@@ -77,15 +85,15 @@ body.front { margin: 0; min-height: 100vh; background: var(--ox); color: var(--p
 .hero-menu a:hover::after { background: #fff; }
 .next-show { margin-top: auto; align-self: flex-start; display: inline-flex; gap: .9em; align-items: baseline;
   color: var(--paper); text-decoration: none; font-size: 1.2rem; letter-spacing: .22em; text-transform: uppercase;
-  background: rgba(71,6,6,.82); padding: .9em 1.2em; border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(6px); }
+  background: rgba(var(--ox-rgb),.82); padding: .9em 1.2em; border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(6px); }
 .next-show b { font-weight: 700; color: var(--glow); }
-.next-show:hover { background: rgba(71,6,6,.95); }
+.next-show:hover { background: rgba(var(--ox-rgb),.95); }
 
 @media (max-width: 768px) {
   body.front { overflow: auto; }
   /* phones: a dark veil down the left where the text is, the photo moved right so her face sits beside the menu */
-  .hero::after { background: linear-gradient(90deg, rgba(20,2,2,.72) 0%, rgba(20,2,2,.5) 38%, rgba(20,2,2,.08) 70%, rgba(20,2,2,0) 100%),
-                             linear-gradient(180deg, rgba(20,2,2,.45) 0%, rgba(20,2,2,0) 30%, rgba(20,2,2,0) 70%, rgba(20,2,2,.5) 100%); }
+  .hero::after { background: linear-gradient(90deg, rgba(var(--ink-rgb),.72) 0%, rgba(var(--ink-rgb),.5) 38%, rgba(var(--ink-rgb),.08) 70%, rgba(var(--ink-rgb),0) 100%),
+                             linear-gradient(180deg, rgba(var(--ink-rgb),.45) 0%, rgba(var(--ink-rgb),0) 30%, rgba(var(--ink-rgb),0) 70%, rgba(var(--ink-rgb),.5) 100%); }
   .hero-img { object-position: calc(var(--fx, 50%) - 9%) var(--fy, 50%); }
   .hero-menu { gap: 3.5vh; }
   .hero-menu .end { display: none; }  /* phones: one diamond, before the word */
@@ -103,7 +111,7 @@ body.app { margin: 0; min-height: 100vh; background: var(--ink); color: var(--pa
   font-size: 1.7rem; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 body.app a { color: inherit; }
 .app-bg { position: fixed; inset: 0 0 auto 0; height: 100vh; height: 100lvh; z-index: 0; background-size: cover; background-position: center; opacity: .2; pointer-events: none; }
-.app-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,3,3,.2), var(--ink) 85%); }
+.app-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(var(--ink-rgb),.2), var(--ink) 85%); }
 .app-main { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 13rem 3rem 10rem; }
 .kicker { font-size: 1.15rem; letter-spacing: .42em; text-transform: uppercase; color: var(--mute); margin: 0 0 1.2rem; }
 .page-title { text-transform: uppercase; font-family: var(--display); font-weight: 300; font-size: clamp(4rem, 6.2vw, 8.6rem); line-height: .95; margin: 0 0 2rem; letter-spacing: .02em; }
@@ -130,8 +138,8 @@ body.app a { color: inherit; }
 .page-hero { position: absolute; top: 0; left: 0; right: 0; height: 100vh; min-height: 560px; max-height: 1100px; z-index: 0;
   background-size: cover; background-position: 62% 35%; }
 .page-hero::after { content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgba(19,3,3,.55) 0%, rgba(19,3,3,.25) 45%, rgba(19,3,3,0) 70%),
-              linear-gradient(180deg, rgba(19,3,3,.3) 0%, rgba(19,3,3,0) 18%, rgba(19,3,3,.15) 55%, var(--ink) 100%); }
+  background: linear-gradient(90deg, rgba(var(--ink-rgb),.55) 0%, rgba(var(--ink-rgb),.25) 45%, rgba(var(--ink-rgb),0) 70%),
+              linear-gradient(180deg, rgba(var(--ink-rgb),.3) 0%, rgba(var(--ink-rgb),0) 18%, rgba(var(--ink-rgb),.15) 55%, var(--ink) 100%); }
 .after-hero .page-title { text-shadow: 0 2px 30px rgba(0,0,0,.45); }
 .after-hero .kicker { color: var(--soft); }
 .after-hero #app { margin-top: 24rem; }
@@ -140,14 +148,14 @@ body.app a { color: inherit; }
 .booking:empty { display: none; }
 .booking a { color: #fff; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.45); }
 .booking a:hover { border-color: #fff; }
-.after-hero .no-shows { background: rgba(19,3,3,.55); backdrop-filter: blur(3px); }
+.after-hero .no-shows { background: rgba(var(--ink-rgb),.55); backdrop-filter: blur(3px); }
 .after-hero .year li, .after-hero .year > button { text-shadow: 0 1px 8px rgba(0,0,0,.6); }
 
 /* ---------- CONTACT */
 body[data-view="contact"] .after-hero #app { margin-top: 4rem; }
 /* desktop: the photo has the right half to itself, the text stays in the left half */
 body[data-view="contact"] .page-hero { left: 50%; height: 100vh; background-size: cover; background-position: 50% 18%; }
-body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(19,3,3,0) 75%, var(--ink) 100%); }
+body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(var(--ink-rgb),0) 75%, var(--ink) 100%); }
 body[data-view="contact"] .app-main { max-width: none; margin: 0; padding-left: max(3rem, 6vw); padding-right: calc(50vw + 5rem); }
 body[data-view="contact"] .contact-grid { grid-template-columns: 1fr; max-width: 46rem; gap: 1.2rem; }
 body[data-view="contact"] .ccard { display: grid; grid-template-columns: 1fr auto; column-gap: 2rem; padding: 2.4rem 2.6rem; }
@@ -160,7 +168,7 @@ body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8re
 .ccard.short h2 { margin: 0; align-self: center; }
 .booking .revealed { display: inline-flex; font-size: 1.4rem; }
 .contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; }
-.ccard { display: flex; flex-direction: column; padding: 3rem 2.8rem 2.8rem; background: rgba(19,3,3,.62); border: 1px solid rgba(255,255,255,.14);
+.ccard { display: flex; flex-direction: column; padding: 3rem 2.8rem 2.8rem; background: rgba(var(--ink-rgb),.62); border: 1px solid rgba(255,255,255,.14);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .ccard .kicker { margin-bottom: 1.6rem; }
 .ccard h2 { font-family: var(--display); font-weight: 300; font-size: clamp(2.6rem, 2.6vw, 3.4rem); line-height: 1.05; letter-spacing: -.015em; margin: 0 0 1.2rem; }
@@ -178,8 +186,10 @@ body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8re
 body.overlay .page-hero { position: fixed; inset: 0; height: auto; max-height: none; min-height: 0; background-size: cover; background-position: 50% 25%; }
 /* the whole photo, screen-wide; js/app.js sets its height and lets it glide up as the page scrolls */
 body.overlay .page-hero { inset: 0 0 auto 0; height: 100vh; will-change: transform; background-position: 50% 0; }
-body.overlay .page-hero::after { content: ""; position: absolute; inset: 0; background: rgba(14, 3, 3, .58); }
+body.overlay .page-hero::after { content: ""; position: absolute; inset: 0; background: rgba(var(--ink-rgb), var(--veil, .58)); }
 body.overlay .app-main { max-width: 76rem; text-align: center; }
+/* other pages put behind their text keep their usual width and reading direction */
+body.overlay:not([data-view="about"]):not([data-view="bio"]) .app-main { max-width: 1080px; text-align: left; }
 body.overlay .longread { margin: 0 auto; color: rgba(255,255,255,.9); text-shadow: 0 1px 14px rgba(0,0,0,.45); }
 /* Full bio: the column is centred like About, but the lists read left to right with the years on the right */
 body.overlay[data-view="bio"] .app-main { text-align: left; }
@@ -251,15 +261,15 @@ body[data-view="album"] .app-bg { z-index: -1; }
 .vwall { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5rem 3.6rem; }
 .vwall.few { grid-template-columns: 1fr; max-width: 92rem; }
 .vcard { margin: 0; }
-.vplay { all: unset; cursor: pointer; position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #0b0202; }
+.vplay { all: unset; cursor: pointer; position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: var(--dark); }
 .vplay img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(.78); transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .4s; }
 .vplay:hover img { transform: scale(1.04); filter: brightness(.95); }
 .vplay:focus-visible { outline: 1px solid var(--glow); outline-offset: 4px; }
 .vbtn { position: absolute; left: 50%; top: 50%; width: 7.4rem; height: 7.4rem; margin: -3.7rem 0 0 -3.7rem; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.75); background: rgba(19,3,3,.35); backdrop-filter: blur(4px); transition: transform .3s, background .3s; }
+  border: 1px solid rgba(255,255,255,.75); background: rgba(var(--ink-rgb),.35); backdrop-filter: blur(4px); transition: transform .3s, background .3s; }
 .vbtn::after { content: ""; position: absolute; left: 52%; top: 50%; transform: translate(-50%, -50%); border-style: solid;
   border-width: .9rem 0 .9rem 1.5rem; border-color: transparent transparent transparent #fff; }
-.vplay:hover .vbtn { transform: scale(1.08); background: rgba(71,6,6,.7); }
+.vplay:hover .vbtn { transform: scale(1.08); background: rgba(var(--ox-rgb),.7); }
 .vframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
 .vcard figcaption { padding-top: 1.8rem; }
 .vcard h3 { font-family: var(--display); font-weight: 300; font-size: clamp(2.2rem, 2.2vw, 2.8rem); line-height: 1.1; letter-spacing: -.01em; margin: 0 0 .6rem; }
@@ -294,8 +304,8 @@ body[data-view="videos"] .album-nav { justify-content: flex-start; gap: 3.6rem; 
 /* ---------- LIVE */
 .shows-next { display: grid; gap: 1.4rem; }
 .show-card { display: grid; grid-template-columns: 11rem 1fr auto; gap: 2.8rem; align-items: center; padding: 2.6rem 2.8rem;
-  background: rgba(71,6,6,.55); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(4px); }
-.show-card:first-child { background: rgba(71,6,6,.85); }
+  background: rgba(var(--ox-rgb),.55); border: 1px solid rgba(255,255,255,.12); backdrop-filter: blur(4px); }
+.show-card:first-child { background: rgba(var(--ox-rgb),.85); }
 .show-date { text-align: center; line-height: 1; }
 .show-date .d { display: block; font-family: var(--display); font-weight: 300; font-size: 5.6rem; }
 .show-date .m { display: block; font-size: 1.2rem; letter-spacing: .38em; text-transform: uppercase; margin-top: .6rem; padding-left: .38em; }
@@ -328,7 +338,7 @@ body[data-view="videos"] .album-nav { justify-content: flex-start; gap: 3.6rem; 
 .card-grid.small { grid-template-columns: repeat(4, 1fr); gap: 2.4rem; }
 .card-grid.three { grid-template-columns: repeat(3, 1fr); gap: 4.4rem 3rem; }
 .wcard { position: relative; display: flex; flex-direction: column; text-decoration: none; color: inherit; }
-.wcard .pic { position: relative; overflow: hidden; background: #2a0606; aspect-ratio: 1; }
+.wcard .pic { position: relative; overflow: hidden; background: var(--panel); aspect-ratio: 1; }
 .card-grid.three .wcard .pic { aspect-ratio: 4 / 3; }
 .wcard .pic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s cubic-bezier(.2,.7,.2,1), filter .6s; }
 .wcard:hover .pic img { transform: scale(1.04); filter: brightness(1.05); }
@@ -344,16 +354,16 @@ body[data-view="videos"] .album-nav { justify-content: flex-start; gap: 3.6rem; 
 .wcard.lead h3 { font-size: clamp(4rem, 5.4vw, 7.4rem); }
 .wcard.lead .meta { margin-top: 0; }
 .wcard .acts a { position: relative; z-index: 2; }
-.tile { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: #2a0606; text-decoration: none; color: #fff; }
+.tile { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: var(--panel); text-decoration: none; color: #fff; }
 .tile img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
-.tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(19,3,3,0) 40%, rgba(19,3,3,.85)); }
+.tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(var(--ink-rgb),0) 40%, rgba(var(--ink-rgb),.85)); }
 .tile span { position: absolute; left: 1.8rem; right: 1.8rem; bottom: 1.6rem; z-index: 1; }
 .tile small { display: block; font-size: 1.05rem; letter-spacing: .26em; text-transform: uppercase; color: var(--soft); margin-bottom: .5rem; }
 .tile b { display: block; font-family: var(--display); font-weight: 400; font-size: 2.3rem; line-height: 1.05; letter-spacing: -.02em; }
 .tile:hover img { transform: scale(1.05); }
 /* news: newest post as a wide feature, then cards; a post opens in a reading panel */
 .feature { display: grid; grid-template-columns: 1.25fr 1fr; gap: 4.4rem; align-items: center; margin-bottom: 2rem; cursor: pointer; }
-.feature .pic { aspect-ratio: 4 / 3; overflow: hidden; background: #2a0606; }
+.feature .pic { aspect-ratio: 4 / 3; overflow: hidden; background: var(--panel); }
 .feature .pic img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s cubic-bezier(.2,.7,.2,1); }
 .feature:hover .pic img { transform: scale(1.03); }
 .feature h2 { font-family: var(--display); font-weight: 300; font-size: clamp(3.4rem, 4.4vw, 6rem); line-height: .98; letter-spacing: -.02em; margin: 0 0 2rem; }
@@ -361,7 +371,7 @@ body[data-view="videos"] .album-nav { justify-content: flex-start; gap: 3.6rem; 
 .excerpt { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 button.wcard { all: unset; cursor: pointer; display: flex; flex-direction: column; }
 button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--glow); outline-offset: 6px; }
-.reader { position: fixed; inset: 0; z-index: 100; background: rgba(10,1,1,.86); backdrop-filter: blur(8px);
+.reader { position: fixed; inset: 0; z-index: 100; background: rgba(var(--dark-rgb),.86); backdrop-filter: blur(8px);
   display: flex; align-items: center; justify-content: center; padding: 4vh 4vw; }
 .reader[hidden] { display: none; }
 /* computers: one centred card, picture left and the whole text right */
@@ -371,7 +381,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
 .reader article.has-img { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
 .reader .body { display: contents; }
 @keyframes pop-in { from { transform: translateY(14px) scale(.985); opacity: 0; } }
-.reader .r-img { margin: 0; background: #0b0202; display: flex; align-items: center; justify-content: center; min-height: 0; max-height: 88vh; }
+.reader .r-img { margin: 0; background: var(--dark); display: flex; align-items: center; justify-content: center; min-height: 0; max-height: 88vh; }
 .reader .r-img img { display: block; width: 100%; height: 100%; max-height: 88vh; object-fit: contain; }
 .reader .r-text { padding: 6rem 5rem 5rem; overflow-y: auto; max-height: 88vh; display: flex; flex-direction: column; }
 /* centred when short, but a long post starts at its title and scrolls */
@@ -386,7 +396,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
 
 /* ---------- PHOTOS (press) */
 .press-intro { font-size: 1.4rem; letter-spacing: .02em; color: var(--mute); margin: -.4rem 0 3.6rem; max-width: 52rem; }
-.press-bio { background: rgba(71,6,6,.5); border: 1px solid rgba(255,255,255,.12); padding: 2.4rem 2.6rem; }
+.press-bio { background: rgba(var(--ox-rgb),.5); border: 1px solid rgba(255,255,255,.12); padding: 2.4rem 2.6rem; }
 .press-bio h2 { font-size: 1.15rem; letter-spacing: .36em; text-transform: uppercase; color: var(--mute); font-weight: 400; margin: 0 0 1.2rem; }
 .press-bio p { font-size: 1.5rem; color: var(--soft); margin: 0 0 1.6rem; }
 .press-bio .row { display: flex; flex-wrap: wrap; gap: 1rem; }
@@ -399,12 +409,12 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
 .grid .col { flex: 1 1 0; min-width: 0; }
 .shot { margin: 0 0 2rem; position: relative; }
 .shot button.open { all: unset; cursor: zoom-in; display: block; width: 100%; }
-.shot img { width: 100%; height: auto; display: block; background: #2a0606; transition: filter .3s; }
+.shot img { width: 100%; height: auto; display: block; background: var(--panel); transition: filter .3s; }
 .shot:hover img { filter: brightness(1.06); }
 .shot figcaption { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .8rem 0 0; font-size: 1.25rem; color: var(--mute); }
 .shot figcaption a { text-decoration: none; color: var(--soft); font-size: 1.1rem; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap; }
 .shot figcaption a:hover { color: #fff; }
-.lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(10,1,1,.96); display: grid; grid-template-rows: 1fr auto; padding: 2rem; }
+.lightbox { position: fixed; inset: 0; z-index: 100; background: rgba(var(--dark-rgb),.96); display: grid; grid-template-rows: 1fr auto; padding: 2rem; }
 .lightbox[hidden] { display: none; }
 .lightbox .stage { display: flex; align-items: center; justify-content: center; min-height: 0; }
 .lightbox .stage img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; }
@@ -491,7 +501,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   body[data-view="contact"] .after-hero #app { margin-top: 3rem; }
   body[data-view="contact"] .page-hero { position: relative; left: 0; height: 60vh; height: calc(100svh - 270px); min-height: 280px; background-size: cover; background-position: 50% 14%; }  /* leaves room for the title and the first card on any phone */
   body[data-view="contact"] .app-main { padding: 2.4rem 1.8rem 7rem; }
-  body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(19,3,3,.4) 0%, rgba(19,3,3,0) 30%, rgba(19,3,3,.3) 60%, var(--ink) 100%); }
+  body[data-view="contact"] .page-hero::after { background: linear-gradient(180deg, rgba(var(--ink-rgb),.4) 0%, rgba(var(--ink-rgb),0) 30%, rgba(var(--ink-rgb),.3) 60%, var(--ink) 100%); }
   body[data-view="contact"] .ccard { grid-template-columns: 1fr; }
   body[data-view="contact"] .ccard .acts { grid-column: 1; grid-row: auto; margin-top: 1.8rem; flex-direction: row; }
   .wcard.lead { grid-template-columns: 1fr; gap: 0; } .wcard.lead .meta { margin-top: 2rem; }
@@ -511,3 +521,9 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
 }
 @keyframes menu-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .hero-img, .hero-text { animation: none; } }
+
+/* the Edit button, only for someone signed in to the admin in this browser (js/app.js) */
+.edit-me { position: fixed; left: 1.6rem; bottom: 1.6rem; z-index: 60; font: 700 1.15rem/1 var(--sans); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink); background: var(--glow); padding: 1rem 1.4rem; text-decoration: none; box-shadow: 0 4px 18px rgba(0,0,0,.45); opacity: .9; }
+.edit-me:hover { opacity: 1; }
+html.overlay-open .edit-me, html.menu-open .edit-me { display: none; }

@@ -16,7 +16,7 @@ const order = () => ev(`return [...document.querySelectorAll('.pgrid .ptile')].s
 const near = (i, x, y) => ev(`const r=document.querySelector('.pgrid .ptile[data-i="${i}"]').getBoundingClientRect();return Math.max(r.left-${x},0,${x}-r.right)+Math.max(r.top-${y},0,${y}-r.bottom)`);   // how far the photo is from a point (0 = under it)
 const cols = () => ev(`return [...document.querySelectorAll('.pgrid .pcol')].map(c=>[...c.querySelectorAll('img')].map(i=>i.getAttribute('src').split('/').pop()).join(',')).join(' / ')`);
 const center = i => ev(`${T(i)}.scrollIntoView({block:'nearest'});const r=${T(i)}.getBoundingClientRect();return [Math.round(r.left+r.width/2),Math.round(r.top+r.height/2),Math.round(r.width)]`);
-const saved = () => ev(`document.querySelector('#preview').click();await new Promise(r=>setTimeout(r,200));return JSON.parse(localStorage.getItem('gyda-draft:photos')).map(p=>p.src.split('/').pop()).join('|')`);
+const saved = () => ev(`document.querySelector('#preview').click();await new Promise(r=>setTimeout(r,300));const s=JSON.parse(localStorage.getItem('gyda-draft:photos')).map(p=>p.src.split('/').pop()).join('|');document.querySelector('#live-close').click();return s`);   // showing the page beside writes the drafts
 const raw = i => ev(`const r=${T(i)}.getBoundingClientRect();return [Math.round(r.left+r.width/2),Math.round(r.top+r.height/2),Math.round(r.width)]`);
 const mouse = (type, x, y, buttons = 1) => send('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons, clickCount: 1 });
 const touch = (type, pts) => send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y]) => ({ x, y, id: 1 })) });
@@ -51,7 +51,7 @@ ok('photo 1 moved later, the others keep their order', n1 > 0 && o1.filter(x => 
 ok('it lands where it was let go', await ev(`const e=document.elementFromPoint(${Math.round(x2 + w / 4)},${y2})?.closest('.ptile');return !!e&&e.dataset.i==='${n1}'`));
 ok('it is selected afterwards and nothing else opened', await ev(`return document.querySelector('.ed-head h2').textContent`) === 'Photo ' + (n1 + 1) + ' of ' + o0.length);
 ok('counts as a change', /1 change/.test(await ev(`return document.querySelector('#status').textContent`)), await ev(`return document.querySelector('#status').textContent`));
-ok('the new order is what gets published', (await saved()) === o1.join('|'));
+{ const sv = await saved(); ok("the new order is what gets published", sv === o1.join("|"), sv); }
 // a plain click still opens a photo
 [x0, y0] = await center(5); console.log('     click at', x0, y0, await ev(`const e=document.elementFromPoint(${x0},${y0});return e&&e.className+' '+(e.closest('.ptile')?'tile '+[...document.querySelectorAll('.ptile')].indexOf(e.closest('.ptile')):'')`)); await mouse('mousePressed', x0, y0); await mouse('mouseReleased', x0, y0, 0); await sleep(300); console.log('     after', await ev(`return (document.querySelector('.ed-head h2')||{}).textContent+' / '+document.querySelector('#panel .blank')?.textContent`));
 ok('a click still opens the photo', await ev(`return document.querySelector('.ed-head h2').textContent`) === 'Photo 6 of ' + o0.length);

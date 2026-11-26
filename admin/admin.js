@@ -15,6 +15,7 @@
   var cal = [];                 // data/calendar.json (written by the calendar sync, read-only here)
   var uploads = {};             // repo path -> { blob, url }
   var removals = {};            // repo path -> true
+  var restored = {}, restoredRaw = '', showing = null;   // an earlier version brought back from History: its deleted pictures
   var loaded = false;
   var tab = 'front';
   var sel = {};                 // selected item per tab
@@ -31,9 +32,9 @@
   function changed(name) { return D[name] !== undefined && text(name) !== orig[name]; }
   function changes() {
     var n = FILES.filter(changed).length;
-    return n + Object.keys(uploads).length + Object.keys(removals).length;
+    return n + Object.keys(uploads).length + Object.keys(removals).length + Object.keys(restored).length;
   }
-  function img(path) { return !path ? '' : uploads[path] ? uploads[path].url : /^https?:|^blob:/.test(path) ? path : '../' + path; }
+  function img(path) { return !path ? '' : uploads[path] ? uploads[path].url : restored[path] ? restoredRaw + path : /^https?:|^blob:/.test(path) ? path : '../' + path; }
   function toast(msg, bad) {
     var t = $('#toast');
     t.textContent = msg;
@@ -101,6 +102,7 @@
       try { cal = c ? JSON.parse(c.text) : []; } catch (e) { cal = []; }
       uploads = {};
       removals = {};
+      restored = {}; showing = null;
       loaded = true;
       render();
       var days = res.expires ? Math.floor((new Date(res.expires.slice(0, 10)) - Date.now()) / 864e5) : 999;
@@ -168,6 +170,7 @@
     if (!path || used(path)) return;
     if (/^images\/[^/]+$/.test(path)) dropFile(thumbPath(path));
     if (uploads[path]) { URL.revokeObjectURL(uploads[path].url); delete uploads[path]; return; }
+    if (restored[path]) { delete restored[path]; return; }
     if (/^(images|press)\//.test(path)) removals[path] = true;
   }
 
@@ -296,8 +299,17 @@
       s.focus();
       s.setSelectionRange(pos, pos);
     });
+    if (o.orderable && !q) sortable($('.list', p), '.item:not([data-ro])', {
+      group: function (el) { var g = el.previousElementSibling; while (g && !g.classList.contains('group')) g = g.previousElementSibling; return g ? g.textContent : ''; },
+      done: function (els) {
+        reorderByIndex(list, els);
+        dirty();
+        render();
+      }
+    });
     p.addEventListener('click', function (e) {
       var it = e.target.closest('.item');
+      if (it && sortable.justDropped) return;
       if (it) {
         if (it.hasAttribute('data-ro')) {
           sel[o.name] = null;
@@ -437,7 +449,7 @@
   TABS.work = function () {
     listTab({
       name: 'work', title: 'Work', addLabel: 'Add', orderable: true, addAtEnd: false,
-      intro: 'Albums appear as big covers, “More work” as smaller tiles. Use ↑ ↓ to change the order.',
+      intro: 'Albums appear as big covers, “More work” as smaller tiles. Drag them in the list to change the order.',
       items: function () {
         return D.work.filter(function (w) { return w.section !== 'More'; }).concat(D.work.filter(function (w) { return w.section === 'More'; }))
           .map(function (it) { return { it: it }; });
@@ -483,13 +495,22 @@
     p.innerHTML = '<div class="tab-head"><div><h1>About</h1><p>The About page and the Full bio page. Write as plain text: an empty line starts a new paragraph, ' +
       'and a line with just ◆ makes a small diamond divider. The first paragraph of About is shown larger.</p></div></div>' +
       '<div class="card" id="aboutf">' + fieldsHTML(a, [
-        { k: 'photo', label: 'About: photo', type: 'image', wide: true },
         { k: 'text', label: 'About: text', type: 'textarea', tall: true, wide: true },
-        { k: 'bio_photo', label: 'Full bio: photo', type: 'image', wide: true },
         { k: 'bio', label: 'Full bio: text', type: 'textarea', tall: true, wide: true,
           help: 'Start each section with ## and its name (e.g. ## Education). Under it, one item per line; “Title — 2021” puts the year on the right. A section with one long line shows as a paragraph.' }
-      ]) + '</div>';
+      ]) + '<p class="muted" style="margin:14px 0 0">The photos behind these pages are chosen on the <button class="link" data-golook="About">Look</button> tab.</p></div>';
     bind($('#aboutf', p), a);
+    // the page beside shows About or Full bio, whichever is being written
+    p.addEventListener('focusin', function (e) {
+      var k = e.target.getAttribute && e.target.getAttribute('data-k');
+      if (!k) return;
+      sel.aboutPage = /^bio/.test(k) ? 'FULL-BIO' : 'About';
+      liveFollow();
+    });
+    p.addEventListener('click', function (e) {
+      var g = e.target.closest('[data-golook]');
+      if (g) goLook(sel.aboutPage || 'About');
+    });
   };
 
   TABS.videos = function () {
@@ -497,7 +518,7 @@
     function pname(k) { return (PAGES.filter(function (p) { return p[0] === k; })[0] || [k, k])[1]; }
     listTab({
       name: 'videos', title: 'Videos', addLabel: 'Add a video', orderable: true,
-      intro: 'YouTube videos for the Music videos, With others and Instant composition pages. Paste the YouTube address; the picture comes from YouTube by itself.',
+      intro: 'YouTube videos for the Music videos, With others and Instant composition pages. Paste the YouTube address; the picture comes from YouTube by itself. Drag them in the list to change the order.',
       items: function () {
         var out = [];
         PAGES.forEach(function (p) { D.videos.forEach(function (v) { if (v.page === p[0]) out.push({ it: v }); }); });
@@ -524,7 +545,7 @@
   TABS.films = function () {
     listTab({
       name: 'films', title: 'Films', addLabel: 'Add a film', orderable: true, addAtEnd: false,
-      intro: 'On the website each title opens to show its text, picture and link. They appear in the order below, grouped by type; use ↑ ↓ to move them.',
+      intro: 'On the website each title opens to show its text, picture and link. They appear in the order below, grouped by type; drag them in the list to move them.',
       items: function () {
         var order = ['Film', 'Documentary', 'Art'];
         D.films.forEach(function (f) { if (order.indexOf(f.category) < 0) order.push(f.category); });
@@ -802,6 +823,113 @@
       drag = null;
     }
   }
+  // Drag things in a list into a new order (albums, videos, films, the menu). Mouse: press and move.
+  // Touch: hold a moment, then move. opts: { handle, group(el) → only moves within its own group, done(els in new order) }
+  function sortable(box, itemSel, opts) {
+    var drag = null;
+    function items() { return Array.prototype.slice.call(box.querySelectorAll(itemSel)); }
+    function scroller() { return box.scrollHeight > box.clientHeight + 4 ? box : null; }
+    box.addEventListener('pointerdown', function (e) {
+      var it = e.target.closest(itemSel);
+      if (!it || e.button > 0 || drag || !box.contains(it)) return;
+      if (opts.handle && !e.target.closest(opts.handle)) return;
+      if (!opts.handle && e.target.closest('input, select, textarea, a')) return;
+      var touch = e.pointerType !== 'mouse';
+      drag = { el: it, x: e.clientX, y: e.clientY, id: e.pointerId, on: false, touch: touch, g: opts.group ? opts.group(it) : '' };
+      if (touch || opts.handle) drag.timer = setTimeout(function () { if (drag && !drag.on) begin(drag.x, drag.y); }, opts.handle && !touch ? 0 : 320);
+      document.addEventListener('pointermove', move, true);
+      document.addEventListener('pointerup', end, true);
+      document.addEventListener('pointercancel', cancel, true);
+      document.addEventListener('keydown', key, true);
+    });
+    function begin(x, y) {
+      var r = drag.el.getBoundingClientRect();
+      drag.on = true;
+      drag.dy = y - r.top; drag.dx = x - r.left; drag.px = x; drag.py = y;
+      drag.before = items();
+      drag.ghost = drag.el.cloneNode(true);
+      drag.ghost.classList.add('lifted-row');
+      drag.ghost.style.width = r.width + 'px';
+      document.body.appendChild(drag.ghost);
+      drag.el.classList.add('gap-row');
+      document.documentElement.classList.add('arranging');
+      document.addEventListener('touchmove', still, { passive: false });
+      if (navigator.vibrate) navigator.vibrate(12);
+      place(x, y);
+    }
+    function still(e) { e.preventDefault(); }
+    function move(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.on) {
+        var far = Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y);
+        if (drag.touch && !opts.handle) { if (far > 10) stop(); return; }
+        if (far < 6) return;
+        begin(e.clientX, e.clientY);
+      }
+      e.preventDefault();
+      drag.px = e.clientX; drag.py = e.clientY;
+      place(e.clientX, e.clientY);
+      edge();
+    }
+    function place(x, y) {
+      drag.ghost.style.transform = 'translate(' + (x - drag.dx) + 'px,' + (y - drag.dy) + 'px)';
+      var over = null;
+      items().forEach(function (t) {
+        if (t === drag.el || (opts.group && opts.group(t) !== drag.g)) return;
+        var r = t.getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) over = t;
+      });
+      if (!over) return;
+      var r = over.getBoundingClientRect();
+      over.parentNode.insertBefore(drag.el, y > r.top + r.height / 2 ? over.nextSibling : over);
+    }
+    function edge() {   // near the edge of the list or the window, it scrolls along
+      cancelAnimationFrame(drag.raf);
+      var sc = scroller(), r = sc ? sc.getBoundingClientRect() : { top: 130, bottom: innerHeight - 100 };
+      var top = Math.max(r.top + 40, 120), bottom = Math.min(r.bottom - 40, innerHeight - 100);
+      var v = drag.py < top ? drag.py - top : drag.py > bottom ? drag.py - bottom : 0;
+      if (!v) return;
+      drag.raf = requestAnimationFrame(function step() {
+        if (!drag || !drag.on) return;
+        var d = Math.max(-18, Math.min(18, v / 3));
+        if (sc) sc.scrollTop += d; else window.scrollBy(0, d);
+        place(drag.px, drag.py);
+        drag.raf = requestAnimationFrame(step);
+      });
+    }
+    function end(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.on) return stop();
+      var now = items(), was = drag.before;
+      stop();
+      sortable.justDropped = true;
+      setTimeout(function () { sortable.justDropped = false; }, 0);
+      if (now.every(function (x, i) { return x === was[i]; })) return;
+      opts.done(now);
+    }
+    function cancel() { if (!drag) return; var was = drag.on; stop(); if (was) render(); }
+    function key(e) { if (e.key === 'Escape' && drag && drag.on) { e.preventDefault(); cancel(); } }
+    function stop() {
+      clearTimeout(drag.timer);
+      cancelAnimationFrame(drag.raf);
+      if (drag.ghost) drag.ghost.remove();
+      drag.el.classList.remove('gap-row');
+      document.documentElement.classList.remove('arranging');
+      document.removeEventListener('touchmove', still, { passive: false });
+      document.removeEventListener('pointermove', move, true);
+      document.removeEventListener('pointerup', end, true);
+      document.removeEventListener('pointercancel', cancel, true);
+      document.removeEventListener('keydown', key, true);
+      drag = null;
+    }
+  }
+  // put the dragged items back into the list: the places they held are refilled in their new order
+  function reorderByIndex(list, els) {
+    var idx = els.map(function (el) { return +el.getAttribute('data-i'); });
+    var items = idx.map(function (i) { return list[i]; }), slots = idx.slice().sort(function (a, b) { return a - b; });
+    slots.forEach(function (s, k) { list[s] = items[k]; });
+  }
+
   function addPhotos(files) {
     if (!files || !files.length) return;
     var credit = (sel.photos && sel.photos.credit) || '';
@@ -863,10 +991,10 @@
         { k: 'name', label: 'Name', wide: true },
         { k: 'tagline', label: 'Line under the name', wide: true },
         { k: 'show_next_show', label: 'Show the next concert on the front page', type: 'check', wide: true }
-      ]) + '</div><div class="card"><h3>Menu</h3><p>Left: the word in the menu. Right: the page it opens. Use ↑ ↓ to reorder, ◐ to hide.</p><div class="rows" id="menu">' +
+      ]) + '</div><div class="card"><h3>Menu</h3><p>Left: the word in the menu. Right: the page it opens. Drag ⠿ to move an item, ◐ hides it.</p><div class="rows" id="menu">' +
       s.menu.map(function (m, i) {
         return '<div class="row two' + (m.hidden ? ' off' : '') + '" data-row="' + i + '"><input type="text" data-k="label" value="' + esc(m.label) + '" aria-label="Label">' +
-          '<select data-page aria-label="The page it opens">' + pageOptions(m) + '</select><span class="tools"><button data-m="up" title="Up">↑</button><button data-m="down" title="Down">↓</button>' +
+          '<select data-page aria-label="The page it opens">' + pageOptions(m) + '</select><span class="tools"><button class="grip" type="button" title="Drag to move" aria-label="Drag to move">⠿</button>' +
           '<button data-m="hide" title="Hide / show">◐</button><button data-m="del" title="Remove">✕</button></span>' +
           (isOther(m) ? '<input type="url" class="addr" data-k="href" value="' + esc(m.href) + '" placeholder="https://…" aria-label="Web address">' : '') + '</div>';
       }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-m="add">+ Add menu item</button></p></div></div></div>';
@@ -890,6 +1018,14 @@
       p.querySelectorAll('#focus img, .phone img').forEach(function (im) { im.style.objectPosition = s.hero_focus; });
       $('.focus-tip').firstChild.textContent = 'Left: a computer screen. Right: a phone. Click the big picture to choose what stays in view (now ' + s.hero_focus + ').';
       dirty();
+    });
+    sortable($('#menu'), '.row', {
+      handle: '.grip',
+      done: function (els) {
+        s.menu = els.map(function (el) { return s.menu[+el.getAttribute('data-row')]; });
+        dirty();
+        render();
+      }
     });
     $('#menu').addEventListener('input', function (e) {
       if (!e.target.hasAttribute('data-k')) return;
@@ -940,6 +1076,200 @@
     });
   };
 
+  // ------------------------------------------------------------------ LOOK: colours, heading font, each page's photo
+  var LK = window.GYDA_LOOK;
+  var LOOK_PAGES = [['About', 'About'], ['FULL-BIO', 'Full bio'], ['Work', 'Work'], ['FILM', 'Film'], ['LIVE', 'Live'], ['NEWS', 'News'],
+    ['PHOTOS', 'Photos'], ['CONTACT', 'Contact'], ['STORE', 'Store'], ['Music-Video', 'Music videos'], ['With-Others', 'With others'], ['Instant-composition', 'Instant composition']];
+  function lookOf() {
+    var s = D.site;
+    s.look = s.look || {};
+    s.look.pages = s.look.pages || {};
+    return s.look;
+  }
+  function goLook(page) { tab = 'look'; sel.lookPage = page; live.auto = true; location.hash = 'look'; render(); window.scrollTo(0, 0); }
+  // the page beside changes at once (a slider, a colour), and is drawn again properly a moment later
+  function lookNow() {
+    var f = $('#live-view iframe.on');
+    if (!f) return;
+    try {
+      var w = f.contentWindow, d = w.document, look = JSON.parse(JSON.stringify(lookOf())), key = d.body.getAttribute('data-page');
+      Object.keys(look.pages).forEach(function (k) { var p = look.pages[k]; if (p.photo && uploads[p.photo]) p.photo = uploads[p.photo].url; });
+      w.GYDA_LOOK.applyTheme(d.documentElement, look);
+      if (key && look.pages[key]) w.GYDA_LOOK.applyPage(d, look.pages[key]);
+    } catch (e) { /* the full redraw follows anyway */ }
+  }
+  TABS.look = function () {
+    var look = lookOf(), key = sel.lookPage || 'About';
+    if (!LOOK_PAGES.some(function (x) { return x[0] === key; })) key = sel.lookPage = 'About';
+    var pg = look.pages[key] = look.pages[key] || { layout: 'none' };
+    var c = LK.colors(look), contact = key === 'CONTACT';
+    var layout = contact ? 'contact' : (LK.LAYOUTS[pg.layout] ? pg.layout : 'none');
+    var bright = pg.bright == null ? LK.BRIGHT[layout] : pg.bright;
+    var fp = pg.focus || '50% 50%';
+    var swatch = function (t) { return '<i style="background:' + t.ink + '"></i><i style="background:' + t.ox + '"></i><i style="background:' + t.glow + '"></i>'; };
+    var html = '<div class="tab-head"><div><h1>Look</h1><p>Colours, the heading font, and the photo and title of each page. ' +
+      'Everything shows on the page beside at once; nothing changes on the website until you press Publish.</p></div></div>' +
+      '<div class="look-grid"><div>' +
+      // pages first: the thing she changes most
+      '<div class="card" id="lk-page"><h3>Pages</h3><p>Choose a page, then its photo, how the photo sits, and the words at the top.</p>' +
+      '<div class="chips">' + LOOK_PAGES.map(function (x) { return '<button data-lkpage="' + x[0] + '" aria-pressed="' + (x[0] === key) + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div class="fields" style="margin-top:16px">' +
+      '<label class="f"><span>Title</span><input type="text" data-pk="title" value="' + esc(pg.title || '') + '"></label>' +
+      '<label class="f"><span>Small line above the title</span><input type="text" data-pk="kicker" value="' + esc(pg.kicker || '') + '"></label></div>' +
+      (contact ? '<p class="muted" style="margin:16px 0 8px">The Contact page always has its photo on the right half.</p>' :
+        '<p class="lk-label">How the photo sits</p><div class="layouts">' + Object.keys(LK.LAYOUTS).map(function (l) {
+          return '<button data-layout="' + l + '" aria-pressed="' + (l === layout) + '"><span class="mini mini-' + l + '"><b></b><s></s></span>' + esc(LK.LAYOUTS[l]) + '</button>';
+        }).join('') + '</div>') +
+      ('<p class="lk-label">The photo' + (pg.photo && layout !== 'none' ? ' <span class="muted">· click it to choose the part that stays in view</span>' : '') + '</p>' +
+        (pg.photo && layout !== 'none' ? '<div class="focus-box" id="lk-focus"><div class="frame"><img src="' + esc(img(pg.photo)) + '" alt="" style="object-position:' + esc(fp) + '"><i class="dot" style="left:' + esc(fp.split(' ')[0]) + ';top:' + esc(fp.split(' ')[1] || '50%') + '"></i></div></div>' : (layout === 'none' && !contact ? '<p class="muted">This page has no photo now. Pick one below and it goes behind the text; then choose how it sits above.</p>' : '<p class="muted">No photo yet: pick one below.</p>')) +
+        '<div class="lk-row"><button class="btn small" data-lkup>Upload a photo</button>' + (pg.photo ? '<button class="btn small" data-lknone>No photo</button>' : '') + '</div>' +
+        '<div class="picker">' + D.photos.map(function (p, i) { return '<button data-lkpick="' + i + '" aria-pressed="' + (p.src === pg.photo) + '"><img src="' + esc(img(p.src)) + '" alt="" loading="lazy"></button>'; }).join('') + '</div>' +
+        (pg.photo && layout !== 'none' ? '<label class="f" style="margin-top:16px"><span>Brightness of the photo · <b id="lk-bv">' + bright + '</b></span><input type="range" min="0" max="100" step="1" data-bright value="' + bright + '"></label>' : '')) +
+      '</div></div><div>' +
+      '<div class="card"><h3>Colours</h3><p>A set of colours for the whole site. The text stays white, so very light colours are darkened by themselves.</p><div class="themes">' +
+      Object.keys(LK.THEMES).map(function (k) {
+        var t = LK.THEMES[k];
+        return '<button data-theme="' + k + '" aria-pressed="' + ((look.theme || 'oxblood') === k && !(look.colors && Object.keys(look.colors).length)) + '"><span class="sw">' + swatch(t) + '</span>' + esc(t.name) + '</button>';
+      }).join('') + '</div><div class="colors">' +
+      [['ink', 'Background'], ['ox', 'Frames & cards'], ['glow', 'Highlight']].map(function (x) {
+        return '<label><input type="color" data-color="' + x[0] + '" value="' + c[x[0]] + '"><span>' + x[1] + '</span></label>';
+      }).join('') + (look.colors && Object.keys(look.colors).length ? '<button class="link" data-colreset>Back to the set’s own colours</button>' : '') + '</div></div>' +
+      '<div class="card"><h3>Heading font</h3><p>For page titles and big headings. The text font stays the same.</p><div class="fonts">' +
+      Object.keys(LK.FONTS).map(function (k) {
+        return '<button data-font="' + k + '" aria-pressed="' + ((look.font || 'outfit') === k) + '" style="font-family:' + esc(LK.FONTS[k].css) + '"><b>GYÐA</b><span>' + esc(LK.FONTS[k].name) + '</span></button>';
+      }).join('') + '</div></div>' +
+      '<div class="card"><h3>Saved looks</h3><p>Keep a look to come back to, for example before trying something new.</p><div class="saved">' +
+      (D.site.looks || []).map(function (s, i) {
+        return '<div class="row"><span>' + esc(s.name) + ' <small class="muted">' + esc(s.date || '') + '</small></span><span class="tools"><button data-lkuse="' + i + '" title="Use this look">Use</button><button data-lkdel="' + i + '" title="Delete">✕</button></span></div>';
+      }).join('') + '</div><p style="margin:10px 0 0"><button class="btn small" data-lksave>Save this look…</button></p></div>' +
+      '</div></div>';
+    var p = $('#panel');
+    p.innerHTML = html;
+    function changedNow(redraw) { dirty(); lookNow(); if (redraw) render(); }
+    p.addEventListener('input', function (e) {
+      var t = e.target, k = t.getAttribute('data-pk');
+      if (k) { pg[k] = t.value; return changedNow(); }
+      if (t.hasAttribute('data-bright')) { pg.bright = +t.value; $('#lk-bv').textContent = t.value; return changedNow(); }
+      var ck = t.getAttribute('data-color');
+      if (ck) {
+        look.colors = look.colors || {};
+        look.colors[ck] = t.value;
+        changedNow();
+      }
+    });
+    p.addEventListener('change', function (e) { if (e.target.hasAttribute('data-color')) render(); });   // a colour picked: show what it became
+    p.addEventListener('click', function (e) {
+      var t = e.target, b;
+      if ((b = t.closest('[data-lkpage]'))) { sel.lookPage = b.getAttribute('data-lkpage'); live.auto = true; render(); return; }
+      if ((b = t.closest('[data-layout]'))) {
+        var l = b.getAttribute('data-layout');
+        if (l !== pg.layout) { pg.layout = l; delete pg.bright; }
+        return changedNow(true);
+      }
+      if ((b = t.closest('[data-lkpick]'))) { pg.photo = D.photos[+b.getAttribute('data-lkpick')].src; if (pg.layout === 'none') pg.layout = 'behind'; return changedNow(true); }
+      if (t.closest('[data-lknone]')) { var was = pg.photo; delete pg.photo; dropFile(was); return changedNow(true); }
+      if (t.closest('[data-lkup]')) {
+        pickFiles(false).then(function (fs) {
+          if (!fs.length) return;
+          return uploadWebImage(fs[0], 'page-' + key.toLowerCase()).then(function (path) {
+            var was = pg.photo;
+            pg.photo = path;
+            dropFile(was);
+            changedNow(true);
+          });
+        }).catch(function (err) { toast(err.message, true); });
+        return;
+      }
+      if ((b = t.closest('#lk-focus'))) {
+        var r = $('#lk-focus img').getBoundingClientRect();
+        var x = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 100), y = Math.round(Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)) * 100);
+        pg.focus = x + '% ' + y + '%';
+        $('#lk-focus img').style.objectPosition = pg.focus;
+        var dot = $('#lk-focus .dot');
+        dot.style.left = x + '%'; dot.style.top = y + '%';
+        return changedNow();
+      }
+      if ((b = t.closest('[data-theme]'))) { look.theme = b.getAttribute('data-theme'); delete look.colors; return changedNow(true); }
+      if (t.closest('[data-colreset]')) { delete look.colors; return changedNow(true); }
+      if ((b = t.closest('[data-font]'))) { look.font = b.getAttribute('data-font'); return changedNow(true); }
+      if (t.closest('[data-lksave]')) {
+        var name = prompt('A name for this look:', 'My look ' + ((D.site.looks || []).length + 1));
+        if (!name) return;
+        D.site.looks = D.site.looks || [];
+        D.site.looks.push({ name: name.slice(0, 60), date: fmt(todayISO()), look: JSON.parse(JSON.stringify(look)) });
+        toast('Saved. Press Publish to keep it.');
+        return changedNow(true);
+      }
+      if ((b = t.closest('[data-lkuse]'))) {
+        var s = D.site.looks[+b.getAttribute('data-lkuse')];
+        if (!confirm('Use “' + s.name + '”? The colours, font and page photos change to it (nothing is published until you press Publish).')) return;
+        D.site.look = JSON.parse(JSON.stringify(s.look));
+        return changedNow(true);
+      }
+      if ((b = t.closest('[data-lkdel]'))) {
+        var i = +b.getAttribute('data-lkdel');
+        if (!confirm('Delete the saved look “' + D.site.looks[i].name + '”?')) return;
+        D.site.looks.splice(i, 1);
+        return changedNow(true);
+      }
+    });
+  };
+
+  // ------------------------------------------------------------------ HISTORY: bring back an earlier version
+  var versions = null;
+  function when(iso) {
+    var d = new Date(iso);
+    return d.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()] + ' ' + d.getFullYear() +
+      ', ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+  function what(msg) {
+    var m = String(msg || '').match(/^Admin: update (.*)$/);
+    if (m) return m[1].replace(/^./, function (c) { return c.toUpperCase(); }).replace('front page/settings', 'front page, contact or look');
+    return 'Website update: ' + String(msg || '').slice(0, 90);
+  }
+  TABS.history = function () {
+    var p = $('#panel');
+    var head = '<div class="tab-head"><div><h1>History</h1><p>Every time something is published, the website keeps the version from before. ' +
+      'Choose one to see it on the page beside. To put it back, press Publish; to forget it, press Undo all.</p></div></div>' +
+      (showing ? '<p class="info">You are looking at the website as it was on <b>' + esc(when(showing.date)) + '</b>. ' +
+        'You can still change things in the other tabs. Press <b>Publish</b> to put it back on the website, or <b>Undo all</b> to go back to now.</p>' : '');
+    if (offline) { p.innerHTML = head + '<p class="muted">History needs the real admin (it is not part of the local test).</p>'; return; }
+    if (!versions) {
+      p.innerHTML = head + '<p class="muted">Loading the versions…</p>';
+      call('GET', '/history').then(function (r) { versions = r.versions; if (tab === 'history') render(); },
+        function (e) { if (tab === 'history') p.innerHTML = head + '<p class="err">Could not load the history: ' + esc(e.message) + '</p>'; });
+      return;
+    }
+    p.innerHTML = head + '<div class="hist">' + versions.map(function (v, i) {
+      return '<div class="hrow' + (showing && showing.sha === v.sha ? ' on' : '') + '"><span class="hwhen">' + esc(when(v.date)) + '</span><span class="hwhat">' + esc(what(v.message)) +
+        (i === 0 ? ' <b class="badge">On the website now</b>' : '') + '</span>' +
+        (i === 0 ? '' : '<button class="btn small" data-ver="' + i + '">' + (showing && showing.sha === v.sha ? 'Showing' : 'Show this version') + '</button>') + '</div>';
+    }).join('') + '</div><p class="muted" style="margin-top:14px">The newest ' + versions.length + ' versions are listed. The changes from the calendar are left out.</p>';
+    p.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-ver]');
+      if (!b) return;
+      var v = versions[+b.getAttribute('data-ver')];
+      if (changes() && !showing && !confirm('You have unpublished changes. Showing an earlier version replaces them. Go on?')) return;
+      b.disabled = true;
+      b.textContent = 'Fetching…';
+      call('GET', '/history/' + v.sha).then(function (r) {
+        Object.keys(uploads).forEach(function (u) { URL.revokeObjectURL(uploads[u].url); });
+        uploads = {}; removals = {};
+        FILES.forEach(function (n) { D[n] = r.files[n] ? JSON.parse(r.files[n]) : JSON.parse(orig[n]); });
+        restored = r.pics || {}; restoredRaw = r.raw || '';
+        showing = { sha: v.sha, date: v.date };
+        sel = {};
+        if (!changes()) { showing = null; toast('That version is the same as the website now.'); }
+        render();
+        live.auto = false; live.page = live.shown || 'index.html';
+        liveLoad();
+      }, function (err) { toast('Could not fetch it: ' + err.message, true); render(); });
+    });
+  };
+  $('#history-link').addEventListener('click', function () {
+    tab = 'history'; versions = null; location.hash = 'history'; render(); window.scrollTo(0, 0);
+  });
+
   TABS.settings = function () {
     var s = D.site;
     s.links = s.links || [];
@@ -975,7 +1305,21 @@
   };
 
   // ------------------------------------------------------------------ chrome
-  var TAB_FILE = { videos: 'videos', about: 'about', work: 'work', front: 'site', news: 'news', live: 'shows', films: 'films', photos: 'photos', settings: 'site' };
+  var TAB_FILE = { look: 'site', history: '', videos: 'videos', about: 'about', work: 'work', front: 'site', news: 'news', live: 'shows', films: 'films', photos: 'photos', settings: 'site' };
+  // the front page, Contact & press and Look all live in site.json: each tab only gets a dot for its own part
+  var SITE_PART = { look: 'look', looks: 'look', email: 'settings', booking_email: 'settings', booking_name: 'settings', press_email: 'settings',
+    press_intro: 'settings', links: 'settings', calendar_ics: 'live' };
+  function sitePart(o, part) {
+    var c = {};
+    Object.keys(o || {}).forEach(function (k) { if ((SITE_PART[k] || 'front') === part) c[k] = o[k]; });
+    return JSON.stringify(c);
+  }
+  function tabChanged(t) {
+    if (t === 'live') return changed('shows') || (changed('site') && D.site.calendar_ics !== JSON.parse(orig.site).calendar_ics);
+    if (TAB_FILE[t] !== 'site') return !!TAB_FILE[t] && changed(TAB_FILE[t]);
+    if (!changed('site')) return false;
+    return sitePart(D.site, t) !== sitePart(JSON.parse(orig.site), t);
+  }
   function render() {
     var p = $('#panel'), fresh = p.cloneNode(false);
     p.parentNode.replaceChild(fresh, p); // drop old listeners
@@ -985,47 +1329,161 @@
       if (t === tab && b.parentNode.scrollWidth > b.parentNode.clientWidth) b.parentNode.scrollLeft = b.offsetLeft - b.parentNode.offsetLeft - (b.parentNode.clientWidth - b.offsetWidth) / 2;
       if (t === tab) $('#guide-link').href = 'guide/#' + tab;   // the guide opens at the page she is on
       var dot = b.querySelector('.dot');
-      var isDirty = changed(TAB_FILE[t]) || (t === 'live' && changed('site') && D.site.calendar_ics !== JSON.parse(orig.site).calendar_ics);
+      var isDirty = tabChanged(t);
       if (isDirty && !dot) b.insertAdjacentHTML('beforeend', '<span class="dot" title="Unpublished changes"></span>');
       if (!isDirty && dot) dot.remove();
     });
     TABS[tab]();
     dirty(true);
+    liveFollow();
   }
   function dirty(quiet) {
     var n = changes();
     var st = $('#status');
     st.className = 'status' + (n ? ' dirty' : '');
     st.textContent = offline ? (n ? n + ' change' + (n === 1 ? '' : 's') + ' (local test: Publish only shows what would be saved)' : 'Local test mode — nothing is saved')
-      : n ? n + ' unpublished change' + (n === 1 ? '' : 's') + '. Preview, then Publish when ready.' : 'Everything is published.';
+      : n ? n + ' unpublished change' + (n === 1 ? '' : 's') + '. Check the page, then Publish when ready.' : 'Everything is published.';
     $('#publish').disabled = !n;
     $('#discard').disabled = !n;
-    $('#preview').disabled = false;
     if (!quiet) {
+      liveSoon();
       document.querySelectorAll('.tabs button').forEach(function (b) {
         var t = b.getAttribute('data-tab');
-        if (changed(TAB_FILE[t]) && !b.querySelector('.dot')) b.insertAdjacentHTML('beforeend', '<span class="dot" title="Unpublished changes"></span>');
+        if (tabChanged(t) && !b.querySelector('.dot')) b.insertAdjacentHTML('beforeend', '<span class="dot" title="Unpublished changes"></span>');
       });
     }
   }
 
-  var PREVIEW_PAGE = { videos: 'Music-Video.html', about: 'About.html', work: 'Work.html', front: '', news: 'NEWS.html', live: 'LIVE.html', films: 'FILM.html', photos: 'PHOTOS.html', settings: 'CONTACT.html' };
-  function preview() {
-    // swap not-yet-uploaded pictures for their in-browser copies, then hand the drafts to the site
-    try {
-      FILES.concat(['calendar']).forEach(function (n) {
-        var t = n === 'calendar' ? JSON.stringify(cal) : text(n);
-        Object.keys(uploads).forEach(function (path) { t = t.split('"' + path + '"').join('"' + uploads[path].url + '"'); });
-        localStorage.setItem('gyda-draft:' + n, t);
-      });
-    } catch (e) { return toast('Preview failed: ' + e.message, true); }
-    window.open('../' + PREVIEW_PAGE[tab] + '?preview=' + Date.now(), 'gyda-preview');
+  // ------------------------------------------------------------------ the page beside the editor
+  // The real website page, drawn from the unpublished changes (js/app.js reads them with ?preview), reloaded
+  // in a second frame and swapped in when it is ready, so it changes as she types without flashing.
+  var live = { on: false, auto: true, page: '', dev: 'desk', shown: '', t: 0, n: 0 };
+  function slugify(t) {   // the same as js/app.js
+    return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ð/g, 'd').replace(/þ/g, 'th').replace(/æ/g, 'ae')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   }
+  function albumPage(w) {
+    if (!w || w.hidden) return '';
+    if (w.page) return w.page;
+    return w.section !== 'More' && (w.story || w.tracks) ? 'Album?a=' + slugify(w.title) : '';
+  }
+  var SITE_PAGES = [['index.html', 'Front page'], ['About', 'About'], ['FULL-BIO', 'Full bio'], ['Work', 'Work'], ['FILM', 'Film'], ['LIVE', 'Live'],
+    ['NEWS', 'News'], ['PHOTOS', 'Photos'], ['CONTACT', 'Contact'], ['STORE', 'Store'], ['Music-Video', 'Music videos'], ['With-Others', 'With others'],
+    ['Instant-composition', 'Instant composition']];
+  function sitePages() {
+    var out = SITE_PAGES.slice();
+    (D.work || []).forEach(function (w) { var p = albumPage(w); if (p && w.section !== 'More') out.push([p, 'Album: ' + w.title]); });
+    return out;
+  }
+  // the page that belongs with what she is editing now
+  function autoPage() {
+    var s = sel[tab];
+    switch (tab) {
+      case 'front': return 'index.html';
+      case 'about': return sel.aboutPage || 'About';
+      case 'work': return albumPage(s) || 'Work';
+      case 'videos': return s && s.page ? s.page : sel['videos:page'] || 'Music-Video';
+      case 'news': return 'NEWS';
+      case 'live': return 'LIVE';
+      case 'films': return 'FILM';
+      case 'photos': return 'PHOTOS';
+      case 'settings': return 'CONTACT';
+      case 'look': return sel.lookPage || 'About';
+      default: return live.shown || 'index.html';
+    }
+  }
+  function writeDrafts() {
+    // pictures that are not uploaded yet are shown from the browser's own copy
+    FILES.concat(['calendar']).forEach(function (n) {
+      var t = n === 'calendar' ? JSON.stringify(cal) : text(n);
+      Object.keys(uploads).forEach(function (path) { t = t.split('"' + path + '"').join('"' + uploads[path].url + '"'); });
+      Object.keys(restored).forEach(function (path) { t = t.split('"' + path + '"').join('"' + restoredRaw + path + '"'); });
+      localStorage.setItem('gyda-draft:' + n, t);
+    });
+  }
+  function liveSize() {
+    var top = $('.top'), dock = $('.dock');
+    document.body.style.setProperty('--top-h', top.getBoundingClientRect().bottom + 'px');
+    document.body.style.setProperty('--dock-h', dock.offsetHeight + 'px');
+    var view = $('#live-view'), W = live.dev === 'phone' ? 390 : 1280;
+    var vw = view.clientWidth, vh = view.clientHeight;
+    // a phone, or a laptop screen (1280 × 800): the page looks as it really will, photos included
+    var k = live.dev === 'phone' ? Math.min(1, (vh - 24) / 800, (vw - 24) / W) : vw / W;
+    view.classList.toggle('as-phone', live.dev === 'phone');
+    view.querySelectorAll('iframe').forEach(function (f) {
+      f.style.width = W + 'px';
+      f.style.height = (live.dev === 'phone' ? Math.min(844, (vh - 24) / k) : Math.min(800, vh / k)) + 'px';
+      f.style.transform = (live.dev === 'phone' ? 'translate(' + Math.max(0, (vw - W * k) / 2) + 'px,12px) ' : '') + 'scale(' + k + ')';
+    });
+    var cap = $('#live-cap'), fh = live.dev === 'phone' ? 0 : Math.min(800, vh / k) * k;
+    cap.hidden = !fh || vh - fh < 40;
+    cap.style.top = fh + 'px';
+    cap.textContent = 'This is how it looks on a laptop screen. Scroll inside it to see the rest of the page.';
+  }
+  function scrollOf(f) {
+    try {
+      var w = f.contentWindow, m = w.document.querySelector('.app-main');
+      return { y: w.scrollY, m: m ? m.scrollTop : 0 };
+    } catch (e) { return { y: 0, m: 0 }; }
+  }
+  function liveLoad() {
+    if (!live.on) return;
+    try { writeDrafts(); } catch (e) { return toast('The page could not be shown: ' + e.message, true); }
+    var page = live.auto ? autoPage() : live.page, view = $('#live-view');
+    var old = view.querySelector('iframe.on'), same = page === live.shown && old, at = same ? scrollOf(old) : { y: 0, m: 0 };
+    var f = document.createElement('iframe'), n = ++live.n;
+    f.title = 'The page as visitors will see it';
+    f.style.visibility = 'hidden';
+    view.appendChild(f);
+    liveSize();
+    f.addEventListener('load', function () {
+      var w = f.contentWindow, tries = 0;
+      (function ready() {   // wait until the page has drawn its content, then put it where the old one was scrolled to
+        var d = w.document, done = d.documentElement.classList.contains('look-set') && (!d.getElementById('app') || d.getElementById('app').children.length);
+        if (!done && tries++ < 40) return setTimeout(ready, 30);
+        if (n !== live.n) return f.remove();         // a newer one is on its way
+        w.scrollTo(0, at.y);
+        var m = d.querySelector('.app-main');
+        if (m && at.m) m.scrollTop = at.m;
+        f.style.visibility = '';
+        f.classList.add('on');
+        view.querySelectorAll('iframe').forEach(function (x) { if (x !== f) x.remove(); });
+      })();
+    });
+    f.src = '../' + page + (page.indexOf('?') < 0 ? '?' : '&') + 'preview&embed&t=' + Date.now();
+    live.shown = page;
+    $('#live-open').href = '../' + page + (page.indexOf('?') < 0 ? '?' : '&') + 'preview';
+    var s = $('#live-page'), pages = sitePages();
+    if (!pages.some(function (p) { return p[0] === page; })) pages.push([page, page]);
+    s.innerHTML = pages.map(function (p) { return '<option value="' + esc(p[0]) + '"' + (p[0] === page ? ' selected' : '') + '>' + esc(p[1]) + '</option>'; }).join('');
+    $('#live-note').textContent = changes() ? 'With your changes, not published yet' : 'As it is on the website now';
+  }
+  function liveSoon() { if (!live.on) return; clearTimeout(live.t); live.t = setTimeout(liveLoad, 450); }
+  function liveFollow() { if (live.on && live.auto && autoPage() !== live.shown) liveLoad(); }   // a new tab or a new selection
+  function liveShow(on) {
+    live.on = on;
+    try { localStorage.setItem('gyda.live', on ? 'on' : 'off'); } catch (e) { /* fine */ }
+    $('#live').hidden = !on;
+    document.body.classList.toggle('with-live', on);
+    $('#preview').textContent = on ? 'Hide the page' : 'Show the page';
+    if (on) { live.shown = ''; liveLoad(); } else $('#live-view').querySelectorAll('iframe').forEach(function (f) { f.remove(); });
+  }
+  $('#live-page').addEventListener('change', function (e) { live.auto = false; live.page = e.target.value; liveLoad(); });
+  $('#live-close').addEventListener('click', function () { liveShow(false); });
+  $('#live').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-dev]');
+    if (!b) return;
+    live.dev = b.getAttribute('data-dev');
+    document.querySelectorAll('#live [data-dev]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    liveSize();
+  });
+  addEventListener('resize', function () { if (live.on) liveSize(); });
 
   function publish() {
     var files = FILES.filter(changed);
     var ups = Object.keys(uploads), dels = Object.keys(removals).filter(function (p) { return !used(p); });
-    if (!files.length && !ups.length && !dels.length) return;
+    var back = Object.keys(restored).filter(function (p) { return used(p) || used(p.replace(/^images\/t\//, 'images/')) || Object.keys(restored).some(function (q) { return thumbPath(q) === p && used(q); }); });
+    if (!files.length && !ups.length && !dels.length && !back.length) return;
     if (offline) {
       alert('Local test mode — this is what Publish would save:\n\n' + files.map(function (f) { return 'data/' + f + '.json'; })
         .concat(ups.map(function (p) { return '+ ' + p; })).concat(dels.map(function (p) { return '− ' + p; })).join('\n'));
@@ -1036,6 +1494,7 @@
     btn.textContent = 'Publishing…';
     // pictures go up one by one (big ones take a moment); then everything is saved in one go
     var adds = {}, body = { files: {}, shas: {}, adds: adds, dels: dels }, done = 0;
+    back.forEach(function (p) { adds[p] = restored[p]; });   // already on GitHub: only put back in place
     files.forEach(function (f) { body.files[f] = text(f); body.shas[f] = sha[f]; });
     ups.reduce(function (chain, path) {
       return chain.then(function () {
@@ -1063,7 +1522,12 @@
     $('#newpass').hidden = true;
     $('#app').hidden = false;
     if (loaded) return dirty();      // signed in again in the middle of something
-    loadAll().catch(function (e) { if (e.status !== 401) toast('Could not load: ' + e.message, true); });
+    loadAll().then(function () {
+      chooseWanted();
+      var pref = null;
+      try { pref = localStorage.getItem('gyda.live'); } catch (e) { /* fine */ }
+      if (innerWidth > 1100 && (pref === 'on' || (pref == null && innerWidth >= 1400))) liveShow(true);   // on small screens only when asked for
+    }).catch(function (e) { if (e.status !== 401) toast('Could not load: ' + e.message, true); });
   }
   function showSignin(err) {
     $('#app').hidden = true;
@@ -1087,6 +1551,7 @@
     var b = e.target.closest('[data-tab]');
     if (!b) return;
     tab = b.getAttribute('data-tab');
+    live.auto = true;
     location.hash = tab;
     render();
     window.scrollTo(0, 0);
@@ -1125,13 +1590,14 @@
     (offline ? Promise.resolve() : SERVICE.logout()).then(function () { location.reload(); });
   });
   $('#publish').addEventListener('click', publish);
-  $('#preview').addEventListener('click', preview);
+  $('#preview').addEventListener('click', function () { liveShow(!live.on); });
   $('#discard').addEventListener('click', function () {
     if (!confirm('Undo every change since the last Publish?')) return;
     Object.keys(uploads).forEach(function (p) { URL.revokeObjectURL(uploads[p].url); });
     FILES.forEach(function (n) { D[n] = JSON.parse(orig[n]); });
     uploads = {};
     removals = {};
+    restored = {}; showing = null;
     sel = {};
     render();
   });
@@ -1139,7 +1605,18 @@
     if (changes()) { e.preventDefault(); e.returnValue = ''; }
   });
 
-  var h = location.hash.slice(1);
-  if (TABS[h]) tab = h;
+  // admin/#tab or admin/#tab:which (from the Edit button on the website): open that tab, with that thing chosen
+  var h = decodeURIComponent(location.hash.slice(1)).split(':'), want = h[1] || '';
+  if (TABS[h[0]]) tab = h[0];
+  function chooseWanted() {
+    if (!want) return;
+    if (tab === 'about') sel.aboutPage = want;
+    if (tab === 'look') sel.lookPage = want;
+    if (tab === 'work') sel.work = D.work.filter(function (w) { return w.page === want || slugify(w.title) === want; })[0] || null;
+    if (tab === 'videos') sel['videos:page'] = want;
+    want = '';
+    history.replaceState(null, '', '#' + tab);
+    render();
+  }
   if (SERVICE.signedIn()) start(); else showSignin();
 })();

@@ -67,3 +67,11 @@ https://gunnitynes.github.io/gydadiamond-site/. After the DNS change, move `_sou
 DNS at Bluehost (nameservers set back to Bluehost's own):
 - `A` records for `@`: 185.199.108.153, 185.199.109.153, 185.199.110.153, 185.199.111.153
 - `CNAME` for `www` → `<github-username>.github.io`
+
+## Look, the page beside, History (Round 31)
+- **Look tab** (admin): colours (dark sets + own colours, kept dark enough for white text), heading font (self-hosted in fonts/), and per page: photo, focus, layout (behind / top / beside / faint / none), brightness, title and small line. Saved in `data/site.json` → `look`; saved looks in `looks`. `js/look.js` is shared by the site and the admin; `_source/build.py` bakes the same look into the HTML, and the browser applies newer changes.
+- **The page beside**: the admin shows the real page (`?preview&embed`, drafts in localStorage) in a frame that reloads as she types; Computer (1280×800) or Phone.
+- **Drag to reorder**: albums, videos, films, the menu (⠿), photos.
+- **Edit this page**: a button on the website for a browser signed in to the admin.
+- **History**: `GET /history` and `GET /history/<sha>` in the service; a version comes back as unpublished changes, with deleted pictures put back from GitHub's own copies.
+

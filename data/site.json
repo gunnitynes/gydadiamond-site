@@ -50,5 +50,81 @@
  "press_intro": "Free to use with the photographer credited.",
  "press_bio": "Gyða Valtýsdóttir is an Icelandic cellist, composer and singer, and a founding member of the experimental group múm. Classically trained, she has made music for film, theatre and dance, and collaborated with Kronos Quartet, Aaron & Bryce Dessner, Josephine Foster, Damien Rice, Dustin O’Halloran, Colin Stetson, Kjartan Sveinsson and Ragnar Kjartansson, among many others. She received the Nordic Council Music Prize in 2019. Her albums are Epicycle (2017), Evolution (2018), Epicycle II (2020) and Ox (2021).",
  "booking_name": "Toutpartout",
- "booking_email": "enc:ZWIudHVvdHJhcHR1b3RAcmV0ZWlk"
+ "booking_email": "enc:ZWIudHVvdHJhcHR1b3RAcmV0ZWlk",
+ "look": {
+  "theme": "oxblood",
+  "font": "outfit",
+  "pages": {
+   "Work": {
+    "title": "Work",
+    "kicker": "Albums, scores & collaborations",
+    "layout": "none"
+   },
+   "FILM": {
+    "title": "Film",
+    "kicker": "Films, documentaries and art",
+    "layout": "faint",
+    "photo": "images/film-bg-mountains.jpg",
+    "bright": 10
+   },
+   "CONTACT": {
+    "title": "Contact",
+    "kicker": "Get in touch",
+    "layout": "contact",
+    "photo": "images/09f593f7-759A5994.jpg"
+   },
+   "LIVE": {
+    "title": "Live",
+    "kicker": "Concerts",
+    "layout": "top",
+    "photo": "images/576e7e30-ata_kam-7.jpg"
+   },
+   "NEWS": {
+    "title": "News",
+    "kicker": "From Gyða",
+    "layout": "none"
+   },
+   "PHOTOS": {
+    "title": "Photos",
+    "kicker": "Press photos",
+    "layout": "none"
+   },
+   "About": {
+    "title": "About",
+    "kicker": "Biography",
+    "layout": "behind",
+    "photo": "images/748b58f2-Gya14-copyI.jpg",
+    "bright": 42,
+    "focus": "50% 25%"
+   },
+   "FULL-BIO": {
+    "title": "Full bio",
+    "kicker": "Collaborations, education & discography",
+    "layout": "behind",
+    "photo": "images/6bc6f397-gyda_sepia_s.jpg",
+    "bright": 42,
+    "focus": "50% 0%"
+   },
+   "Music-Video": {
+    "title": "Music videos",
+    "kicker": "Videos",
+    "layout": "none"
+   },
+   "With-Others": {
+    "title": "With others",
+    "kicker": "Collaborations",
+    "layout": "none"
+   },
+   "Instant-composition": {
+    "title": "Instant composition",
+    "kicker": "Improvisations",
+    "layout": "none"
+   },
+   "STORE": {
+    "title": "Store",
+    "kicker": "Albums on Bandcamp",
+    "layout": "none"
+   }
+  }
+ }
 }

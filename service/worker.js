@@ -199,6 +199,37 @@ async function publish(env, body) {
   }
 }
 
+// ------------------------------------------------------------------ history: earlier versions of the website
+// The versions are GitHub's own commits; bringing one back is done in the admin as ordinary unpublished
+// changes, so nothing here writes anything.
+async function history(env) {
+  const list = await gh(env, `/commits?sha=${env.BRANCH}&path=data&per_page=60`);
+  return {
+    versions: list.filter(c => !/^Calendar sync/.test(c.commit.message)).slice(0, 40)
+      .map(c => ({ sha: c.sha, date: c.commit.committer.date, message: c.commit.message.split('\n')[0] }))
+  };
+}
+async function treeOf(env, commit) {
+  const c = await gh(env, '/git/commits/' + commit);
+  return (await gh(env, `/git/trees/${c.tree.sha}?recursive=1`)).tree;
+}
+async function version(env, sha) {
+  if (!/^[0-9a-f]{40}$/.test(sha)) throw new Say(400, 'That version is not known.');
+  const [head] = await headOf(env);
+  const [old, now] = await Promise.all([treeOf(env, sha), treeOf(env, head)]);
+  const was = Object.fromEntries(old.map(e => [e.path, e.sha])), have = new Set(now.map(e => e.path)), files = {};
+  await Promise.all(Object.keys(FILES).filter(n => was[`data/${n}.json`]).map(async n => {
+    files[n] = await gh(env, `/contents/data/${n}.json?ref=${sha}`, { raw: true });
+  }));
+  // pictures that version shows but that have been deleted since: they come back from GitHub's own copy
+  const pics = {};
+  for (const [, p] of Object.values(files).join('\n').matchAll(/"((?:images|press)\/[^"]+)"/g)) {
+    const thumb = /^images\/[^/]+$/.test(p) ? 'images/t/' + p.slice(7).replace(/\.[a-z]+$/i, '.jpg') : '';
+    for (const q of [p, thumb]) if (q && was[q] && !have.has(q) && PICTURE.test(q)) pics[q] = was[q];
+  }
+  return { files, pics, raw: `https://raw.githubusercontent.com/${env.REPO}/${sha}/` };
+}
+
 // ------------------------------------------------------------------ the front
 function ipOf(req) {
   const ip = req.headers.get('CF-Connecting-IP') || 'local';
@@ -239,7 +270,9 @@ async function route(req, env) {
   // everything below needs a signed-in browser
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer /, '');
   if (!/^[0-9a-f]{64}$/.test(token) || !await door.check(token)) throw new Say(401, 'Please sign in again.');
+  if (what.startsWith('GET /history/')) return version(env, what.slice(13));
   switch (what) {
+    case 'GET /history': return history(env);
     case 'POST /logout': await door.logout(token); return {};
     case 'GET /guide-key': return { key: env.GUIDE_KEY };
     case 'GET /data': return readData(env);

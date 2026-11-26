@@ -8,6 +8,7 @@ export const repo = { commit: 'a'.repeat(40), files: {}, blobs: {}, log: [], rac
 const sha = t => createHash('sha1').update(t).digest('hex');
 for (const f of fs.readdirSync('../data')) repo.files['data/' + f] = fs.readFileSync('../data/' + f, 'utf8');
 let trees = {}, commits = {};
+const snaps = [{ sha: repo.commit, message: 'Start', date: '2026-11-01T10:00:00Z', files: { ...repo.files } }];   // every version, newest last
 http.createServer(async (q, s) => {
   let b = ''; for await (const c of q) b += c;
   const p = q.url.replace('/repos/gunnitynes/gydadiamond-site', ''), m = q.method, out = (j, c = 200, h = {}) => { s.writeHead(c, h); s.end(typeof j === 'string' ? j : JSON.stringify(j)); };
@@ -15,8 +16,11 @@ http.createServer(async (q, s) => {
   if (repo.bad || q.headers.authorization !== 'Bearer test-token') return out({ message: 'Bad credentials' }, 401);
   if (p === '/git/ref/heads/main') return out({ object: { sha: repo.commit } }, 200, { 'github-authentication-token-expiration': '2027-11-01 10:00:00 UTC' });
   if (p.startsWith('/contents/data?')) return out(Object.keys(repo.files).filter(f => f.startsWith('data/')).map(f => ({ type: 'file', name: f.slice(5), sha: sha(repo.files[f]) })));
-  if (p.startsWith('/contents/data/')) return out(repo.files['data/' + p.slice(15).split('?')[0]]);
-  if (p.startsWith('/git/commits/')) return out({ tree: { sha: 'base' } });
+  // an older version comes from its snapshot; the newest is repo.files itself, which some tests change directly
+  if (p.startsWith('/contents/data/')) { const ref = (p.match(/ref=([0-9a-f]+)/) || [])[1], s = ref !== repo.commit && snaps.find(x => x.sha === ref); return out((s ? s.files : repo.files)['data/' + p.slice(15).split('?')[0]]); }
+  if (p.startsWith('/commits?')) return out(snaps.slice().reverse().map(x => ({ sha: x.sha, commit: { message: x.message, committer: { date: x.date } } })));
+  if (p.startsWith('/git/commits/')) return out({ tree: { sha: 'tree-' + p.slice(13) } });
+  if (p.startsWith('/git/trees/tree-')) { const s = snaps.find(x => x.sha === p.slice(16).split('?')[0]); return s ? out({ tree: Object.entries(s.files).map(([path, c]) => ({ path, sha: c.startsWith('blob:') ? c.slice(5) : sha(c) })) }) : out({ message: 'Not Found' }, 404); }
   if (p === '/git/blobs') { const j = JSON.parse(b), x = sha(j.content); repo.blobs[x] = j.content.length; repo.lastLength = q.headers['content-length']; return out({ sha: x }, 201); }
   if (p === '/git/trees') { const j = JSON.parse(b), x = sha(b + Math.random()); trees[x] = j.tree; return out({ sha: x }, 201); }
   if (p === '/git/commits') { const j = JSON.parse(b), x = sha(b + Math.random()); commits[x] = j; return out({ sha: x }, 201); }
@@ -25,7 +29,7 @@ http.createServer(async (q, s) => {
     if (repo.race) { repo.race--; repo.commit = sha('race' + Math.random()); return out({ message: 'Update is not a fast forward' }, 422); }
     if (commits[j.sha].parents[0] !== repo.commit || j.force) return out({ message: 'Update is not a fast forward' }, 422);
     for (const e of trees[commits[j.sha].tree]) { if (e.sha === null) delete repo.files[e.path]; else repo.files[e.path] = e.content ?? 'blob:' + e.sha; }
-    repo.commit = j.sha; repo.message = commits[j.sha].message; return out({});
+    repo.commit = j.sha; repo.message = commits[j.sha].message; snaps.push({ sha: j.sha, message: repo.message, date: new Date().toISOString(), files: { ...repo.files } }); return out({});
   }
   if (p.endsWith('/dispatches')) return out('', 204);
   out({ message: 'Not Found' }, 404);
@@ -73,11 +77,16 @@ if (path.basename(process.argv[1]) === 'test.mjs') {
   })) { r = await pub(x); ok('refused: ' + n, r.s === 400, r); }
   ok('nothing was changed by those', repo.commit === before, 0);
   r = await pub({ files: { news: '[]' }, shas: { news: 'b'.repeat(40) } }); ok('refused: changed somewhere else', r.s === 409, r);
-  news.unshift({ title: 'Próf ð' }); repo.race = 1;
+  news.unshift({ title: 'Próf ð', image: 'images/20261124-x.jpg' }); repo.race = 1;
   r = await pub({ files: { news: JSON.stringify(news) }, shas, adds: { 'images/20261124-x.jpg': pic, 'images/t/20261124-x.jpg': pic, 'press/20261124-x.heic': pic } });
   ok('publishes, also when something else saves in between', r.s === 200 && JSON.parse(repo.files['data/news.json'])[0].title === 'Próf ð' && repo.files['press/20261124-x.heic'], r); ok('commit message', repo.message === 'Admin: update news, 3 pictures', repo.message);
   r = await pub({ dels: ['images/20261124-x.jpg'] }); ok('removes a picture', r.s === 200 && !repo.files['images/20261124-x.jpg'], r);
   r = await api('POST', '/sync-calendar', {}, t2); ok('calendar sync', r.s === 200, r);
+  r = await api('GET', '/history', undefined, t2); ok('history lists the versions, newest first', r.s === 200 && r.versions.length === 3 && r.versions[0].message === 'Admin: update remove pictures' && r.versions[2].message === 'Start', r);
+  const mid = r.versions[1].sha; r = await api('GET', '/history/' + mid, undefined, t2);
+  ok('an earlier version: its texts, and the deleted picture comes back from its copy', r.s === 200 && JSON.parse(r.files.news)[0].title === 'Próf ð' && r.pics['images/20261124-x.jpg'] === pic && !r.pics['images/t/20261124-x.jpg'] && !r.pics['press/20261124-x.heic'] && r.raw.endsWith(mid + '/'), r);
+  r = await api('GET', '/history/' + 'z'.repeat(40), undefined, t2); ok('a made-up version is refused', r.s === 400, r);
+  r = await api('GET', '/history', undefined); ok('history needs sign-in', r.s === 401, r);
   repo.bad = 1; r = await api('GET', '/data', undefined, t2); ok('a run-out GitHub key is explained', r.s === 502 && /run out/.test(r.error), r); repo.bad = 0;
   r = await api('POST', '/logout', {}, t1); r = await api('GET', '/guide-key', undefined, t1); ok('sign out ends that session', r.s === 401, r);
   r = await api('POST', '/password', { p: B, code: code(1) }); ok('password changed', r.s === 200, r); const t3 = r.token;

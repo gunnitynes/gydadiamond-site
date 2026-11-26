@@ -48,7 +48,7 @@ SKIP = {'Running-on-Cargo'}
 # cache-busting: asset links get ?v=<hash of the asset files>, so browsers fetch new CSS/JS after a change
 import hashlib, re
 V = hashlib.sha1(b''.join(open(os.path.join(ROOT, f), 'rb').read() for f in
-                          ['css/static.css', 'css/app.css', 'css/fonts.css', 'js/app.js', 'js/site.js', '_source/site.css'])).hexdigest()[:8]
+                          ['css/static.css', 'css/app.css', 'css/fonts.css', 'js/app.js', 'js/look.js', 'js/site.js', '_source/site.css'])).hexdigest()[:8]
 HOME = 'Front-page'
 
 
@@ -176,33 +176,61 @@ def front_html():
 <nav class="hero-menu" aria-label="Main">{menu}</nav>
 </div>
 </main>
+<script src="js/look.js?v={V}" defer></script>
 <script src="js/app.js?v={V}" defer></script>
 </body>
 </html>
 '''
 
 
-def app_html(key):
+LOOK_PAGES = (site.get('look') or {}).get('pages') or {}
+BRIGHT = {'behind': 42, 'top': 100, 'beside': 100, 'faint': 20, 'contact': 100}
+
+
+def page_look(key):
+    """The page as the admin's Look tab last saved it (data/site.json), so the built page already matches;
+    js/look.js applies it again in the browser, for changes published since this build."""
     view, title, kicker, bg = APP_PAGES[key]
+    p = LOOK_PAGES.get(key)
+    if not p or view == 'album':
+        return view, title, kicker, bg, ''
+    layout, photo = p.get('layout', 'none'), p.get('photo', '')
+    pre = {'top': 'hero:', 'contact': 'hero:', 'beside': 'split:', 'behind': 'overlay:', 'faint': ''}.get(layout)
+    bg = pre + photo if photo and pre is not None else ''
+    b = max(0, min(100, int(p.get('bright', BRIGHT.get(layout, 100)))))
+    style = []
+    if p.get('focus'):
+        style.append('background-position:' + p['focus'])
+    if layout == 'faint':
+        style.append(f'opacity:{b / 100:g}')
+    elif layout in ('top', 'beside', 'contact') and b < 100:
+        style.append(f'filter:brightness({b / 100:g})')
+    veil = f' style="--veil:{1 - b / 100:.2f}"' if layout == 'behind' and bg else ''
+    return view, p.get('title') or title, p.get('kicker', kicker), bg, (';' + ';'.join(style) if style else '', veil)
+
+
+def app_html(key):
+    view, title, kicker, bg, extra = page_look(key)
+    style, veil = extra if extra else ('', '')
     hero = bg.startswith('hero:')
     split = bg.startswith('split:')
     overlay = bg.startswith('overlay:')
     bg = bg.removeprefix('hero:').removeprefix('split:').removeprefix('overlay:')
-    bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\')"></div>' if bg and not hero and not split and not overlay else ''
-    head = f'<p class="kicker">{html.escape(kicker)}</p>\n<h1 class="page-title">{title}</h1>'
+    bg_div = f'<div class="app-bg" style="background-image:url(\'{bg}\'){style}"></div>' if bg and not hero and not split and not overlay else ''
+    head = f'<p class="kicker">{html.escape(kicker)}</p>\n<h1 class="page-title">{html.escape(title)}</h1>'
     # a "hero:" photo is shown whole across the top of the page, with the title over it
-    top = f'<div class="page-hero" style="background-image:url(\'{bg}\')" aria-hidden="true"></div>' if hero or split or overlay else ''
+    top = f'<div class="page-hero" style="background-image:url(\'{bg}\'){style}" aria-hidden="true"></div>' if hero or split or overlay else ''
     if view == 'live':
         head += '\n<p class="booking" data-booking></p>'
     return f'''<!doctype html>
 <html lang="en" class="app-root">
 <head>
 {HEAD}
-<title>{title} — Gyða Valtýsdóttir</title>
+<title>{html.escape(title)} — Gyða Valtýsdóttir</title>
 <meta name="description" content="Gyða Valtýsdóttir — {html.escape(kicker.lower())}.">
 <link rel="stylesheet" href="css/app.css?v={V}">
 </head>
-<body class="app{' split' if split else ''}{' overlay' if overlay else ''}" data-view="{view}"{f' data-slug="{key}"' if view in ('album', 'videos') else ''}>
+<body class="app{' split' if split else ''}{' overlay' if overlay else ''}" data-view="{view}" data-page="{key}"{f' data-slug="{key}"' if view in ('album', 'videos') else ''}{veil}>
 {bg_div}
 {topbar(key, hero or split or overlay)}
 {top}
@@ -210,6 +238,7 @@ def app_html(key):
 {head}
 <div id="app"><noscript><p>This page needs JavaScript.</p></noscript></div>
 </main>
+<script src="js/look.js?v={V}" defer></script>
 <script src="js/app.js?v={V}" defer></script>
 </body>
 </html>
@@ -272,6 +301,7 @@ def page_html(key, page):
 </div>
 </div>
 <script src="js/site.js?v={V}" defer></script>
+<script src="js/look.js?v={V}" defer></script>
 <script src="js/app.js?v={V}" defer></script>
 </body>
 </html>
@@ -313,5 +343,5 @@ for page in ('admin/index.html', 'admin/guide/index.html', 'admin/post/index.htm
     def bust(m):
         f = os.path.join(d, m.group(2))
         return f'{m.group(1)}{m.group(2)}?v={hashlib.sha1(open(f, "rb").read()).hexdigest()[:8]}"'
-    t2 = re.sub(r'((?:src|href)=")((?:\.\./)?(?:admin|service|guide|post)\.(?:js|css))(?:\?v=\w+)?"', bust, t)
+    t2 = re.sub(r'((?:src|href)=")((?:\.\./)?(?:admin|service|guide|post)\.(?:js|css)|\.\./js/look\.js|\.\./css/fonts\.css)(?:\?v=\w+)?"', bust, t)
     if t2 != t: open(p, 'w').write(t2)

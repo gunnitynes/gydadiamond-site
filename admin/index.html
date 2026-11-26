@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700&family=Vollkorn&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="admin.css?v=40b75c75">
+<link rel="stylesheet" href="../css/fonts.css?v=862a9f33">
+<link rel="stylesheet" href="admin.css?v=0eddb72b">
 </head>
 <body>
 
@@ -58,25 +59,38 @@
       <button role="tab" data-tab="films">Films</button>
       <button role="tab" data-tab="photos">Photos</button>
       <button role="tab" data-tab="settings">Contact &amp; press</button>
+      <button role="tab" data-tab="look">Look</button>
     </nav>
     <a class="link guide-link" href="post/" target="_blank">Quick post</a>
     <a class="link guide-link" id="guide-link" href="guide/" target="_blank">Guide</a>
+    <button class="link" id="history-link">History</button>
     <button class="link" id="change-pass">Password</button>
     <button class="link" id="signout">Sign out</button>
   </header>
   <main id="panel" class="panel"></main>
+  <aside class="live" id="live" hidden aria-label="The page as visitors will see it">
+    <div class="live-bar">
+      <select id="live-page" aria-label="Which page to show"></select>
+      <span class="seg" role="group" aria-label="Show it as on"><button type="button" data-dev="desk" aria-pressed="true">Computer</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></span>
+      <span class="live-note" id="live-note">Not published yet</span>
+      <a class="link" id="live-open" target="gyda-preview" href="../">Open large</a>
+      <button class="link" id="live-close" type="button" title="Hide the page">Hide ✕</button>
+    </div>
+    <div class="live-view" id="live-view"><p class="live-cap" id="live-cap"></p></div>
+  </aside>
   <footer class="dock">
     <span id="status" class="status">Loading…</span>
     <span class="dock-btns">
       <button class="btn" id="discard" disabled>Undo all</button>
-      <button class="btn" id="preview" disabled>Preview</button>
+      <button class="btn" id="preview">Show the page</button>
       <button class="btn solid" id="publish" disabled>Publish</button>
     </span>
   </footer>
 </div>
 
 <div id="toast" class="toast" role="status" hidden></div>
+<script src="../js/look.js?v=a3c4b61e"></script>
 <script src="service.js?v=2677012a"></script>
-<script src="admin.js?v=497856a8"></script>
+<script src="admin.js?v=ed2867c1"></script>
 </body>
 </html>

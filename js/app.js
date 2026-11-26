@@ -352,10 +352,6 @@
     var m = l.split(/\s+\|\s+/);
     return m[1] ? '<a href="' + esc(m[1]) + '"' + ext(m[1]) + '>' + esc(m[0]) + ' <span class="arr">↗</span></a>' : esc(m[0]);
   }
-  function setHero(img) {
-    var h = document.querySelector('.page-hero');
-    if (h && img) h.style.backgroundImage = "url('" + img + "')";
-  }
   // a paragraph that is just ◆ becomes a separator
   function proseD(t) {
     return prose(t).replace(/<p>\s*◆\s*<\/p>/g, '<p class="sep-d" aria-hidden="true">◆</p>');
@@ -450,14 +446,12 @@
 
   function renderAbout(a) {
     a = a || {};
-    setHero(a.photo);
     var root = document.getElementById('app');
     root.innerHTML = '<div class="longread lead-first">' + proseD(a.text) + '</div>' +
       '<p class="read-on"><a class="btn" href="FULL-BIO">Full bio →</a></p>';
   }
   function renderBio(a) {
     a = a || {};
-    setHero(a.bio_photo);
     var root = document.getElementById('app'), h = '';
     String(a.bio || '').split(/^##\s+/m).forEach(function (sec) {
       sec = sec.trim();
@@ -728,7 +722,7 @@
       var on = mq.matches;
       document.documentElement.classList.toggle('plx', on);
       var y = on ? scrollY : 0, vh = innerHeight;
-      if (view === 'live') {
+      if (document.querySelector('.after-hero') && view !== 'contact') {   // a big photo at the top (LIVE, or as chosen in the Look tab)
         var hero = document.querySelector('.page-hero');
         if (hero) hero.style.transform = on ? 'translate3d(0,' + (Math.min(y, hero.offsetHeight) * 0.45).toFixed(1) + 'px,0)' : '';
       }
@@ -798,15 +792,59 @@
 
   // ------------------------------------------------------------ go
   if (PREVIEW) {
-    var f = document.createElement('div');
-    f.className = 'preview-flag';
-    f.textContent = 'Preview — not published yet';
-    document.body.appendChild(f);
+    // inside the admin (embed) the page sits beside the editor, which already says it is not published
+    if (!/[?&]embed\b/.test(location.search)) {
+      var f = document.createElement('div');
+      f.className = 'preview-flag';
+      f.textContent = 'Preview — not published yet';
+      document.body.appendChild(f);
+    }
+    // links to the site's other pages keep showing the unpublished changes
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || a.target === '_blank' || a.origin !== location.origin || /\/admin\//.test(a.pathname) || a.hasAttribute('data-mail')) return;
+      if (/[?&]preview\b/.test(a.search)) return;
+      e.preventDefault();
+      location.href = a.pathname + (a.search ? a.search + '&' : '?') + 'preview' + (/[?&]embed\b/.test(location.search) ? '&embed' : '') + a.hash;
+    });
   }
+  // Signed in to the admin in this browser: a small Edit button takes her to this page in the admin.
+  // Visitors never see it (they have no admin session), and it is not shown inside the admin's own preview.
+  (function () {
+    var signed = false;
+    try { signed = !!localStorage.getItem('gyda.session'); } catch (e) { /* private browsing */ }
+    if (!signed || /[?&]embed\b/.test(location.search)) return;
+    var page = document.body.getAttribute('data-page') || '', slug = document.body.getAttribute('data-slug') || '';
+    var where = { front: 'front', about: 'about', bio: 'about:FULL-BIO', work: 'work', store: 'work', film: 'films', live: 'live', news: 'news',
+      photos: 'photos', contact: 'settings', videos: 'videos:' + slug }[view] || 'front';
+    if (view === 'album') {
+      var q = (location.search.match(/[?&]a=([^&]+)/) || [])[1];
+      where = 'work:' + (q ? decodeURIComponent(q) : slug || page);
+    }
+    var a = document.createElement('a');
+    a.className = 'edit-me';
+    a.href = 'admin/#' + where;
+    a.textContent = '✎ Edit this page';
+    a.title = 'Only you see this, because you are signed in to the admin';
+    document.body.appendChild(a);
+  })();
+
   // start the page's data downloads now, alongside site.json (load() hands back the same request later)
   ({ videos: ['videos'], store: ['work'], about: ['about'], bio: ['about'], album: ['work'], work: ['work'], film: ['films'], news: ['news'], photos: ['photos'], live: ['shows', 'calendar'], front: ['shows', 'calendar'] }[view] || [])
     .forEach(function (n) { load(n); });
+  // the look chosen in the admin (js/look.js): colours, heading font, and this page's photo and title
+  function applyLook(site) {
+    var L = window.GYDA_LOOK, look = site && site.look;
+    if (L && look) {
+      L.applyTheme(document.documentElement, look);
+      var key = document.body.getAttribute('data-page');
+      if (key && look.pages && look.pages[key]) L.applyPage(document, look.pages[key]);
+    }
+    document.documentElement.classList.add('look-set');
+  }
+  setTimeout(function () { document.documentElement.classList.add('look-set'); }, 1500);   // never hide a photo for long
   load('site').then(function (site) {
+    applyLook(site);
     renderNav(site);
     renderBooking(site);
     if (view === 'front') return renderFront(site);
