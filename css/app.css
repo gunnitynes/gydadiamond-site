@@ -176,9 +176,15 @@ body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8re
 
 /* ---------- OVERLAY page (About): the photo fills the screen and holds still, darkened; the text scrolls over it, centred */
 body.overlay .page-hero { position: fixed; inset: 0; height: auto; max-height: none; min-height: 0; background-size: cover; background-position: 50% 25%; }
+/* a slow drift as the page scrolls (js/app.js): grown from the top so its lower edge never shows */
+body.overlay .page-hero { transform-origin: 50% 0; will-change: transform; }
 body.overlay .page-hero::after { content: ""; position: absolute; inset: 0; background: rgba(14, 3, 3, .58); }
 body.overlay .app-main { max-width: 76rem; text-align: center; }
 body.overlay .longread { margin: 0 auto; color: rgba(255,255,255,.9); text-shadow: 0 1px 14px rgba(0,0,0,.45); }
+/* Full bio: the column is centred like About, but the lists read left to right with the years on the right */
+body.overlay[data-view="bio"] .app-main { text-align: left; }
+body.overlay[data-view="bio"] .page-title, body.overlay[data-view="bio"] .kicker, body.overlay[data-view="bio"] .read-on { text-align: center; }
+body.overlay[data-view="bio"] .bio-list li, body.overlay[data-view="bio"] .bio-para { text-shadow: 0 1px 12px rgba(0,0,0,.5); }
 body.overlay .page-title, body.overlay .kicker { text-shadow: 0 2px 24px rgba(0,0,0,.5); }
 
 /* ---------- SPLIT pages (About, Full bio): the photo holds still on the right half, the text scrolls on the left */

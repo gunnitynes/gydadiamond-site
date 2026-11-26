@@ -716,6 +716,16 @@
           im.style.setProperty('--py', (off * -7).toFixed(2) + '%');
         });
       }
+      // ABOUT, FULL BIO: the darkened photo behind the text drifts up a little as you read (phones too,
+      // where the text scrolls inside its own frame)
+      if (document.body.classList.contains('overlay')) {
+        var ph = document.querySelector('.page-hero'), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var sc = innerWidth <= 768 ? document.querySelector('.app-main') : document.scrollingElement;
+        if (ph && sc) {
+          var room = Math.max(1, sc.scrollHeight - sc.clientHeight);
+          ph.style.transform = still ? '' : 'translate3d(0,' + (-10 * Math.min(1, sc.scrollTop / room)).toFixed(2) + '%,0) scale(1.14)';
+        }
+      }
       if (view === 'album') {
         var bg = document.querySelector('.app-bg');
         var span = Math.max(1, document.documentElement.scrollHeight - vh);
@@ -724,7 +734,7 @@
       }
     }
     function request() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
-    addEventListener('scroll', request, { passive: true });
+    addEventListener('scroll', request, { passive: true, capture: true });   // capture: also the text frame on phones
     addEventListener('resize', request);
     if (mq.addEventListener) mq.addEventListener('change', request);
     // Work and album pages draw their content after the data loads

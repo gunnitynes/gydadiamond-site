@@ -27,7 +27,7 @@ APP_PAGES = {
     'PHOTOS': ('photos', 'Photos', 'Press photos', ''),
     # "split:" = photo on the right half (computers) / on top (phones); text from data/about.json
     'About':    ('about', 'About', 'Biography', 'overlay:images/748b58f2-Gya14-copyI.jpg'),  # text over the darkened photo
-    'FULL-BIO': ('bio',   'Full bio', 'Collaborations, education & discography', 'split:images/6bc6f397-gyda_sepia_s.jpg'),
+    'FULL-BIO': ('bio',   'Full bio', 'Collaborations, education & discography', 'overlay:images/6bc6f397-gyda_sepia_s.jpg'),  # like About: the text over the darkened photo
     # album pages: drawn from the matching entry in data/work.json (its "page" field)
     'Ox':          ('album', 'Ox',          'Album', 'images/f68d8c29--milk_blood_antjetaiga6.jpg'),
     'Evolution':   ('album', 'Evolution',   'Album', 'images/475818a3-drawing_2.png'),
