@@ -176,8 +176,8 @@ body[data-view="contact"] .ccard.short { align-items: center; padding-top: 2.8re
 
 /* ---------- OVERLAY page (About): the photo fills the screen and holds still, darkened; the text scrolls over it, centred */
 body.overlay .page-hero { position: fixed; inset: 0; height: auto; max-height: none; min-height: 0; background-size: cover; background-position: 50% 25%; }
-/* a slow drift as the page scrolls (js/app.js): grown from the top so its lower edge never shows */
-body.overlay .page-hero { transform-origin: 50% 0; will-change: transform; }
+/* the whole photo, screen-wide; js/app.js sets its height and lets it glide up as the page scrolls */
+body.overlay .page-hero { inset: 0 0 auto 0; height: 100vh; will-change: transform; background-position: 50% 0; }
 body.overlay .page-hero::after { content: ""; position: absolute; inset: 0; background: rgba(14, 3, 3, .58); }
 body.overlay .app-main { max-width: 76rem; text-align: center; }
 body.overlay .longread { margin: 0 auto; color: rgba(255,255,255,.9); text-shadow: 0 1px 14px rgba(0,0,0,.45); }
@@ -475,7 +475,7 @@ button.wcard:focus-visible, .feature:focus-visible { outline: 1px solid var(--gl
   body.overlay .app-main { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain; touch-action: pan-y; padding: 2.2rem 1.8rem calc(16rem + env(safe-area-inset-bottom)); }
   /* (the extra space at the bottom keeps the last button clear of the phone browser's bottom bar) */
-  body.overlay .page-hero { background-position: 50% 20%; }
+  body.overlay .page-hero { background-position: 50% 0; }
   /* split pages: photo on top, text below */
   body.split .page-hero { position: relative; left: 0; height: 58vh; height: 58svh; min-height: 320px; }
   body.split .app-main { padding: 3rem 1.8rem 7rem; }

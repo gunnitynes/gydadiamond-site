@@ -716,14 +716,26 @@
           im.style.setProperty('--py', (off * -7).toFixed(2) + '%');
         });
       }
-      // ABOUT, FULL BIO: the darkened photo behind the text drifts up a little as you read (phones too,
-      // where the text scrolls inside its own frame)
+      // ABOUT, FULL BIO: the darkened photo behind the text is as wide as the screen and as tall as the photo itself,
+      // so none of it is zoomed in; as you read it glides up and shows more of the photo (phones too, where the
+      // text scrolls inside its own frame). With reduced motion it stays put.
       if (document.body.classList.contains('overlay')) {
         var ph = document.querySelector('.page-hero'), still = matchMedia('(prefers-reduced-motion: reduce)').matches;
         var sc = innerWidth <= 768 ? document.querySelector('.app-main') : document.scrollingElement;
         if (ph && sc) {
+          var url = (getComputedStyle(ph).backgroundImage.match(/url\("?(.*?)"?\)/) || [])[1];
+          if (url && ph.dataset.src !== url) {          // learn the photo's shape once it is known
+            ph.dataset.src = url;
+            var im = new Image();
+            im.onload = function () { ph.dataset.r = im.naturalHeight / im.naturalWidth; request(); };
+            im.src = url;
+          }
+          var vw = innerWidth, wh = innerHeight, r = +ph.dataset.r || 1.5;
+          var H = Math.max(wh * 1.18, vw * r);           // at least a little taller than the screen, to have room to move
+          ph.style.height = Math.round(H) + 'px';
           var room = Math.max(1, sc.scrollHeight - sc.clientHeight);
-          ph.style.transform = still ? '' : 'translate3d(0,' + (-10 * Math.min(1, sc.scrollTop / room)).toFixed(2) + '%,0) scale(1.14)';
+          var travel = still ? 0 : Math.min(H - wh, room * 0.45);   // never more than about half the speed of the text
+          ph.style.transform = 'translate3d(0,' + (-travel * Math.min(1, sc.scrollTop / room)).toFixed(1) + 'px,0)';
         }
       }
       if (view === 'album') {
